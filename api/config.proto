@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package api;
+
+// Config file structure
+message Config {
+    SourceRepo source = 1;
+    TargetRepo target = 2;
+}
+
+// Generic repo representation
+message Repo {
+    oneof repo {
+        SourceRepo source_repo = 1;
+        TargetRepo target_repo = 2;
+    }
+}
+
+// Auth contains credentials to login to a chart repository
+message Auth {
+    string username = 1;
+    string password = 2;
+}
+
+// SourceRepo contains the required information of the source chart repository
+message SourceRepo {
+    string url = 1;
+    string kind = 2;
+    Auth auth = 3;
+}
+
+// TargetRepo contains the required information of the target chart repository
+message TargetRepo {
+    string url = 1;
+    string container_registry = 2;
+    string container_repository = 3;
+    Auth auth = 4;
+}
