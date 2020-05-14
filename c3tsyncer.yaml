@@ -2,15 +2,18 @@
 # Example config file
 #
 source:
-  url: "http://localhost:8080" # local test source repo
-  kind: "chartmuseum"
-  # auth:
-  #   username: "USERNAME"
-  #   password: "PASSWORD"
+  repo:
+    kind: "HELM"
+    url: "http://localhost:8080" # local test source repo
+    # auth:
+    #   username: "USERNAME"
+    #   password: "PASSWORD"
 target:
-  url: "http://localhost:9090" # local test target repo
   containerRegistry: "demo.registry.io"
   containerRepository: "tpizarro/demo"
-  # auth:
-  #   username: "USERNAME"
-  #   password: "PASSWORD"
+  repo:
+    kind: "CHARTMUSEUM"
+    url: "http://localhost:9090" # local test target repo
+    # auth:
+    #   username: "USERNAME"
+    #   password: "PASSWORD"

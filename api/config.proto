@@ -8,12 +8,23 @@ message Config {
     TargetRepo target = 2;
 }
 
+// SourceRepo contains the required information of the source chart repository
+message SourceRepo {
+    Repo repo = 1;
+}
+
+// TargetRepo contains the required information of the target chart repository
+message TargetRepo {
+    Repo repo = 1;
+    string container_registry = 2;
+    string container_repository = 3;
+}
+
 // Generic repo representation
 message Repo {
-    oneof repo {
-        SourceRepo source_repo = 1;
-        TargetRepo target_repo = 2;
-    }
+    string url = 1;
+    string kind = 2;
+    Auth auth = 3;
 }
 
 // Auth contains credentials to login to a chart repository
@@ -22,17 +33,8 @@ message Auth {
     string password = 2;
 }
 
-// SourceRepo contains the required information of the source chart repository
-message SourceRepo {
-    string url = 1;
-    string kind = 2;
-    Auth auth = 3;
-}
-
-// TargetRepo contains the required information of the target chart repository
-message TargetRepo {
-    string url = 1;
-    string container_registry = 2;
-    string container_repository = 3;
-    Auth auth = 4;
+enum Kind {
+    UNKNOWN = 0;
+    HELM = 1;
+    CHARTMUSEUM = 2;
 }

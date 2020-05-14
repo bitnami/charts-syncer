@@ -1,6 +1,7 @@
-package cmd
+package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -16,51 +17,55 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	helm_repo "helm.sh/helm/v3/pkg/repo"
+	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
-var fromDate string // used for flags
+var (
+	fromDate string // used for flags
+)
 
-// syncCmd represents the sync command
-var syncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Syncronize all the charts from a source repository to a target repository",
-	Long:  `Syncronize all the charts from a source repository to a target repository`,
-	Run: func(cmd *cobra.Command, args []string) {
-		sync()
-	},
+func newSync() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sync",
+		Short: "Syncronize all the charts from a source repository to a target repository",
+		Long:  `Syncronize all the charts from a source repository to a target repository`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.Trace(sync())
+		},
+	}
+
+	f := cmd.Flags()
+	f.StringVar(&fromDate, "from-date", "01/01/01", "Date you want to synchronize charts from. Format: MM/DD/YY")
+
+	return cmd
 }
 
-func init() {
-	rootCmd.AddCommand(syncCmd)
-	syncCmd.Flags().StringVar(&fromDate, "from-date", "01/01/01", "Date you want to synchronize charts from. Format: MM/DD/YY")
-	//syncCmd.Flags().DurationVar()
-}
-
-func sync() {
+func sync() error {
 	var errs error
 	// Load config file
 	var syncConfig api.Config
-	config.LoadConfig(&syncConfig)
-	sourceRepo := syncConfig.Source
-	targetRepo := syncConfig.Target
+	if err := config.LoadConfig(&syncConfig); err != nil {
+		return errors.Trace(fmt.Errorf("Error loading config file"))
+	}
+	source := syncConfig.Source
+	target := syncConfig.Target
 
 	// Create basic layout for date and parse flag to time type
 	timeLayout := "01/02/06"
 	dateThreshold, _ := time.Parse(timeLayout, fromDate)
 
 	// Parse index.yaml file to get all chart releases info
-	sourceIndexFile, err := utils.DownloadIndex(sourceRepo)
-	if err != nil {
-		klog.Fatalf("Error downloading index.yaml: %v ", err)
-	}
-	sourceIndex, err := helm_repo.LoadIndexFile(sourceIndexFile)
-	if err != nil {
-		klog.Fatalf("Error loading index.yaml: %v ", err)
-	}
+	sourceIndexFile, err := utils.DownloadIndex(source.Repo)
 	defer os.Remove(sourceIndexFile)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("Error downloading index.yaml: %w", err))
+	}
+	sourceIndex, err := helmRepo.LoadIndexFile(sourceIndexFile)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
+	}
 	// Add target repo to helm CLI
-	helmcli.AddRepoToHelm(targetRepo.Url, targetRepo.Auth)
+	helmcli.AddRepoToHelm(target.Repo.Url, target.Repo.Auth)
 
 	// Iterate over charts in source index
 	for chartName := range sourceIndex.Entries {
@@ -69,22 +74,24 @@ func sync() {
 			// Get version and publishing date
 			chartVersion := sourceIndex.Entries[chartName][i].Metadata.Version
 			publishingTime := sourceIndex.Entries[chartName][i].Created
-			// Check if chart is already in target repo
-			if chartExists, _ := utils.ChartExistInTargetRepo(chartName, chartVersion, targetRepo); !chartExists {
-				if publishingTime.After(dateThreshold) {
-					if dryRun {
-						klog.Infof("dry-run: Chart %s-%s pending to be synced", chartName, chartVersion)
-					} else {
-						klog.Infof("Syncing %s-%s", chartName, chartVersion)
-						if err := chart.Sync(chartName, chartVersion, sourceRepo, targetRepo, true); err != nil {
-							errs = multierror.Append(errs, errors.Trace(err))
-						}
-					}
-				}
+			// If chart-version already in target repo skip
+			if chartExists, _ := utils.ChartExistInTargetRepo(chartName, chartVersion, target.Repo); chartExists {
+				continue
+			}
+			// If publishing date before date threshold skip
+			if publishingTime.Before(dateThreshold) {
+				continue
+			}
+			// If dry-run mode enabled skip
+			if dryRun {
+				klog.Infof("dry-run: Chart %s-%s pending to be synced", chartName, chartVersion)
+				continue
+			}
+			klog.Infof("Syncing %s-%s", chartName, chartVersion)
+			if err := chart.Sync(chartName, chartVersion, source.Repo, target, true); err != nil {
+				errs = multierror.Append(errs, errors.Trace(err))
 			}
 		}
 	}
-	if errs != nil {
-		klog.Fatal(errors.ErrorStack(errs))
-	}
+	return errs
 }

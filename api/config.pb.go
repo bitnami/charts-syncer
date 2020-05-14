@@ -20,6 +20,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type Kind int32
+
+const (
+	Kind_UNKNOWN     Kind = 0
+	Kind_HELM        Kind = 1
+	Kind_CHARTMUSEUM Kind = 2
+)
+
+var Kind_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "HELM",
+	2: "CHARTMUSEUM",
+}
+
+var Kind_value = map[string]int32{
+	"UNKNOWN":     0,
+	"HELM":        1,
+	"CHARTMUSEUM": 2,
+}
+
+func (x Kind) String() string {
+	return proto.EnumName(Kind_name, int32(x))
+}
+
+func (Kind) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3eaf2c85e69e9ea4, []int{0}
+}
+
 // Config file structure
 type Config struct {
 	Source               *SourceRepo `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
@@ -68,22 +96,117 @@ func (m *Config) GetTarget() *TargetRepo {
 	return nil
 }
 
+// SourceRepo contains the required information of the source chart repository
+type SourceRepo struct {
+	Repo                 *Repo    `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SourceRepo) Reset()         { *m = SourceRepo{} }
+func (m *SourceRepo) String() string { return proto.CompactTextString(m) }
+func (*SourceRepo) ProtoMessage()    {}
+func (*SourceRepo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3eaf2c85e69e9ea4, []int{1}
+}
+
+func (m *SourceRepo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SourceRepo.Unmarshal(m, b)
+}
+func (m *SourceRepo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SourceRepo.Marshal(b, m, deterministic)
+}
+func (m *SourceRepo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SourceRepo.Merge(m, src)
+}
+func (m *SourceRepo) XXX_Size() int {
+	return xxx_messageInfo_SourceRepo.Size(m)
+}
+func (m *SourceRepo) XXX_DiscardUnknown() {
+	xxx_messageInfo_SourceRepo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SourceRepo proto.InternalMessageInfo
+
+func (m *SourceRepo) GetRepo() *Repo {
+	if m != nil {
+		return m.Repo
+	}
+	return nil
+}
+
+// TargetRepo contains the required information of the target chart repository
+type TargetRepo struct {
+	Repo                 *Repo    `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	ContainerRegistry    string   `protobuf:"bytes,2,opt,name=container_registry,json=containerRegistry,proto3" json:"container_registry,omitempty"`
+	ContainerRepository  string   `protobuf:"bytes,3,opt,name=container_repository,json=containerRepository,proto3" json:"container_repository,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TargetRepo) Reset()         { *m = TargetRepo{} }
+func (m *TargetRepo) String() string { return proto.CompactTextString(m) }
+func (*TargetRepo) ProtoMessage()    {}
+func (*TargetRepo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3eaf2c85e69e9ea4, []int{2}
+}
+
+func (m *TargetRepo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TargetRepo.Unmarshal(m, b)
+}
+func (m *TargetRepo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TargetRepo.Marshal(b, m, deterministic)
+}
+func (m *TargetRepo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TargetRepo.Merge(m, src)
+}
+func (m *TargetRepo) XXX_Size() int {
+	return xxx_messageInfo_TargetRepo.Size(m)
+}
+func (m *TargetRepo) XXX_DiscardUnknown() {
+	xxx_messageInfo_TargetRepo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TargetRepo proto.InternalMessageInfo
+
+func (m *TargetRepo) GetRepo() *Repo {
+	if m != nil {
+		return m.Repo
+	}
+	return nil
+}
+
+func (m *TargetRepo) GetContainerRegistry() string {
+	if m != nil {
+		return m.ContainerRegistry
+	}
+	return ""
+}
+
+func (m *TargetRepo) GetContainerRepository() string {
+	if m != nil {
+		return m.ContainerRepository
+	}
+	return ""
+}
+
 // Generic repo representation
 type Repo struct {
-	// Types that are valid to be assigned to Repo:
-	//	*Repo_SourceRepo
-	//	*Repo_TargetRepo
-	Repo                 isRepo_Repo `protobuf_oneof:"repo"`
-	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
-	XXX_unrecognized     []byte      `json:"-"`
-	XXX_sizecache        int32       `json:"-"`
+	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	Kind                 string   `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	Auth                 *Auth    `protobuf:"bytes,3,opt,name=auth,proto3" json:"auth,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Repo) Reset()         { *m = Repo{} }
 func (m *Repo) String() string { return proto.CompactTextString(m) }
 func (*Repo) ProtoMessage()    {}
 func (*Repo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3eaf2c85e69e9ea4, []int{1}
+	return fileDescriptor_3eaf2c85e69e9ea4, []int{3}
 }
 
 func (m *Repo) XXX_Unmarshal(b []byte) error {
@@ -104,49 +227,25 @@ func (m *Repo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Repo proto.InternalMessageInfo
 
-type isRepo_Repo interface {
-	isRepo_Repo()
-}
-
-type Repo_SourceRepo struct {
-	SourceRepo *SourceRepo `protobuf:"bytes,1,opt,name=source_repo,json=sourceRepo,proto3,oneof"`
-}
-
-type Repo_TargetRepo struct {
-	TargetRepo *TargetRepo `protobuf:"bytes,2,opt,name=target_repo,json=targetRepo,proto3,oneof"`
-}
-
-func (*Repo_SourceRepo) isRepo_Repo() {}
-
-func (*Repo_TargetRepo) isRepo_Repo() {}
-
-func (m *Repo) GetRepo() isRepo_Repo {
+func (m *Repo) GetUrl() string {
 	if m != nil {
-		return m.Repo
+		return m.Url
 	}
-	return nil
+	return ""
 }
 
-func (m *Repo) GetSourceRepo() *SourceRepo {
-	if x, ok := m.GetRepo().(*Repo_SourceRepo); ok {
-		return x.SourceRepo
+func (m *Repo) GetKind() string {
+	if m != nil {
+		return m.Kind
 	}
-	return nil
+	return ""
 }
 
-func (m *Repo) GetTargetRepo() *TargetRepo {
-	if x, ok := m.GetRepo().(*Repo_TargetRepo); ok {
-		return x.TargetRepo
+func (m *Repo) GetAuth() *Auth {
+	if m != nil {
+		return m.Auth
 	}
 	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*Repo) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*Repo_SourceRepo)(nil),
-		(*Repo_TargetRepo)(nil),
-	}
 }
 
 // Auth contains credentials to login to a chart repository
@@ -162,7 +261,7 @@ func (m *Auth) Reset()         { *m = Auth{} }
 func (m *Auth) String() string { return proto.CompactTextString(m) }
 func (*Auth) ProtoMessage()    {}
 func (*Auth) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3eaf2c85e69e9ea4, []int{2}
+	return fileDescriptor_3eaf2c85e69e9ea4, []int{4}
 }
 
 func (m *Auth) XXX_Unmarshal(b []byte) error {
@@ -197,132 +296,13 @@ func (m *Auth) GetPassword() string {
 	return ""
 }
 
-// SourceRepo contains the required information of the source chart repository
-type SourceRepo struct {
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	Kind                 string   `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
-	Auth                 *Auth    `protobuf:"bytes,3,opt,name=auth,proto3" json:"auth,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *SourceRepo) Reset()         { *m = SourceRepo{} }
-func (m *SourceRepo) String() string { return proto.CompactTextString(m) }
-func (*SourceRepo) ProtoMessage()    {}
-func (*SourceRepo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3eaf2c85e69e9ea4, []int{3}
-}
-
-func (m *SourceRepo) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SourceRepo.Unmarshal(m, b)
-}
-func (m *SourceRepo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SourceRepo.Marshal(b, m, deterministic)
-}
-func (m *SourceRepo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SourceRepo.Merge(m, src)
-}
-func (m *SourceRepo) XXX_Size() int {
-	return xxx_messageInfo_SourceRepo.Size(m)
-}
-func (m *SourceRepo) XXX_DiscardUnknown() {
-	xxx_messageInfo_SourceRepo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SourceRepo proto.InternalMessageInfo
-
-func (m *SourceRepo) GetUrl() string {
-	if m != nil {
-		return m.Url
-	}
-	return ""
-}
-
-func (m *SourceRepo) GetKind() string {
-	if m != nil {
-		return m.Kind
-	}
-	return ""
-}
-
-func (m *SourceRepo) GetAuth() *Auth {
-	if m != nil {
-		return m.Auth
-	}
-	return nil
-}
-
-// TargetRepo contains the required information of the target chart repository
-type TargetRepo struct {
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	ContainerRegistry    string   `protobuf:"bytes,2,opt,name=container_registry,json=containerRegistry,proto3" json:"container_registry,omitempty"`
-	ContainerRepository  string   `protobuf:"bytes,3,opt,name=container_repository,json=containerRepository,proto3" json:"container_repository,omitempty"`
-	Auth                 *Auth    `protobuf:"bytes,4,opt,name=auth,proto3" json:"auth,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *TargetRepo) Reset()         { *m = TargetRepo{} }
-func (m *TargetRepo) String() string { return proto.CompactTextString(m) }
-func (*TargetRepo) ProtoMessage()    {}
-func (*TargetRepo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3eaf2c85e69e9ea4, []int{4}
-}
-
-func (m *TargetRepo) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TargetRepo.Unmarshal(m, b)
-}
-func (m *TargetRepo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TargetRepo.Marshal(b, m, deterministic)
-}
-func (m *TargetRepo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TargetRepo.Merge(m, src)
-}
-func (m *TargetRepo) XXX_Size() int {
-	return xxx_messageInfo_TargetRepo.Size(m)
-}
-func (m *TargetRepo) XXX_DiscardUnknown() {
-	xxx_messageInfo_TargetRepo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TargetRepo proto.InternalMessageInfo
-
-func (m *TargetRepo) GetUrl() string {
-	if m != nil {
-		return m.Url
-	}
-	return ""
-}
-
-func (m *TargetRepo) GetContainerRegistry() string {
-	if m != nil {
-		return m.ContainerRegistry
-	}
-	return ""
-}
-
-func (m *TargetRepo) GetContainerRepository() string {
-	if m != nil {
-		return m.ContainerRepository
-	}
-	return ""
-}
-
-func (m *TargetRepo) GetAuth() *Auth {
-	if m != nil {
-		return m.Auth
-	}
-	return nil
-}
-
 func init() {
+	proto.RegisterEnum("api.Kind", Kind_name, Kind_value)
 	proto.RegisterType((*Config)(nil), "api.Config")
-	proto.RegisterType((*Repo)(nil), "api.Repo")
-	proto.RegisterType((*Auth)(nil), "api.Auth")
 	proto.RegisterType((*SourceRepo)(nil), "api.SourceRepo")
 	proto.RegisterType((*TargetRepo)(nil), "api.TargetRepo")
+	proto.RegisterType((*Repo)(nil), "api.Repo")
+	proto.RegisterType((*Auth)(nil), "api.Auth")
 }
 
 func init() {
@@ -330,23 +310,25 @@ func init() {
 }
 
 var fileDescriptor_3eaf2c85e69e9ea4 = []byte{
-	// 287 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x52, 0x3f, 0x4b, 0xc4, 0x30,
-	0x14, 0xb7, 0x36, 0x14, 0xfb, 0x4e, 0x50, 0xa3, 0x43, 0x11, 0x04, 0xe9, 0xa2, 0x8b, 0x05, 0xcf,
-	0x5d, 0x50, 0x17, 0x57, 0xa3, 0x93, 0xcb, 0x11, 0x6b, 0xec, 0x05, 0xb5, 0x09, 0x2f, 0x89, 0x72,
-	0x9f, 0xc6, 0xaf, 0x2a, 0x49, 0x7a, 0xb9, 0x0e, 0xbd, 0x2d, 0xbf, 0xbf, 0xef, 0x57, 0x28, 0xec,
-	0xb7, 0xaa, 0xff, 0x90, 0x5d, 0xa3, 0x51, 0x59, 0x45, 0x73, 0xae, 0x65, 0xfd, 0x0a, 0xc5, 0x43,
-	0x20, 0xe9, 0x05, 0x14, 0x46, 0x39, 0x6c, 0x45, 0x95, 0x9d, 0x67, 0x97, 0xb3, 0xf9, 0x41, 0xc3,
-	0xb5, 0x6c, 0x9e, 0x03, 0xc5, 0x84, 0x56, 0x6c, 0x90, 0xbd, 0xd1, 0x72, 0xec, 0x84, 0xad, 0x76,
-	0x47, 0xc6, 0x97, 0x40, 0x45, 0x63, 0x94, 0xeb, 0x1f, 0x20, 0x1e, 0xd3, 0x39, 0xcc, 0x62, 0x74,
-	0x81, 0x42, 0xab, 0x2d, 0xf5, 0x8f, 0x3b, 0x0c, 0x4c, 0x42, 0x3e, 0x13, 0x5b, 0x62, 0x66, 0xfa,
-	0x92, 0xcf, 0xd8, 0x84, 0xee, 0x0b, 0x20, 0xde, 0x5c, 0xdf, 0x02, 0xb9, 0x73, 0x76, 0x49, 0x4f,
-	0x61, 0xcf, 0x19, 0x81, 0x3d, 0xff, 0x8e, 0xdf, 0x54, 0xb2, 0x84, 0xbd, 0xa6, 0xb9, 0x31, 0xbf,
-	0x0a, 0xdf, 0x43, 0x79, 0xc9, 0x12, 0xae, 0x9f, 0x00, 0x36, 0xbb, 0xe8, 0x21, 0xe4, 0x0e, 0xbf,
-	0x86, 0x02, 0xff, 0xa4, 0x14, 0xc8, 0xa7, 0xec, 0xd7, 0xb9, 0xf0, 0xa6, 0x67, 0x40, 0xb8, 0xb3,
-	0xcb, 0x2a, 0x0f, 0x43, 0xcb, 0x30, 0xd4, 0x8f, 0x60, 0x81, 0xae, 0xff, 0x32, 0x80, 0xcd, 0xee,
-	0x89, 0xce, 0x2b, 0xa0, 0xad, 0xea, 0x2d, 0x97, 0xbd, 0xc0, 0x05, 0x8a, 0x4e, 0x1a, 0x8b, 0xab,
-	0xe1, 0xc2, 0x51, 0x52, 0xd8, 0x20, 0xd0, 0x6b, 0x38, 0x19, 0xdb, 0xb5, 0x32, 0xd2, 0x2a, 0x5c,
-	0x85, 0xf3, 0x25, 0x3b, 0x1e, 0x05, 0xd6, 0x52, 0x5a, 0x48, 0x26, 0x17, 0xbe, 0x15, 0xe1, 0xa7,
-	0xb8, 0xf9, 0x0f, 0x00, 0x00, 0xff, 0xff, 0xda, 0x8f, 0x85, 0xbd, 0x24, 0x02, 0x00, 0x00,
+	// 305 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x51, 0x4f, 0x4b, 0xf3, 0x30,
+	0x18, 0x7f, 0xbb, 0x85, 0xbd, 0xdb, 0x33, 0x61, 0x35, 0x7a, 0x18, 0x82, 0x20, 0xbd, 0x28, 0x8a,
+	0x05, 0xf5, 0x2e, 0x8c, 0x31, 0x18, 0xcc, 0x55, 0xc8, 0x56, 0x04, 0x2f, 0x12, 0x6b, 0xec, 0x82,
+	0xda, 0x84, 0x24, 0x45, 0xf6, 0x21, 0xfc, 0xce, 0x92, 0x67, 0x6d, 0xd7, 0x9b, 0xb7, 0xfc, 0xfe,
+	0x3e, 0x3f, 0x08, 0x1c, 0x64, 0xaa, 0x78, 0x97, 0x79, 0xac, 0x8d, 0x72, 0x8a, 0x76, 0xb9, 0x96,
+	0xd1, 0x33, 0xf4, 0xa6, 0x48, 0xd2, 0x73, 0xe8, 0x59, 0x55, 0x9a, 0x4c, 0x8c, 0x83, 0xb3, 0xe0,
+	0x62, 0x78, 0x3b, 0x8a, 0xb9, 0x96, 0xf1, 0x0a, 0x29, 0x26, 0xb4, 0x62, 0x95, 0xec, 0x8d, 0x8e,
+	0x9b, 0x5c, 0xb8, 0x71, 0xa7, 0x65, 0x5c, 0x23, 0xb5, 0x33, 0xee, 0xe4, 0xe8, 0x0a, 0x60, 0x1f,
+	0xa7, 0xa7, 0x40, 0x8c, 0xd0, 0xaa, 0x6a, 0x1f, 0x60, 0x08, 0xed, 0x48, 0x47, 0x3f, 0x01, 0xc0,
+	0xbe, 0xe3, 0x0f, 0x37, 0xbd, 0x06, 0x9a, 0xa9, 0xc2, 0x71, 0x59, 0x08, 0xf3, 0x62, 0x44, 0x2e,
+	0xad, 0x33, 0x5b, 0xdc, 0x33, 0x60, 0x87, 0x8d, 0xc2, 0x2a, 0x81, 0xde, 0xc0, 0x71, 0xdb, 0xae,
+	0x95, 0x95, 0x4e, 0x99, 0xed, 0xb8, 0x8b, 0x81, 0xa3, 0x56, 0xa0, 0x96, 0xa2, 0x05, 0x10, 0x1c,
+	0x12, 0x42, 0xb7, 0x34, 0x9f, 0xb8, 0x63, 0xc0, 0xfc, 0x93, 0x52, 0x20, 0x1f, 0xb2, 0x78, 0xab,
+	0xae, 0xe1, 0xdb, 0xcf, 0xe5, 0xa5, 0xdb, 0x60, 0x61, 0x3d, 0x77, 0x52, 0xba, 0x0d, 0x43, 0x3a,
+	0xba, 0x07, 0xe2, 0x11, 0x3d, 0x81, 0x7e, 0x69, 0x85, 0x29, 0xf8, 0x97, 0xa8, 0x1a, 0x1b, 0xec,
+	0x35, 0xcd, 0xad, 0xfd, 0x56, 0xa6, 0xae, 0x6e, 0xf0, 0x65, 0x0c, 0x64, 0xe1, 0xcf, 0x0c, 0xe1,
+	0x7f, 0x9a, 0x2c, 0x92, 0xc7, 0xa7, 0x24, 0xfc, 0x47, 0xfb, 0x40, 0xe6, 0xb3, 0x87, 0x65, 0x18,
+	0xd0, 0x11, 0x0c, 0xa7, 0xf3, 0x09, 0x5b, 0x2f, 0xd3, 0xd5, 0x2c, 0x5d, 0x86, 0x9d, 0xd7, 0x1e,
+	0xfe, 0xf0, 0xdd, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x8e, 0xfe, 0x73, 0x8d, 0xf1, 0x01, 0x00,
+	0x00,
 }

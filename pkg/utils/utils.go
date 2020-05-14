@@ -9,13 +9,13 @@ import (
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/juju/errors"
-	helm_repo "helm.sh/helm/v3/pkg/repo"
+	helmRepo "helm.sh/helm/v3/pkg/repo"
 
 	"k8s.io/klog"
 )
 
 // ChartExistInIndex checks if a specific chart version is present in the index file
-func ChartExistInIndex(name string, version string, index *helm_repo.IndexFile) (bool, error) {
+func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (bool, error) {
 	chartVersionFound := false
 	var err error
 	if index.Entries[name] != nil {
@@ -41,7 +41,7 @@ func ChartExistInIndex(name string, version string, index *helm_repo.IndexFile) 
 
 // ChartExistInTargetRepo checks if a chart exists in the target repo
 // So far, targetRepo should be ChartMuseum-like as we are using its API for checking
-func ChartExistInTargetRepo(name string, version string, targetRepo *api.TargetRepo) (bool, error) {
+func ChartExistInTargetRepo(name string, version string, targetRepo *api.Repo) (bool, error) {
 	// Check if chart exists in target repo
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", targetRepo.Url+"/api/charts/"+name+"/"+version, nil)
@@ -77,7 +77,7 @@ func ChartExistInTargetRepo(name string, version string, targetRepo *api.TargetR
 
 // DownloadIndex will download the index.yaml file of a chart repository and return
 // the path to the downloaded file
-func DownloadIndex(repo *api.SourceRepo) (string, error) {
+func DownloadIndex(repo *api.Repo) (string, error) {
 	downloadURL := repo.Url + "/index.yaml"
 
 	// Get the data

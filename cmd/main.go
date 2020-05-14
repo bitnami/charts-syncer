@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"flag"
@@ -11,8 +11,10 @@ import (
 	"k8s.io/klog"
 )
 
-var cfgFile string
-var dryRun bool
+var (
+	cfgFile string
+	dryRun  bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -24,28 +26,28 @@ chart repositories from a source repository to a target repository.
 You can sync a single chart or the whole repository`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		klog.Fatal(err)
-		os.Exit(1)
-	}
-}
-
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.c3tsyncer.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "only shows the charts pending to be synced without syncing them")
-	rootCmd.MarkPersistentFlagRequired("config")
 
 	// Initialize klog. Override some flag defaults so they are shown in the help func.
 	klog.InitFlags(flag.CommandLine)
 	flag.CommandLine.Lookup("alsologtostderr").Value.Set("true")
 	flag.CommandLine.Lookup("v").Value.Set("2")
-	defer klog.Flush()
+
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.c3tsyncer.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "only shows the charts pending to be synced without syncing them")
+	rootCmd.MarkPersistentFlagRequired("config")
+
+	flag.Usage = func() {
+		if err := rootCmd.Help(); err != nil {
+			klog.Fatalf("%+v", err)
+		}
+	}
+
+	rootCmd.AddCommand(newSync())
+	rootCmd.AddCommand(newSyncChart())
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -64,11 +66,15 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".c3tsyncer")
 	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		klog.Info("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+func main() {
+	defer klog.Flush()
+	if err := rootCmd.Execute(); err != nil {
+		klog.Fatal(err)
 	}
 }

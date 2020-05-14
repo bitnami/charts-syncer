@@ -3,6 +3,7 @@ module github.com/bitnami-labs/chart-repository-syncer
 go 1.13
 
 require (
+	github.com/aws/aws-sdk-go v1.15.11
 	github.com/golang/protobuf v1.3.2
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/juju/testing v0.0.0-20200508075044-1fb6f5331da5 // indirect
