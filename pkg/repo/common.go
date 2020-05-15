@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 	"github.com/juju/errors"
 	"k8s.io/klog"
 )
@@ -15,11 +14,12 @@ import (
 func download(filepath string, name string, version string, downloadURL string, sourceRepo *api.Repo) error {
 	// Get the data
 	req, err := http.NewRequest("GET", downloadURL, nil)
+	klog.V(4).Infof("GET %q", downloadURL)
 	if err != nil {
-		return errors.Annotate(err, "Error getting chart")
+		return errors.Annotatef(err, "Error getting %q chart from %q", name, downloadURL)
 	}
 	if sourceRepo.Auth != nil && sourceRepo.Auth.Username != "" && sourceRepo.Auth.Password != "" {
-		klog.V(12).Info("Source repo configures basic authentication. Downloading chart...")
+		klog.V(4).Info("Using basic authentication %q:****", sourceRepo.Auth.Username)
 		req.SetBasicAuth(sourceRepo.Auth.Username, sourceRepo.Auth.Password)
 	}
 	client := &http.Client{}
@@ -45,13 +45,5 @@ func download(filepath string, name string, version string, downloadURL string, 
 		return errors.Annotatef(err, "Error write to file %s", filepath)
 	}
 
-	// Check contentType
-	contentType, err := utils.GetFileContentType(filepath)
-	if err != nil {
-		return errors.Annotatef(err, "Error checking contentType of %s file", filepath)
-	}
-	if contentType != "application/x-gzip" {
-		return errors.Errorf("The downloaded chart %s is not a gzipped tarball", filepath)
-	}
 	return errors.Trace(err)
 }

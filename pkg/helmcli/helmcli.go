@@ -22,7 +22,7 @@ func Package(chartPath, name, version, destDir string) (string, error) {
 
 // UpdateDependencies uses helm cli to update dependencies of a chart
 func UpdateDependencies(chartPath string) error {
-	klog.V(8).Info(`Updating dependencies with "helm dependency update"`)
+	klog.V(3).Info(`Updating dependencies with "helm dependency update"`)
 	cmd := exec.Command("helm", "dependency", "update", chartPath)
 	if _, err := cmd.Output(); err != nil {
 		return errors.Errorf("Error updading dependencies for %s", chartPath)
@@ -35,10 +35,10 @@ func AddRepoToHelm(url string, auth *api.Auth) error {
 	var cmd *exec.Cmd
 	var err error
 	if auth != nil && auth.Username != "" && auth.Password != "" {
-		klog.V(8).Info("Adding target repository to helm cli with basic authentication")
+		klog.V(3).Info("Adding target repository to helm cli with basic authentication")
 		cmd = exec.Command("helm", "repo", "add", "target", url, "--username", auth.Username, "--password", auth.Password)
 	} else {
-		klog.V(8).Info("Adding target repository to helm cli")
+		klog.V(3).Info("Adding target repository to helm cli")
 		cmd = exec.Command("helm", "repo", "add", "target", url)
 	}
 	if _, err := cmd.Output(); err != nil {

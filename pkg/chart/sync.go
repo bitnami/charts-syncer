@@ -21,9 +21,14 @@ import (
 // SyncAllVersions will sync all versions of a specific char.
 func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool, index *helmRepo.IndexFile, dryRun bool) error {
 	var errs error
+	// Create client for target repo
+	tc, err := repo.NewClient(target.Repo)
+	if err != nil {
+		return fmt.Errorf("could not create a client for the source repo: %w", err)
+	}
 	if index.Entries[name] != nil {
 		for i := range index.Entries[name] {
-			if chartExists, err := utils.ChartExistInTargetRepo(name, index.Entries[name][i].Metadata.Version, target.Repo); !chartExists && err == nil {
+			if chartExists, err := tc.ChartExists(name, index.Entries[name][i].Metadata.Version, target.Repo); !chartExists && err == nil {
 				if dryRun {
 					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, index.Entries[name][i].Metadata.Version)
 				} else {
@@ -39,8 +44,8 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 	return errs
 }
 
-// Sync is the main function.  It downloads, transform, package and publish a chart
-func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool) error {
+// Sync is the main function. It downloads, transform, package and publish a chart
+func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sc repo.ChartRepoAPI, tc repo.ChartRepoAPI, syncDependencies bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "c3tsyncer")
 	defer os.RemoveAll(tmpDir)
@@ -55,15 +60,15 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 
 	// Download chart
 	filepath := srcDir + "/" + name + "-" + version + ".tgz"
-	klog.V(12).Infof("srcDir: %s", srcDir)
-	klog.V(12).Infof("destDir: %s", destDir)
-	klog.V(12).Infof("chartPath: %s", filepath)
+	klog.V(4).Infof("srcDir: %s", srcDir)
+	klog.V(4).Infof("destDir: %s", destDir)
+	klog.V(4).Infof("chartPath: %s", filepath)
 	// Create client for source repo
-	sourceClient, err := repo.NewClient(sourceRepo)
+	sc, err := repo.NewClient(sourceRepo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := sourceClient.DownloadChart(filepath, name, version, sourceRepo); err != nil {
+	if err := sc.DownloadChart(filepath, name, version, sourceRepo); err != nil {
 		return errors.Annotatef(err, "Error downloading chart %s-%s from source repo", name, version)
 	}
 
@@ -84,11 +89,11 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	valuesFile := path.Join(chartPath, "values.yaml")
 	valuesProductionFile := path.Join(chartPath, "values-production.yaml")
 	if _, err := os.Stat(valuesFile); err == nil {
-		klog.V(8).Infof("Chart %s-%s has values.yaml file...", name, version)
+		klog.V(3).Infof("Chart %s-%s has values.yaml file...", name, version)
 		updateValuesFile(valuesFile, target)
 	}
 	if _, err := os.Stat(valuesProductionFile); err == nil {
-		klog.V(8).Infof("Chart %s-%s has values-production.yaml...", name, version)
+		klog.V(3).Infof("Chart %s-%s has values-production.yaml...", name, version)
 		updateValuesFile(valuesProductionFile, target)
 	}
 
@@ -99,11 +104,11 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	}
 
 	// Create client for target repo
-	targetClient, err := repo.NewClient(target.Repo)
+	tc, err := repo.NewClient(target.Repo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := targetClient.PublishChart(packagedChartPath, target.Repo); err != nil {
+	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
 		return errors.Annotatef(err, "Error downloading chart %s-%s from source repo", name, version)
 	}
 	klog.Infof("Chart %s-%s published successfully", name, version)

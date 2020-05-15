@@ -1,12 +1,13 @@
 package chart
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"gopkg.in/yaml.v2"
@@ -28,7 +29,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 
 	requirementsLockFile := path.Join(chartPath, "requirements.lock")
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
-	klog.V(4).Info("Chart has dependencies...")
+	klog.V(3).Info("Chart has dependencies...")
 
 	requirementsLock, err := ioutil.ReadFile(requirementsLockFile)
 	if err != nil {
@@ -40,6 +41,12 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	if err != nil {
 		return errors.Annotatef(err, "Error unmarshaling %s file", requirementsLockFile)
 	}
+	// Create client for target repo
+	tc, err := repo.NewClient(target.Repo)
+	if err != nil {
+		return fmt.Errorf("could not create a client for the source repo: %w", err)
+	}
+
 	for i := range lock.Dependencies {
 		// Check if chart exists in target repo
 		depName := lock.Dependencies[i].Name
@@ -48,14 +55,14 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 		chartDependenciesMap[depName] = depVersion
 		// Only sync dependencies retrieved from source repo.
 		if depRepository == sourceRepo.Url {
-			if chartExists, _ := utils.ChartExistInTargetRepo(depName, depVersion, target.Repo); chartExists {
+			if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); chartExists {
 				klog.Infof("Dependency %s-%s already synced\n", depName, depVersion)
 			} else {
 				if syncDependencies {
 					klog.Infof("Dependency %s-%s not synced yet. Syncing now\n", depName, depVersion)
 					Sync(depName, depVersion, sourceRepo, target, true)
 					// Verify is already published in target repo
-					if chartExists, _ := utils.ChartExistInTargetRepo(depName, depVersion, target.Repo); chartExists {
+					if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); chartExists {
 						klog.Infof("Dependency %s-%s synced: Continuing with main chart\n", depName, depVersion)
 					} else {
 						klog.Infof("Dependency %s-%s not synced yet.\n", depName, depVersion)
@@ -71,7 +78,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	}
 
 	if !missingDependencies {
-		klog.V(8).Info("Updating requirements.yaml file...")
+		klog.V(3).Info("Updating requirements.yaml file...")
 		// Update requirements.yaml file to point to target repo
 		requirements, err := ioutil.ReadFile(requirementsFile)
 		if err != nil {

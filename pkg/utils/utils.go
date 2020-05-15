@@ -14,70 +14,46 @@ import (
 	"k8s.io/klog"
 )
 
+// LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
+func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
+	indexFile, err := downloadIndex(repo)
+	defer os.Remove(indexFile)
+	if err != nil {
+		return nil, errors.Errorf("Error downloading index.yaml: %w", err)
+	}
+	index, err := helmRepo.LoadIndexFile(indexFile)
+	if err != nil {
+		return nil, errors.Errorf("Error loading index.yaml: %w", err)
+	}
+	return index, errors.Trace(err)
+}
+
 // ChartExistInIndex checks if a specific chart version is present in the index file
 func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (bool, error) {
 	chartVersionFound := false
 	var err error
 	if index.Entries[name] != nil {
-		klog.V(8).Infof("Chart %s exists in index.yaml file. Searching %s version", name, version)
+		klog.V(3).Infof("Chart %q exists in index.yaml file. Searching %q version", name, version)
 		for i := range index.Entries[name] {
-			// Check if chart exists in target repo
-			//chartName := index.Entries[chart]
 			if index.Entries[name][i].Metadata.Version == version {
-				klog.V(8).Infof("Version %s found for chart %s in index.yaml file", index.Entries[name][i].Metadata.Version, name)
+				klog.V(3).Infof("Version %q found for chart %q in index.yaml file", index.Entries[name][i].Metadata.Version, name)
 				chartVersionFound = true
 				break
 			}
 		}
 		if !chartVersionFound {
-			return false, errors.Errorf("Chart version %s doesn't exist in index.yaml file", version)
+			return false, errors.Errorf("Chart version %q doesn't exist in index.yaml file", version)
 		}
 	} else {
-		return false, errors.Errorf("%s chart doesn't exist in index.yaml", name)
+		return false, errors.Errorf("%q chart doesn't exist in index.yaml", name)
 	}
 
 	return chartVersionFound, errors.Trace(err)
 }
 
-// ChartExistInTargetRepo checks if a chart exists in the target repo
-// So far, targetRepo should be ChartMuseum-like as we are using its API for checking
-func ChartExistInTargetRepo(name string, version string, targetRepo *api.Repo) (bool, error) {
-	// Check if chart exists in target repo
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", targetRepo.Url+"/api/charts/"+name+"/"+version, nil)
-	if err != nil {
-		return false, errors.Trace(err)
-	}
-	if targetRepo.Auth != nil && targetRepo.Auth.Username != "" && targetRepo.Auth.Password != "" {
-		klog.V(12).Info("Target Repo uses basic authentication")
-		req.SetBasicAuth(targetRepo.Auth.Username, targetRepo.Auth.Password)
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return false, errors.Trace(err)
-	}
-	//chartInfo, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		return false, errors.Trace(err)
-	}
-	// Check error codes
-	if res.StatusCode >= 200 && res.StatusCode <= 299 {
-		klog.V(4).Infof("Chart %s-%s already exists in target repo", name, version)
-	} else {
-		if res.StatusCode == 404 {
-			klog.V(8).Infof("Chart %s-%s not found in target repo \n", name, version)
-			return false, errors.Trace(err)
-		}
-		return false, errors.Annotatef(err, "Error checking if chart exists in repo: %s %d", http.StatusText(res.StatusCode), res.StatusCode)
-	}
-
-	return true, errors.Trace(err)
-}
-
-// DownloadIndex will download the index.yaml file of a chart repository and return
+// downloadIndex will download the index.yaml file of a chart repository and return
 // the path to the downloaded file
-func DownloadIndex(repo *api.Repo) (string, error) {
+func downloadIndex(repo *api.Repo) (string, error) {
 	downloadURL := repo.Url + "/index.yaml"
 
 	// Get the data
@@ -87,7 +63,7 @@ func DownloadIndex(repo *api.Repo) (string, error) {
 		return "", errors.Trace(err)
 	}
 	if repo.Auth != nil && repo.Auth.Username != "" && repo.Auth.Password != "" {
-		klog.V(12).Info("Repo configures basic authentication. Downloading index.yaml...")
+		klog.V(4).Info("Repo configures basic authentication. Downloading index.yaml...")
 		req.SetBasicAuth(repo.Auth.Username, repo.Auth.Password)
 	}
 	res, err := client.Do(req)
@@ -114,7 +90,7 @@ func DownloadIndex(repo *api.Repo) (string, error) {
 // Untar will uncompress a tarball
 func Untar(filepath, destDir string) error {
 	// Uncompress tarball
-	klog.V(8).Info("Extracting source chart...")
+	klog.V(3).Info("Extracting source chart...")
 	cmd := exec.Command("tar", "xzf", filepath, "--directory", destDir)
 	_, err := cmd.Output()
 	if err != nil {

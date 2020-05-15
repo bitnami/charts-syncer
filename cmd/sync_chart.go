@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/chart"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/config"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 	"github.com/juju/errors"
-	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
 	"github.com/spf13/cobra"
@@ -60,22 +59,19 @@ func syncChart() error {
 	source := syncConfig.Source
 	target := syncConfig.Target
 
-	klog.Infof("Source repo kind: %s", source.Repo.Kind)
-	klog.Infof("Target repo kind: %s", target.Repo.Kind)
-
-	// Parse index.yaml file to get all chart releases info
-	indexFile, err := utils.DownloadIndex(source.Repo)
-	defer os.Remove(indexFile)
-	if err != nil {
-		return errors.Trace(fmt.Errorf("Error downloading index.yaml: %w", err))
-	}
-	sourceIndex, err := helmRepo.LoadIndexFile(indexFile)
+	// Load index.yaml info into index object
+	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
 	}
 
 	// Add target repo to helm CLI
 	helmcli.AddRepoToHelm(target.Repo.Url, target.Repo.Auth)
+	// Create client for target repo
+	tc, err := repo.NewClient(target.Repo)
+	if err != nil {
+		return fmt.Errorf("could not create a client for the source repo: %w", err)
+	}
 
 	if syncAllVersions {
 		if err := chart.SyncAllVersions(name, source.Repo, target, false, sourceIndex, dryRun); err != nil {
@@ -84,7 +80,7 @@ func syncChart() error {
 	} else {
 		if chartExistsInSource, err := utils.ChartExistInIndex(name, version, sourceIndex); err == nil {
 			if chartExistsInSource {
-				if chartExistsInTarget, err := utils.ChartExistInTargetRepo(name, version, target.Repo); err == nil {
+				if chartExistsInTarget, err := tc.ChartExists(name, version, target.Repo); err == nil {
 					if !chartExistsInTarget {
 						if dryRun {
 							klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
