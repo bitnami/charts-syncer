@@ -35,7 +35,7 @@ func newSync() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&fromDate, "from-date", "01/01/01", "Date you want to synchronize charts from. Format: MM/DD/YY")
+	f.StringVar(&fromDate, "from-date", "2001-01-01", "Date you want to synchronize charts from. Format: YYYY/MM/DD")
 
 	return cmd
 }
@@ -51,8 +51,11 @@ func sync() error {
 	target := syncConfig.Target
 
 	// Create basic layout for date and parse flag to time type
-	timeLayout := "01/02/06"
-	dateThreshold, _ := time.Parse(timeLayout, fromDate)
+	timeLayoutISO := "2006-01-02"
+	dateThreshold, err := time.Parse(timeLayoutISO, fromDate)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("Error parsing date: %w", err))
+	}
 
 	// Parse index.yaml file to get all chart releases info
 	sourceIndexFile, err := utils.DownloadIndex(source.Repo)
@@ -74,12 +77,12 @@ func sync() error {
 			// Get version and publishing date
 			chartVersion := sourceIndex.Entries[chartName][i].Metadata.Version
 			publishingTime := sourceIndex.Entries[chartName][i].Created
-			// If chart-version already in target repo skip
-			if chartExists, _ := utils.ChartExistInTargetRepo(chartName, chartVersion, target.Repo); chartExists {
-				continue
-			}
 			// If publishing date before date threshold skip
 			if publishingTime.Before(dateThreshold) {
+				continue
+			}
+			// If chart-version already in target repo skip
+			if chartExists, _ := utils.ChartExistInTargetRepo(chartName, chartVersion, target.Repo); chartExists {
 				continue
 			}
 			// If dry-run mode enabled skip

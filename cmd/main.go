@@ -35,10 +35,8 @@ func init() {
 	flag.CommandLine.Lookup("v").Value.Set("2")
 
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.c3tsyncer.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "only shows the charts pending to be synced without syncing them")
-	rootCmd.MarkPersistentFlagRequired("config")
 
 	flag.Usage = func() {
 		if err := rootCmd.Help(); err != nil {
@@ -67,7 +65,9 @@ func initConfig() {
 		viper.SetConfigName(".c3tsyncer")
 	}
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	if err := viper.ReadInConfig(); err != nil {
+		klog.Fatalf("Error reading config file: %+v", err)
+	} else {
 		klog.Info("Using config file:", viper.ConfigFileUsed())
 	}
 }
