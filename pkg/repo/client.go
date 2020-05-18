@@ -24,6 +24,6 @@ var NewClient = func(repo *api.Repo) (ChartRepoAPI, error) {
 	case api.Kind_CHARTMUSEUM.String():
 		return NewChartMuseumClient(repo), nil
 	default:
-		return nil, fmt.Errorf("unsupported repo backend type %q", repo.Kind)
+		return nil, fmt.Errorf("unsupported repo kind %q", repo.Kind)
 	}
 }

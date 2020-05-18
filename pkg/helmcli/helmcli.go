@@ -33,7 +33,6 @@ func UpdateDependencies(chartPath string) error {
 // AddRepoToHelm uses helm cli to add a repo to the helm CLI
 func AddRepoToHelm(url string, auth *api.Auth) error {
 	var cmd *exec.Cmd
-	var err error
 	if auth != nil && auth.Username != "" && auth.Password != "" {
 		klog.V(3).Info("Adding target repository to helm cli with basic authentication")
 		cmd = exec.Command("helm", "repo", "add", "target", url, "--username", auth.Username, "--password", auth.Password)
@@ -44,5 +43,5 @@ func AddRepoToHelm(url string, auth *api.Auth) error {
 	if _, err := cmd.Output(); err != nil {
 		return errors.Annotate(err, "Error adding target repo to helm")
 	}
-	return errors.Annotate(err, "Error adding target repo to helm")
+	return nil
 }

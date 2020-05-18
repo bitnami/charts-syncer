@@ -75,8 +75,7 @@ func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) 
 	if res.StatusCode >= 200 && res.StatusCode <= 299 {
 		klog.V(3).Infof("Chart %s uploaded successfully", filepath)
 	} else {
-		errors.Annotatef(err, "Error publishing %s chart", filepath)
-		return errors.New("Post status code is not 2xx")
+		return errors.Errorf("POST chart status Code: %d, Message: %s", res.StatusCode, string(respBody))
 	}
 	return errors.Trace(err)
 }

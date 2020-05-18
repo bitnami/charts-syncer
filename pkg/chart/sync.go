@@ -45,7 +45,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 }
 
 // Sync is the main function. It downloads, transform, package and publish a chart
-func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sc repo.ChartRepoAPI, tc repo.ChartRepoAPI, syncDependencies bool) error {
+func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "c3tsyncer")
 	defer os.RemoveAll(tmpDir)

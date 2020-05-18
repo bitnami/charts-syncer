@@ -19,7 +19,7 @@ func download(filepath string, name string, version string, downloadURL string, 
 		return errors.Annotatef(err, "Error getting %q chart from %q", name, downloadURL)
 	}
 	if sourceRepo.Auth != nil && sourceRepo.Auth.Username != "" && sourceRepo.Auth.Password != "" {
-		klog.V(4).Info("Using basic authentication %q:****", sourceRepo.Auth.Username)
+		klog.V(4).Infof("Using basic authentication %q:****", sourceRepo.Auth.Username)
 		req.SetBasicAuth(sourceRepo.Auth.Username, sourceRepo.Auth.Password)
 	}
 	client := &http.Client{}
