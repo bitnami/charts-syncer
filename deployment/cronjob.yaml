@@ -1,0 +1,24 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: c3tsyncer
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: c3styncer
+            image: tompizmor/c3tsyncer:0.0.1-r0
+            args: ["sync", "--config", "/c3tsyncer.yaml", "-v", "8"]
+            volumeMounts:
+              - name: config
+                mountPath: /c3tsyncer.yaml
+                subPath: c3tsyncer.yaml
+          restartPolicy: OnFailure
+          volumes:
+            - name: config
+              configMap:
+                name: c3tsyncer-config

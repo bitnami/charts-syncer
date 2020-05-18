@@ -1,0 +1,19 @@
+#
+# Example config file
+#
+source:
+  repo:
+    kind: "HELM"
+    url: "http://localhost:8080" # local test source repo
+    # auth:
+    #   username: "USERNAME"
+    #   password: "PASSWORD"
+target:
+  containerRegistry: "demo.registry.io"
+  containerRepository: "tpizarro/demo"
+  repo:
+    kind: "CHARTMUSEUM"
+    url: "http://localhost:9090" # local test target repo
+    # auth:
+    #   username: "USERNAME"
+    #   password: "PASSWORD"
