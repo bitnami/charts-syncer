@@ -14,18 +14,18 @@ type ClassicHelmClient struct {
 	repo *api.Repo
 }
 
-// NewClassicHelmClient creates a new `ClassicHelmClient`
+// NewClassicHelmClient creates a new `ClassicHelmClient`.
 func NewClassicHelmClient(repo *api.Repo) *ClassicHelmClient {
 	return &ClassicHelmClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to classic helm repository
+// PublishChart publishes a packaged chart to classic helm repository.
 func (c *ClassicHelmClient) PublishChart(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to classic helm repo", filepath)
 	return errors.Errorf("Publishing to a Helm classic repository is not supported yet")
 }
 
-// DownloadChart downloads a packaged chart from a classic helm repository
+// DownloadChart downloads a packaged chart from a classic helm repository.
 func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error {
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
 	downloadURL := sourceRepo.Url + "/" + name + "-" + version + ".tgz"
@@ -43,7 +43,7 @@ func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version 
 	return nil
 }
 
-// ChartExists checks if a chart exists in the repo
+// ChartExists checks if a chart exists in the repo.
 func (c *ClassicHelmClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
 	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
 	index, err := utils.LoadIndexFromRepo(repo)
