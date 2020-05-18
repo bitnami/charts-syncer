@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/juju/errors"
@@ -117,4 +118,18 @@ func GetFileContentType(filepath string) (string, error) {
 	// content-type by returning "application/octet-stream" if no others seemed to match.
 	contentType := http.DetectContentType(buffer[:n])
 	return contentType, err
+}
+
+// ParseDate will parse a string date agains a fixed layout and return a time.Date value
+func ParseDate(date string) (time.Time, error) {
+	dateThreshold := time.Unix(0, 0)
+	if date != "" {
+		var err error
+		timeLayoutISO := "2006-01-02"
+		dateThreshold, err = time.Parse(timeLayoutISO, date)
+		if err != nil {
+			return dateThreshold, errors.Trace(err)
+		}
+	}
+	return dateThreshold, nil
 }
