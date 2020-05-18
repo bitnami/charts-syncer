@@ -48,7 +48,7 @@ func sync() error {
 	target := syncConfig.Target
 
 	// Create basic layout for date and parse flag to time type
-	dateThreshold, err := utils.ParseDate(fromDate)
+	dateThreshold, err := utils.GetDateThreshold(fromDate)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("Error parsing date: %w", err))
 	}
