@@ -78,7 +78,7 @@ func syncChart() error {
 			return errors.Trace(err)
 		}
 	} else {
-		if chartExistsInSource, err := utils.ChartExistInIndex(name, version, sourceIndex); err == nil {
+		if chartExistsInSource, err := utils.ChartExistInIndex(name, version, sourceIndex); chartExistsInSource && err == nil {
 			if chartExistsInSource {
 				if chartExistsInTarget, err := tc.ChartExists(name, version, target.Repo); err == nil {
 					if !chartExistsInTarget {
@@ -97,7 +97,7 @@ func syncChart() error {
 				}
 			}
 		} else {
-			return errors.Trace(err)
+			return errors.Errorf("Chart %s-%s not found in source index.yaml", name, version)
 		}
 	}
 	return nil
