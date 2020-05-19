@@ -22,7 +22,6 @@ var (
 			Url:  "http://fake.target/com",
 			Kind: "CHARTMUSEUM",
 			Auth: &api.Auth{
-				Username: "user",
 				Password: "password",
 			},
 		},
@@ -36,8 +35,6 @@ func TestDownload(t *testing.T) {
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 	defer os.RemoveAll(testTmpDir)
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
-	}
 	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
 	// Create client for source repo
 	sc, err := repo.NewClient(source.Repo)
