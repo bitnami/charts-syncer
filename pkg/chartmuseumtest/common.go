@@ -21,7 +21,7 @@ var (
 		{
 			"real service",
 			func(t *testing.T) {
-				key := "TEST_CHART_PUBLISHER_WITH_REAL_CHARTMUSEUM"
+				key := "TEST_WITH_REAL_CHARTMUSEUM"
 				if os.Getenv(key) == "" {
 					t.Skipf("skipping because %s env var not set", key)
 				}
