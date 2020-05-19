@@ -20,12 +20,12 @@ type ChartMuseumClient struct {
 	repo *api.Repo
 }
 
-// NewChartMuseumClient creates a new `ChartMuseumClient`
+// NewChartMuseumClient creates a new `ChartMuseumClient`.
 func NewChartMuseumClient(repo *api.Repo) *ChartMuseumClient {
 	return &ChartMuseumClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to ChartsMuseum repository
+// PublishChart publishes a packaged chart to ChartsMuseum repository.
 func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to chartmuseum repo", filepath)
 	publishURL := targetRepo.Url + "/api/charts"
@@ -80,7 +80,7 @@ func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) 
 	return errors.Trace(err)
 }
 
-// DownloadChart downloads a packaged chart from ChartsMuseum repository
+// DownloadChart downloads a packaged chart from ChartsMuseum repository.
 func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error {
 	klog.V(3).Infof("Downloading %s-%s from chartmuseum repo", name, version)
 	downloadURL := sourceRepo.Url + "/charts/" + name + "-" + version + ".tgz"
@@ -98,7 +98,7 @@ func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version 
 	return nil
 }
 
-// ChartExists checks if a chart exists in the repo
+// ChartExists checks if a chart exists in the repo.
 func (c *ChartMuseumClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
 	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
 	index, err := utils.LoadIndexFromRepo(repo)

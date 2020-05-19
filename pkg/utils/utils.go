@@ -14,7 +14,7 @@ import (
 	"k8s.io/klog"
 )
 
-// LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
+// LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object.
 func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
 	defer os.Remove(indexFile)
@@ -28,7 +28,7 @@ func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	return index, errors.Trace(err)
 }
 
-// ChartExistInIndex checks if a specific chart version is present in the index file
+// ChartExistInIndex checks if a specific chart version is present in the index file.
 func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (bool, error) {
 	chartVersionFound := false
 	var err error
@@ -52,7 +52,7 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (
 }
 
 // downloadIndex will download the index.yaml file of a chart repository and return
-// the path to the downloaded file
+// the path to the downloaded file.
 func downloadIndex(repo *api.Repo) (string, error) {
 	downloadURL := repo.Url + "/index.yaml"
 
@@ -87,7 +87,7 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	return out.Name(), errors.Trace(err)
 }
 
-// Untar will uncompress a tarball
+// Untar will uncompress a tarball.
 func Untar(filepath, destDir string) error {
 	// Uncompress tarball
 	klog.V(3).Info("Extracting source chart...")
@@ -99,7 +99,7 @@ func Untar(filepath, destDir string) error {
 	return errors.Trace(err)
 }
 
-// GetFileContentType returns the content type of a file
+// GetFileContentType returns the content type of a file.
 func GetFileContentType(filepath string) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.
 	buffer := make([]byte, 512)

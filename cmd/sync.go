@@ -74,18 +74,14 @@ func sync() error {
 	for chartName := range sourceIndex.Entries {
 		// Iterate over charts versions
 		for i := range sourceIndex.Entries[chartName] {
-			// Get version and publishing date
 			chartVersion := sourceIndex.Entries[chartName][i].Metadata.Version
 			publishingTime := sourceIndex.Entries[chartName][i].Created
-			// Skip if publishing date before date threshold
 			if publishingTime.Before(dateThreshold) {
 				continue
 			}
-			// Skip if chart-version already in target repo
 			if chartExists, _ := tc.ChartExists(chartName, chartVersion, target.Repo); chartExists {
 				continue
 			}
-			// Skip if dry-run mode enabled
 			if dryRun {
 				klog.Infof("dry-run: Chart %s-%s pending to be synced", chartName, chartVersion)
 				continue
