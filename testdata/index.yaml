@@ -1,0 +1,380 @@
+apiVersion: v1
+entries:
+  common:
+  - apiVersion: v1
+    appVersion: 0.2.1
+    created: "2020-05-13T12:45:29.903304922Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: e39fa5079ce6f0722854b4dce8485412931b2a5afa374429d790025dbfb8c9bd
+    engine: gotpl
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+    - common
+    - helper
+    - template
+    - function
+    - bitnami
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: common
+    sources:
+    - https://github.com/bitnami/charts
+    urls:
+    - https://fake.chart.repo.com/testing/common-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v1
+    appVersion: 0.1.0
+    created: "2020-04-17T14:11:28.322778531Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: 3541c1e86f11a201547578a8cc714b6980eb8a0364af52988e009d32be84f105
+    engine: gotpl
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+    - common
+    - helper
+    - template
+    - function
+    - bitnami
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: common
+    sources:
+    - https://github.com/bitnami/charts
+    urls:
+    - https://fake.chart.repo.com/testing/common-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v1
+    appVersion: 0.1.0
+    created: "2020-04-09T11:02:34.876896327Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: d14ba3587d2061b1a7198d18ca93fb8312d8dfacd24d2d7d292eb8571d457afe
+    engine: gotpl
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+    - common
+    - helper
+    - template
+    - function
+    - bitnami
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: common
+    sources:
+    - https://github.com/bitnami/charts
+    urls:
+    - https://fake.chart.repo.com/testing/common-0.1.1.tgz
+    version: 0.1.1
+  etcd:
+  - apiVersion: v1
+    appVersion: 3.4.7
+    created: "2020-05-11T21:18:22.551739626Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.8.0.tgz
+    version: 4.8.0
+  - apiVersion: v1
+    appVersion: 3.4.7
+    created: "2020-04-16T18:58:15.579758366Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: 75d13e9069e1fb3877e352be98cf67bcbfd5d3f139ffc72696fdfad030693597
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.7.4.tgz
+    version: 4.7.4
+  - apiVersion: v1
+    appVersion: 3.4.7
+    created: "2020-04-03T10:36:05.425968859Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: 21dfcada3dd558cf303cdae834d1819f414541c7240017603f4144a13578c264
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.7.3.tgz
+    version: 4.7.3
+  - apiVersion: v1
+    appVersion: 3.4.7
+    created: "2020-04-02T01:09:57.548232741Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: 4cead44a68f3c0db322abd676907fe13f6e8b829649f08d16366c0be508f6745
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.7.2.tgz
+    version: 4.7.2
+  - apiVersion: v1
+    appVersion: 3.4.6
+    created: "2020-03-29T22:12:57.602967829Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: 070f09871f6d62d2cea7e1cc9f758dd0dc9cc7ca9568de5c89c69014f160bbc4
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.7.1.tgz
+    version: 4.7.1
+  - apiVersion: v1
+    appVersion: 3.4.5
+    created: "2020-03-27T17:19:47.68587173Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: 62afa05c863e0ee5dfec646f19f02b7b8a94fb9d8d0f043a81874e5b35e3c1bf
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - https://fake.chart.repo.com/testing/etcd-4.7.0.tgz
+    version: 4.7.0
+  nginx:
+  - apiVersion: v1
+    appVersion: 1.17.10
+    created: "2020-05-11T20:55:12.15798248Z"
+    description: Chart for the nginx server
+    digest: 428312557ee2129f3baa9cae939d49c4e60d1b4deca88cbd7d4fbf1106836d69
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.3.0.tgz
+    version: 5.3.0
+  - apiVersion: v1
+    appVersion: 1.17.10
+    created: "2020-04-30T15:10:41.611088627Z"
+    description: Chart for the nginx server
+    digest: 49d200ef0f96ab81305280c97256610e9858eb13dcee5ec89f9f0e104b875376
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.2.1.tgz
+    version: 5.2.1
+  - apiVersion: v1
+    appVersion: 1.16.1
+    created: "2020-04-16T09:39:35.372880754Z"
+    description: Chart for the nginx server
+    digest: c8af92f12160090663e9365e96030e9d795e0034ae8eab201dac9b82ca7d7452
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.2.0.tgz
+    version: 5.2.0
+  - apiVersion: v1
+    appVersion: 1.16.1
+    created: "2020-04-09T16:57:06.79255872Z"
+    description: Chart for the nginx server
+    digest: bf9c725f6c54ccf12009ed68d786e9fa3a88c3a410069c37b3b70812fb5f52ca
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.1.3.tgz
+    version: 5.1.3
+  - apiVersion: v1
+    appVersion: 1.16.1
+    created: "2020-04-06T18:43:34.995745293Z"
+    description: Chart for the nginx server
+    digest: 4441317eb3270a84a4263af368ba0c4ffa80a3a4009c0a0876a433bd3b6f80ac
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.1.2.tgz
+    version: 5.1.2
+  - apiVersion: v1
+    appVersion: 1.16.1
+    created: "2020-04-03T10:35:28.882377923Z"
+    description: Chart for the nginx server
+    digest: 80ac9c61583eeba856a746958e0131223bf64bcabf108bb15b4dfe741c77a86b
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.1.1.tgz
+    version: 5.1.1
+  - apiVersion: v1
+    appVersion: 1.16.1
+    created: "2020-03-26T16:49:22.751325366Z"
+    description: Chart for the nginx server
+    digest: 5a36fd45147e1035963b07e422d32caf3e24a6828f12669b7202dbafb65a3949
+    engine: gotpl
+    home: http://www.nginx.org
+    icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+    keywords:
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: nginx
+    sources:
+    - https://github.com/bitnami/bitnami-docker-nginx
+    urls:
+    - https://fake.chart.repo.com/testing/nginx-5.1.0.tgz
+    version: 5.1.0
+generated: "2020-05-13T12:45:29.902443152Z"
