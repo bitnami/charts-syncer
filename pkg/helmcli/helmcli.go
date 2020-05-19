@@ -9,7 +9,7 @@ import (
 	"k8s.io/klog"
 )
 
-// Package uses helm cli to package a chart and return the path to the packaged chart
+// Package uses helm cli to package a chart and return the path to the packaged chart.
 func Package(chartPath, name, version, destDir string) (string, error) {
 	cmd := exec.Command("helm", "package", chartPath, "--destination", destDir)
 	_, err := cmd.Output()
@@ -20,7 +20,7 @@ func Package(chartPath, name, version, destDir string) (string, error) {
 	return packagedChartPath, errors.Trace(err)
 }
 
-// UpdateDependencies uses helm cli to update dependencies of a chart
+// UpdateDependencies uses helm cli to update dependencies of a chart.
 func UpdateDependencies(chartPath string) error {
 	klog.V(3).Info(`Updating dependencies with "helm dependency update"`)
 	cmd := exec.Command("helm", "dependency", "update", chartPath)
@@ -30,7 +30,7 @@ func UpdateDependencies(chartPath string) error {
 	return nil
 }
 
-// AddRepoToHelm uses helm cli to add a repo to the helm CLI
+// AddRepoToHelm uses helm cli to add a repo to the helm CLI.
 func AddRepoToHelm(url string, auth *api.Auth) error {
 	var cmd *exec.Cmd
 	if auth != nil && auth.Username != "" && auth.Password != "" {

@@ -18,7 +18,7 @@ import (
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
-// SyncAllVersions will sync all versions of a specific char.
+// SyncAllVersions will sync all versions of a specific chart.
 func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool, index *helmRepo.IndexFile, dryRun bool) error {
 	var errs error
 	// Create client for target repo
@@ -44,7 +44,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 	return errs
 }
 
-// Sync is the main function. It downloads, transform, package and publish a chart
+// Sync is the main function. It downloads, transform, package and publish a chart.
 func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "c3tsyncer")

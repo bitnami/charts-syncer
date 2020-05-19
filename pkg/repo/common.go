@@ -10,7 +10,7 @@ import (
 	"k8s.io/klog"
 )
 
-// download downloads a packaged from the given repo
+// download downloads a packaged from the given repo.
 func download(filepath string, name string, version string, downloadURL string, sourceRepo *api.Repo) error {
 	// Get the data
 	req, err := http.NewRequest("GET", downloadURL, nil)
