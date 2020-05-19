@@ -50,7 +50,7 @@ func sync() error {
 	// Create basic layout for date and parse flag to time type
 	dateThreshold, err := utils.GetDateThreshold(fromDate)
 	if err != nil {
-		return errors.Trace(fmt.Errorf("Error parsing date: %w", err))
+		return errors.Trace(err)
 	}
 	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)

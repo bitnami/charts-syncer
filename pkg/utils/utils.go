@@ -15,6 +15,10 @@ import (
 	"k8s.io/klog"
 )
 
+const (
+	timeLayoutISO = "2006-01-02"
+)
+
 // LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
 func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
@@ -122,14 +126,12 @@ func GetFileContentType(filepath string) (string, error) {
 
 // GetDateThreshold will parse a string date agains a fixed layout and return a time.Date value
 func GetDateThreshold(date string) (time.Time, error) {
-	dateThreshold := time.Unix(0, 0)
-	if date != "" {
-		var err error
-		timeLayoutISO := "2006-01-02"
-		dateThreshold, err = time.Parse(timeLayoutISO, date)
-		if err != nil {
-			return dateThreshold, errors.Trace(err)
-		}
+	if date == "" {
+		return time.Unix(0, 0), nil
+	}
+	dateThreshold, err := time.Parse(timeLayoutISO, date)
+	if err != nil {
+		return dateThreshold, errors.Trace(err)
 	}
 	return dateThreshold, nil
 }
