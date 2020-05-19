@@ -10,7 +10,7 @@ import (
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 )
 
-// updateValuesFile performs some substitutions to a given values.yaml file
+// updateValuesFile performs some substitutions to a given values.yaml file.
 func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 	if err := updateContainerImageRegistry(valuesFile, targetRepo); err != nil {
 		return errors.Annotatef(err, "Error updating %s file", valuesFile)
@@ -21,7 +21,7 @@ func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 	return nil
 }
 
-// updateContainerImageRepository updates the container repository in a values.yaml file
+// updateContainerImageRepository updates the container repository in a values.yaml file.
 func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRepo) error {
 	regex := regexp.MustCompile(`(?m)(repository:[[:blank:]])(.*)(/)`)
 	values, err := ioutil.ReadFile(valuesFile)
@@ -40,7 +40,7 @@ func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRep
 	return errors.Trace(err)
 }
 
-// updateContainerImageRegistry updates the container registry in a values.yaml file
+// updateContainerImageRegistry updates the container registry in a values.yaml file.
 func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo) error {
 	regex := regexp.MustCompile(`(?m)(registry:[[:blank:]])(.*)(.*$)`)
 	values, err := ioutil.ReadFile(valuesFile)

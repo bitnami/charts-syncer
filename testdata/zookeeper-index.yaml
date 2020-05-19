@@ -1,0 +1,65 @@
+apiVersion: v1
+entries:
+  zookeeper:
+  - apiVersion: v1
+    appVersion: 3.6.1
+    created: "2020-05-19T11:23:10.913475959Z"
+    description: A centralized service for maintaining configuration information,
+      naming, providing distributed synchronization, and providing group services
+      for distributed applications.
+    digest: f355a3959e73a12a27509ea6ece34f77d91db093c8f62deebadcceea6ea138e8
+    home: https://zookeeper.apache.org/
+    icon: https://bitnami.com/assets/stacks/zookeeper/img/zookeeper-stack-110x117.png
+    keywords:
+    - zookeeper
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: zookeeper
+    sources:
+    - https://github.com/bitnami/bitnami-docker-zookeeper
+    urls:
+    - charts/zookeeper-5.14.3.tgz
+    version: 5.14.3
+  - apiVersion: v1
+    appVersion: 3.6.1
+    created: "2020-05-19T11:23:14.677556112Z"
+    description: A centralized service for maintaining configuration information,
+      naming, providing distributed synchronization, and providing group services
+      for distributed applications.
+    digest: eadb2f3a439ed757c38b2bfb06df039c9924d0d6e782b7faeab9571f018f51b7
+    home: https://zookeeper.apache.org/
+    icon: https://bitnami.com/assets/stacks/zookeeper/img/zookeeper-stack-110x117.png
+    keywords:
+    - zookeeper
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: zookeeper
+    sources:
+    - https://github.com/bitnami/bitnami-docker-zookeeper
+    urls:
+    - charts/zookeeper-5.14.2.tgz
+    version: 5.14.2
+  - apiVersion: v1
+    appVersion: 3.6.1
+    created: "2020-05-19T11:23:18.561638821Z"
+    description: A centralized service for maintaining configuration information,
+      naming, providing distributed synchronization, and providing group services
+      for distributed applications.
+    digest: 1bffedde4f0abf7fdc8584e5321d80529c2a8f3aa4347c0e84cca7cf11c15e7e
+    home: https://zookeeper.apache.org/
+    icon: https://bitnami.com/assets/stacks/zookeeper/img/zookeeper-stack-110x117.png
+    keywords:
+    - zookeeper
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: zookeeper
+    sources:
+    - https://github.com/bitnami/bitnami-docker-zookeeper
+    urls:
+    - charts/zookeeper-5.14.1.tgz
+    version: 5.14.1
+generated: "2020-05-19T11:23:26Z"
+serverInfo: {}
