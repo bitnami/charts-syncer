@@ -2,7 +2,6 @@
 
 Sync chart packages between chart repositories
 
-
 ## Usage
 
 #### Sync a specific chart
@@ -85,10 +84,10 @@ In order to ease and accelerate the deployment, basic Kubernetes templates have 
 
 1. Build a docker image containing the tool and push it to a docker registry so later on it can be consumed from Kubernetes.
 
-~~~bash
-$ docker build -t IMAGE_NAME:TAG .
-$ docker push IMAGE_NAME:TAG
-~~~
+    ~~~bash
+    $ docker build -t IMAGE_NAME:TAG .
+    $ docker push IMAGE_NAME:TAG
+    ~~~
 
 1. Edit `deployment/cronjob.yaml` and replace the `IMAGE_NAME:TAG` placeholder by the real image name and tag.
 
@@ -96,13 +95,13 @@ $ docker push IMAGE_NAME:TAG
 
 1. Edit the configuration file from `deployment/configmap.yaml` and specify your source and target chart repositories.
 
-1. (optional) Configure credentials. If any of your source or target chart repository is using basic authentication you need to specify the credentials. See #manage-credentials section to check current options.
+1. (optional) Configure credentials. If any of your source or target chart repository is using basic authentication you need to specify the credentials. See [Manage credentials](#manage-credentials) section to check current options.
 
 1. Deploy the manifests to your Kubernetes cluster.
 
-~~~bash
-$ kubectl create -f deployment/
-~~~
+    ~~~bash
+    $ kubectl create -f deployment/
+    ~~~
 
 ### Manage credentials
 
