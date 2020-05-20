@@ -36,7 +36,6 @@ func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 // ChartExistInIndex checks if a specific chart version is present in the index file.
 func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (bool, error) {
 	chartVersionFound := false
-	//var err error
 	if index.Entries[name] != nil {
 		klog.V(3).Infof("Chart %q exists in index.yaml file. Searching %q version", name, version)
 		for i := range index.Entries[name] {
@@ -48,10 +47,8 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (
 		}
 		if !chartVersionFound {
 			return false, nil
-			//return false, errors.Errorf("Chart version %q doesn't exist in index.yaml file", version)
 		}
 	} else {
-		//return false, errors.Errorf("%q chart doesn't exist in index.yaml", name)
 		return false, nil
 	}
 
@@ -110,7 +107,6 @@ func Untar(filepath, destDir string) error {
 func GetFileContentType(filepath string) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.
 	buffer := make([]byte, 512)
-	// Open File
 	file, err := os.Open(filepath)
 	if err != nil {
 		panic(err)
