@@ -4,21 +4,22 @@ metadata:
   name: c3tsyncer-config
 data:
   c3tsyncer.yaml: |-
+    #
+    # Example config file
+    #
     source:
-      # url: "https://charts.bitnami.com/bitnami" # bitnami repo
-      # url: "https://charts.trials.tac.bitnami.com/canary" # canary repo
-      # url: "https://charts.trials.tac.bitnami.com/demo" # demo repo
-      url: "http://localhost:8080" # local test repo
-      containerRegistry: "docker.io"
-      containerRepository: "bitnami"
-      kind: "helm"
-      # auth:
-      #   username: "USERNAME"
-      #   password: "PASSWORD"
+      repo:
+        kind: "HELM"
+        url: "http://localhost:8080" # local test source repo
+        # auth:
+        #   username: "USERNAME"
+        #   password: "PASSWORD"
     target:
-      url: "http://localhost:9090"
-      containerRegistry: "demo.registry.io"
-      containerRepository: "tpizarro/demo"
-      # auth:
-      #   username: "USERNAME"
-      #   password: "PASSWORD"
+      containerRegistry: "k8s.container.registry.io"
+      containerRepository: "repository/demo/k8s"
+      repo:
+        kind: "CHARTMUSEUM"
+        url: "http://localhost:9090" # local test target repo
+        # auth:
+        #   username: "USERNAME"
+        #   password: "PASSWORD"
