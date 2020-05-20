@@ -11,8 +11,30 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: c3styncer
-            image: tompizmor/c3tsyncer:0.0.1-r0
-            args: ["sync", "--config", "/c3tsyncer.yaml", "-v", "8"]
+            imagePullPolicy: Always
+            image: IMAGE_NAME:TAG
+            args: ["sync", "--config", "/c3tsyncer.yaml", "-v", "4"]
+            # env:
+            #   - name: SOURCE_REPO_USERNAME
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: chart-syncer-credentials
+            #         key: source-username
+            #   - name: SOURCE_REPO_PASSWORD
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: chart-syncer-credentials
+            #         key: source-password
+            #   - name: TARGET_REPO_USERNAME
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: chart-syncer-credentials
+            #         key: target-username
+            #   - name: TARGET_REPO_PASSWORD
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: chart-syncer-credentials
+            #         key: target-password
             volumeMounts:
               - name: config
                 mountPath: /c3tsyncer.yaml

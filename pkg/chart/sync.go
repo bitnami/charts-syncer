@@ -109,7 +109,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
 	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
-		return errors.Annotatef(err, "Error downloading chart %s-%s from source repo", name, version)
+		return errors.Annotatef(err, "Error publishing chart %s-%s to target repo", name, version)
 	}
 	klog.Infof("Chart %s-%s published successfully", name, version)
 
