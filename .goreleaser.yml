@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod download
+    - go install google.golang.org/protobuf/cmd/protoc-gen-go
     - go generate ./...
 builds:
   - id: release
