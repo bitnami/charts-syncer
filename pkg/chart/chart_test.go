@@ -10,14 +10,28 @@ import (
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
 )
 
-func TestDownload(t *testing.T) {
-	// Define source repo
-	source := &api.SourceRepo{
+var (
+	source = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "https://charts.bitnami.com/bitnami",
 			Kind: "HELM",
 		},
 	}
+	target = &api.TargetRepo{
+		Repo: &api.Repo{
+			Url:  "http://fake.target/com",
+			Kind: "CHARTMUSEUM",
+			Auth: &api.Auth{
+				Username: "user",
+				Password: "password",
+			},
+		},
+		ContainerRegistry:   "test.registry.io",
+		ContainerRepository: "test/repo",
+	}
+)
+
+func TestDownload(t *testing.T) {
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 	defer os.RemoveAll(testTmpDir)
@@ -45,20 +59,15 @@ func TestUpdateValuesFile(t *testing.T) {
 global:
   imageRegistry: ""
 image:
-  registry: new.registry.io
-  repository: new/repo/zookeeper
+  registry: test.registry.io
+  repository: test/repo/zookeeper
   tag: 3.5.7-r7
 volumePermissions:
   enabled: false
   image:
-    registry: new.registry.io
-    repository: new/repo/custom-base-image
+    registry: test.registry.io
+    repository: test/repo/custom-base-image
     tag: r0`
-	// Define source repo
-	targetRepo := &api.TargetRepo{
-		ContainerRegistry:   "new.registry.io",
-		ContainerRepository: "new/repo",
-	}
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 	defer os.RemoveAll(testTmpDir)
@@ -79,7 +88,7 @@ volumePermissions:
 		t.Errorf("Error writting destination file")
 	}
 
-	updateValuesFile(destValuesFilePath, targetRepo)
+	updateValuesFile(destValuesFilePath, target)
 	valuesFile, err := ioutil.ReadFile(destValuesFilePath)
 	if err != nil {
 		t.Fatal(err)

@@ -14,30 +14,6 @@ import (
 )
 
 func TestManageDependencies(t *testing.T) {
-	// Define source repo
-	source := &api.SourceRepo{
-		Repo: &api.Repo{
-			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "HELM",
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
-			},
-		},
-	}
-	// Define target repo
-	target := &api.TargetRepo{
-		Repo: &api.Repo{
-			Url:  "http://fake.target/com",
-			Kind: "CHARTMUSEUM",
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
-			},
-		},
-		ContainerRegistry:   "test.registry.io",
-		ContainerRepository: "test/repo",
-	}
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 	defer os.RemoveAll(testTmpDir)
@@ -68,26 +44,9 @@ func TestSyncMissingDependencies(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Define source repo
-			source := &api.SourceRepo{
-				Repo: &api.Repo{
-					Url:  "https://charts.bitnami.com/bitnami",
-					Kind: "HELM",
-				},
-			}
-			// Define source repo
-			target := &api.TargetRepo{
-				Repo: &api.Repo{
-					Url:  url,
-					Kind: "CHARTMUSEUM",
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
-					},
-				},
-				ContainerRegistry:   "test.registry.io",
-				ContainerRepository: "test/repo",
-			}
+			// Update URL for target repo
+			target.Repo.Url = url
+
 			// dependencies of redmine-14.1.18 chart
 			missingDependencies := map[string]string{
 				"mariadb":    "7.3.21",
@@ -106,30 +65,6 @@ func TestSyncMissingDependencies(t *testing.T) {
 }
 
 func TestUpdateRequirementsFile(t *testing.T) {
-	// Define source repo
-	source := &api.SourceRepo{
-		Repo: &api.Repo{
-			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "HELM",
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
-			},
-		},
-	}
-	// Define source repo
-	target := &api.TargetRepo{
-		Repo: &api.Repo{
-			Url:  "http://fake.target/com",
-			Kind: "CHARTMUSEUM",
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
-			},
-		},
-		ContainerRegistry:   "test.registry.io",
-		ContainerRepository: "test/repo",
-	}
 	chartDependencies := map[string]string{
 		"zookeeper": "5.5.5",
 	}
