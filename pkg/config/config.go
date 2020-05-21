@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// LoadConfig unmarshall config file into Config struct
+// LoadConfig unmarshall config file into Config struct.
 func LoadConfig(Config *api.Config) error {
 	viper.BindEnv("source.auth.username", "SOURCE_AUTH_USERNAME")
 	viper.BindEnv("source.auth.password", "SOURCE_AUTH_PASSWORD")

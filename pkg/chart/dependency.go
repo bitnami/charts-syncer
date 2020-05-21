@@ -96,13 +96,15 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 			deps.Dependencies[i].Version = chartDependenciesMap[deps.Dependencies[i].Name]
 			// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 			// the repository.
-			// For example, old charts pointing to helm/charts repo
+			// For example, old dependencies obtained from helm/charts repo
 			if deps.Dependencies[i].Repository == sourceRepo.Url {
 				deps.Dependencies[i].Repository = target.Repo.Url
 			}
 		}
-		// Write updated requirements yamls file
-		writeRequirementsFile(chartPath, deps)
+		// Write updated requirements.yaml file
+		if err := writeRequirementsFile(chartPath, deps); err != nil {
+			return errors.Trace(err)
+		}
 		if err := helmcli.UpdateDependencies(chartPath); err != nil {
 			return errors.Trace(err)
 		}
@@ -110,7 +112,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	return errs
 }
 
-// writeLock writes a lockfile to disk
+// writeRequirementsFile writes a requirements.yaml file to disk
 func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	data, err := yaml.Marshal(deps)
 	if err != nil {
