@@ -91,14 +91,14 @@ func syncChart() error {
 		}
 		if targetExists {
 			klog.Infof("Chart %s-%s already exists in target repo", name, version)
-		} else {
-			if dryRun {
-				klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
-			} else {
-				if err := chart.Sync(name, version, source.Repo, target, false); err != nil {
-					return errors.Trace(err)
-				}
-			}
+			return nil
+		}
+		if dryRun {
+			klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
+			return nil
+		}
+		if err := chart.Sync(name, version, source.Repo, target, false); err != nil {
+			return errors.Trace(err)
 		}
 	}
 	return nil

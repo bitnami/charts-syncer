@@ -20,8 +20,8 @@ type dependencies struct {
 	Dependencies []*helmChart.Dependency `json:"dependencies"`
 }
 
-// manageDependencies takes care of updating dependencies to correct version and sync to target repo if necesary
-func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool) error {
+// syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary
+func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool) error {
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
 	var missingDependencies = false
@@ -57,7 +57,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 			klog.V(3).Infof("Dependency %s-%s already synced", depName, depVersion)
 			continue
 		}
-		if !syncDependencies {
+		if !syncDeps {
 			missingDependencies = true
 			errs = multierror.Append(errs, errors.Errorf("Please sync %s-%s dependency first", depName, depVersion))
 			continue
@@ -71,7 +71,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 			return errors.Trace(err)
 		}
 		if !chartExists {
-			return errors.Errorf("Dependency %s-%s not available yet")
+			return errors.Errorf("Dependency %s-%s not available yet", depName, depVersion)
 		}
 		klog.Infof("Dependency %s-%s synced", depName, depVersion)
 	}

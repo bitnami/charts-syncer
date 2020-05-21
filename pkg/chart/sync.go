@@ -19,7 +19,7 @@ import (
 )
 
 // SyncAllVersions will sync all versions of a specific chart.
-func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool, index *helmRepo.IndexFile, dryRun bool) error {
+func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool, index *helmRepo.IndexFile, dryRun bool) error {
 	var errs error
 	// Create client for target repo
 	tc, err := repo.NewClient(target.Repo)
@@ -32,7 +32,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 				if dryRun {
 					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, index.Entries[name][i].Metadata.Version)
 				} else {
-					if err := Sync(name, index.Entries[name][i].Metadata.Version, sourceRepo, target, syncDependencies); err != nil {
+					if err := Sync(name, index.Entries[name][i].Metadata.Version, sourceRepo, target, syncDeps); err != nil {
 						errs = multierror.Append(errs, errors.Trace(err))
 					}
 				}
@@ -45,7 +45,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 }
 
 // Sync is the main function. It downloads, transform, package and publish a chart.
-func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDependencies bool) error {
+func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "c3tsyncer")
 	defer os.RemoveAll(tmpDir)
@@ -80,7 +80,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	// If chart has dependencies, check that they are already in the target repo.
 	chartPath := path.Join(destDir, name)
 	if _, err := os.Stat(path.Join(chartPath, "requirements.lock")); err == nil {
-		if err := manageDependencies(chartPath, sourceRepo, target, syncDependencies); err != nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, syncDeps); err != nil {
 			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
 		}
 	}
