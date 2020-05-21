@@ -27,7 +27,6 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	var missingDependencies = false
 	requirementsLockFile := path.Join(chartPath, "requirements.lock")
 
-	// Load requirements lock info
 	requirementsLock, err := ioutil.ReadFile(requirementsLockFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -38,31 +37,43 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 		return errors.Annotatef(err, "Error unmarshaling %s file", requirementsLockFile)
 	}
 
-	// Create client for target repo
 	tc, err := repo.NewClient(target.Repo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
 
-	// Check list of dependencies and missing dependencies
-	dependenciesMap, missingDependenciesMap, err := getDependencies(lock, sourceRepo, target, tc)
+	dependenciesMap, err := getDependencies(lock, sourceRepo, target, tc)
 	if err != nil {
 		return errors.Trace(err)
 	}
-
-	// Sync missing dependencies
-	if missingDependenciesMap != nil {
-		if syncDependencies {
-			if err := syncMissingDependencies(missingDependenciesMap, sourceRepo, target, tc); err != nil {
-				return errors.Trace(err)
-			}
-		} else {
-			for depName := range missingDependenciesMap {
-				depVersion := missingDependenciesMap[depName]
-				errs = multierror.Append(errs, errors.Errorf("Please sync %s-%s dependency first", depName, depVersion))
-				missingDependencies = true
-			}
+	for i := range lock.Dependencies {
+		depName := lock.Dependencies[i].Name
+		depVersion := lock.Dependencies[i].Version
+		depRepository := lock.Dependencies[i].Repository
+		if depRepository != sourceRepo.Url {
+			continue
 		}
+		if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); chartExists {
+			klog.V(3).Infof("Dependency %s-%s already synced", depName, depVersion)
+			continue
+		}
+		if !syncDependencies {
+			missingDependencies = true
+			errs = multierror.Append(errs, errors.Errorf("Please sync %s-%s dependency first", depName, depVersion))
+			continue
+		}
+		klog.Infof("Dependency %s-%s not synced yet. Syncing now", depName, depVersion)
+		if err := Sync(depName, depVersion, sourceRepo, target, true); err != nil {
+			return errors.Trace(err)
+		}
+		chartExists, err := tc.ChartExists(depName, depVersion, target.Repo)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		if !chartExists {
+			return errors.Errorf("Dependency %s-%s not available yet")
+		}
+		klog.Infof("Dependency %s-%s synced", depName, depVersion)
 	}
 
 	if !missingDependencies {
@@ -77,23 +88,15 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	return errs
 }
 
-// getDependencies returns the list of dependencies not synced yet
-func getDependencies(lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo, tc repo.ChartRepoAPI) (map[string]string, map[string]string, error) {
+// getDependencies returns the list of dependencies
+func getDependencies(lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo, tc repo.ChartRepoAPI) (map[string]string, error) {
 	dependenciesMap := make(map[string]string)
-	missingDependenciesMap := make(map[string]string)
 	for i := range lock.Dependencies {
 		depName := lock.Dependencies[i].Name
 		depVersion := lock.Dependencies[i].Version
-		depRepository := lock.Dependencies[i].Repository
 		dependenciesMap[depName] = depVersion
-		if depRepository == sourceRepo.Url {
-			if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); !chartExists {
-				klog.V(3).Infof("Dependency %s-%s not synced yet", depName, depVersion)
-				missingDependenciesMap[depName] = depVersion
-			}
-		}
 	}
-	return dependenciesMap, missingDependenciesMap, nil
+	return dependenciesMap, nil
 }
 
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies
@@ -123,24 +126,6 @@ func updateRequirementsFile(chartPath string, chartDependencies map[string]strin
 	}
 	// Write updated requirements yamls file
 	writeRequirementsFile(chartPath, deps)
-	return nil
-}
-
-// syncMissingDependencies will sync the missing dependencies.
-func syncMissingDependencies(missingDependencies map[string]string, sourceRepo *api.Repo, target *api.TargetRepo, tc repo.ChartRepoAPI) error {
-	for depName := range missingDependencies {
-		depVersion := missingDependencies[depName]
-		klog.Infof("Dependency %s-%s not synced yet. Syncing now\n", depName, depVersion)
-		if err := Sync(depName, depVersion, sourceRepo, target, true); err != nil {
-			return errors.Trace(err)
-		}
-		// Verify is already published in target repo
-		if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); chartExists {
-			klog.Infof("Dependency %s-%s synced: Continuing with main chart\n", depName, depVersion)
-		} else {
-			klog.Infof("Dependency %s-%s not synced yet.\n", depName, depVersion)
-		}
-	}
 	return nil
 }
 
