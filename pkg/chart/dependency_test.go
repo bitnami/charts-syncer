@@ -54,35 +54,6 @@ func TestSyncDependencies(t *testing.T) {
 	}
 }
 
-// func TestSyncMissingDependencies(t *testing.T) {
-// 	for _, test := range chartmuseumtest.Tests {
-// 		t.Run(test.Desc, func(t *testing.T) {
-// 			// Check if the test should be skipped or allowed.
-// 			test.Skip(t)
-
-// 			url, cleanup := test.MakeServer(t)
-// 			defer cleanup()
-
-// 			// Update URL for target repo
-// 			target.Repo.Url = url
-
-// 			// dependencies of redmine-14.1.18 chart
-// 			missingDependencies := map[string]string{
-// 				"mariadb":    "7.3.21",
-// 				"postgresql": "8.9.1",
-// 			}
-// 			// Create client for target repo
-// 			tc, err := repo.NewClient(target.Repo)
-// 			if err != nil {
-// 				t.Fatal("could not create a client for the source repo", err)
-// 			}
-// 			if err := syncMissingDependencies(missingDependencies, source.Repo, target, tc); err != nil {
-// 				t.Fatal(err)
-// 			}
-// 		})
-// 	}
-// }
-
 func TestUpdateRequirementsFile(t *testing.T) {
 	chartDependencies := map[string]string{
 		"zookeeper": "5.5.5",
