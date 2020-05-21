@@ -78,26 +78,27 @@ func syncChart() error {
 			return errors.Trace(err)
 		}
 	} else {
-		if chartExistsInSource, err := utils.ChartExistInIndex(name, version, sourceIndex); chartExistsInSource && err == nil {
-			if chartExistsInSource {
-				if chartExistsInTarget, err := tc.ChartExists(name, version, target.Repo); err == nil {
-					if !chartExistsInTarget {
-						if dryRun {
-							klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
-						} else {
-							if err := chart.Sync(name, version, source.Repo, target, false); err != nil {
-								return errors.Trace(err)
-							}
-						}
-					} else {
-						klog.Infof("Chart %s-%s already exists in target repo", name, version)
-					}
-				} else {
+		srcExists, err := utils.ChartExistInIndex(name, version, sourceIndex)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		if !srcExists {
+			return errors.Errorf("Chart %s-%s not found in source index.yaml", name, version)
+		}
+		targetExists, err := tc.ChartExists(name, version, target.Repo)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		if targetExists {
+			klog.Infof("Chart %s-%s already exists in target repo", name, version)
+		} else {
+			if dryRun {
+				klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
+			} else {
+				if err := chart.Sync(name, version, source.Repo, target, false); err != nil {
 					return errors.Trace(err)
 				}
 			}
-		} else {
-			return errors.Errorf("Chart %s-%s not found in source index.yaml", name, version)
 		}
 	}
 	return nil

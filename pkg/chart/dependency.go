@@ -30,7 +30,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	// Load requirements lock info
 	requirementsLock, err := ioutil.ReadFile(requirementsLockFile)
 	if err != nil {
-		return errors.Annotatef(err, "Error reading %s file", requirementsLockFile)
+		return errors.Trace(err)
 	}
 	lock := &helmChart.Lock{}
 	err = yaml.Unmarshal(requirementsLock, lock)
@@ -77,7 +77,7 @@ func manageDependencies(chartPath string, sourceRepo *api.Repo, target *api.Targ
 	return errs
 }
 
-// getMissingDependencies returns the list of dependencies not synced yet
+// getDependencies returns the list of dependencies not synced yet
 func getDependencies(lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo, tc repo.ChartRepoAPI) (map[string]string, map[string]string, error) {
 	dependenciesMap := make(map[string]string)
 	missingDependenciesMap := make(map[string]string)
@@ -102,7 +102,7 @@ func updateRequirementsFile(chartPath string, chartDependencies map[string]strin
 	// Update requirements.yaml file to point to target repo
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
-		return errors.Annotatef(err, "Error reading %s file", requirementsFile)
+		return errors.Trace(err)
 	}
 
 	deps := &dependencies{}
