@@ -24,11 +24,11 @@ func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
 	defer os.Remove(indexFile)
 	if err != nil {
-		return nil, errors.Errorf("Error downloading index.yaml: %w", err)
+		return nil, errors.Errorf("Error downloading index.yaml")
 	}
 	index, err := helmRepo.LoadIndexFile(indexFile)
 	if err != nil {
-		return nil, errors.Errorf("Error loading index.yaml: %w", err)
+		return nil, errors.Errorf("Error loading index.yaml")
 	}
 	return index, errors.Trace(err)
 }
