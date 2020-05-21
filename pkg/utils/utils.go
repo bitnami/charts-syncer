@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/juju/errors"
@@ -14,7 +15,11 @@ import (
 	"k8s.io/klog"
 )
 
-// LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object.
+const (
+	timeLayoutISO = "2006-01-02"
+)
+
+// LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
 func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
 	defer os.Remove(indexFile)
@@ -117,4 +122,16 @@ func GetFileContentType(filepath string) (string, error) {
 	// content-type by returning "application/octet-stream" if no others seemed to match.
 	contentType := http.DetectContentType(buffer[:n])
 	return contentType, err
+}
+
+// GetDateThreshold will parse a string date agains a fixed layout and return a time.Date value
+func GetDateThreshold(date string) (time.Time, error) {
+	if date == "" {
+		return time.Unix(0, 0), nil
+	}
+	dateThreshold, err := time.Parse(timeLayoutISO, date)
+	if err != nil {
+		return dateThreshold, errors.Trace(err)
+	}
+	return dateThreshold, nil
 }

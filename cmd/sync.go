@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/juju/errors"
@@ -49,14 +48,9 @@ func sync() error {
 	target := syncConfig.Target
 
 	// Create basic layout for date and parse flag to time type
-	dateThreshold := time.Unix(0, 0)
-	if fromDate != "" {
-		var err error
-		timeLayoutISO := "2006-01-02"
-		dateThreshold, err = time.Parse(timeLayoutISO, fromDate)
-		if err != nil {
-			return errors.Trace(fmt.Errorf("Error parsing date: %w", err))
-		}
+	dateThreshold, err := utils.GetDateThreshold(fromDate)
+	if err != nil {
+		return errors.Trace(err)
 	}
 	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
