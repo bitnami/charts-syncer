@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod download
+    - curl -JLO "https://github.com/protocolbuffers/protobuf/releases/download/v3.12.1/protoc-3.12.1-linux-x86_64.zip" && unzip ./protoc-3.12.1-linux-x86_64.zip -d /usr/local
     - go install google.golang.org/protobuf/cmd/protoc-gen-go
     - go generate ./...
 builds:
