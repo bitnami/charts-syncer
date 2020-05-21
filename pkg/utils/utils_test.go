@@ -11,12 +11,15 @@ import (
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
-func TestLoadIndexFromRepo(t *testing.T) {
-	source := &api.SourceRepo{
+var (
+	source = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url: "https://charts.bitnami.com/bitnami",
 		},
 	}
+)
+
+func TestLoadIndexFromRepo(t *testing.T) {
 	// Load index.yaml info into index object
 	sourceIndex, err := LoadIndexFromRepo(source.Repo)
 	if err != nil {
@@ -44,11 +47,6 @@ func TestChartExistInIndex(t *testing.T) {
 }
 
 func TestDownloadIndex(t *testing.T) {
-	source := &api.SourceRepo{
-		Repo: &api.Repo{
-			Url: "https://charts.bitnami.com/bitnami",
-		},
-	}
 	indexFile, err := downloadIndex(source.Repo)
 	defer os.Remove(indexFile)
 	if err != nil {

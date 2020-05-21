@@ -12,6 +12,31 @@ import (
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartmuseumtest"
 )
 
+var (
+	sourceCM = &api.SourceRepo{
+		Repo: &api.Repo{
+			Url:  "http://fake.source.com",
+			Kind: "CHARTMUSEUM",
+			Auth: &api.Auth{
+				Username: "user",
+				Password: "password",
+			},
+		},
+	}
+	targetCM = &api.TargetRepo{
+		Repo: &api.Repo{
+			Url:  "http://fake.target.com",
+			Kind: "CHARTMUSEUM",
+			Auth: &api.Auth{
+				Username: "user",
+				Password: "password",
+			},
+		},
+		ContainerRegistry:   "test.registry.io",
+		ContainerRepository: "test/repo",
+	}
+)
+
 func TestPublishToChartmuseum(t *testing.T) {
 	for _, test := range chartmuseumtest.Tests {
 		t.Run(test.Desc, func(t *testing.T) {
@@ -21,37 +46,26 @@ func TestPublishToChartmuseum(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Define target repo
-			target := &api.TargetRepo{
-				Repo: &api.Repo{
-					Url:  url,
-					Kind: "CHARTMUSEUM",
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
-					},
-				},
-				ContainerRegistry:   "test.registry.io",
-				ContainerRepository: "test/repo",
-			}
+			// Update source repo url
+			targetCM.Repo.Url = url
 
 			// Create client for target repo
-			tc, err := NewClient(target.Repo)
+			tc, err := NewClient(targetCM.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.PublishChart("../../testdata/apache-7.3.15.tgz", target.Repo)
+			err = tc.PublishChart("../../testdata/apache-7.3.15.tgz", targetCM.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Check the chart really was added to the service's index.
-			req, err := http.NewRequest("GET", target.Repo.Url+"/api/charts/apache", nil)
+			req, err := http.NewRequest("GET", targetCM.Repo.Url+"/api/charts/apache", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			req.SetBasicAuth(target.Repo.Auth.Username, target.Repo.Auth.Password)
+			req.SetBasicAuth(targetCM.Repo.Auth.Username, targetCM.Repo.Auth.Password)
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
@@ -86,26 +100,18 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Define target repo
-			source := &api.SourceRepo{
-				Repo: &api.Repo{
-					Url:  url,
-					Kind: "CHARTMUSEUM",
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
-					},
-				},
-			}
+			// Update source repo url
+			sourceCM.Repo.Url = url
+
 			// Create client for source repo
-			sc, err := NewClient(source.Repo)
+			sc, err := NewClient(sourceCM.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
 
 			// If testing real docker chartmuseum, we must push the chart before download it
 			if test.Desc == "real service" {
-				sc.PublishChart("../../testdata/apache-7.3.15.tgz", source.Repo)
+				sc.PublishChart("../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
 			}
 
 			// Create temporary working directory
@@ -116,7 +122,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			}
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.DownloadChart(chartPath, "apache", "7.3.15", source.Repo)
+			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceCM.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,21 +134,16 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 }
 
 func TestChartExistsInChartMuseum(t *testing.T) {
-	// Define source repo
-	source := &api.SourceRepo{
-		Repo: &api.Repo{
-			// This repo is not a chartmuseum repo but there are no differences
-			// for the ChartExists function.
-			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "CHARTMUSEUM",
-		},
-	}
+	// Update source repo url
+	// This repo is not a chartmuseum repo but there are no differences
+	// for the ChartExists function.
+	sourceCM.Repo.Url = "https://charts.bitnami.com/bitnami"
 	// Create client for source repo
-	sc, err := NewClient(source.Repo)
+	sc, err := NewClient(sourceCM.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("grafana", "1.5.2", source.Repo)
+	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceCM.Repo)
 	if err != nil {
 		t.Fatal(err)
 	}

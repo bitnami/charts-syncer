@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartmuseumtest"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
@@ -24,26 +23,9 @@ func TestSync(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Define source repo
-			source := &api.SourceRepo{
-				Repo: &api.Repo{
-					Url:  "https://charts.bitnami.com/bitnami",
-					Kind: "HELM",
-				},
-			}
-			// Define source repo
-			target := &api.TargetRepo{
-				Repo: &api.Repo{
-					Url:  url,
-					Kind: "CHARTMUSEUM",
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
-					},
-				},
-				ContainerRegistry:   "test.registry.io",
-				ContainerRepository: "test/repo",
-			}
+			// Update target url
+			target.Repo.Url = url
+
 			name := "zookeeper"
 			version := "5.11.0"
 			if err := Sync(name, version, source.Repo, target, false); err != nil {
@@ -129,26 +111,9 @@ func TestSyncAllVersions(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Define source repo
-			source := &api.SourceRepo{
-				Repo: &api.Repo{
-					Url:  "https://charts.bitnami.com/bitnami",
-					Kind: "HELM",
-				},
-			}
-			// Define source repo
-			target := &api.TargetRepo{
-				Repo: &api.Repo{
-					Url:  url,
-					Kind: "CHARTMUSEUM",
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
-					},
-				},
-				ContainerRegistry:   "test.registry.io",
-				ContainerRepository: "test/repo",
-			}
+			// Update target url
+			target.Repo.Url = url
+
 			name := "zookeeper"
 			indexFile := "../../testdata/zookeeper-index.yaml"
 			// Load index.yaml info into index object
