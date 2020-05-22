@@ -5,10 +5,12 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 	"gopkg.in/yaml.v2"
+	helmChart "helm.sh/helm/v3/pkg/chart"
 )
 
 var (
@@ -55,8 +57,12 @@ func TestSyncDependencies(t *testing.T) {
 }
 
 func TestUpdateRequirementsFile(t *testing.T) {
-	chartDependencies := map[string]string{
-		"zookeeper": "5.5.5",
+	lock := &helmChart.Lock{
+		Generated: time.Now(),
+		Digest:    "sha256:fe26de7fc873dc8001404168feb920a61ba884a2fe211a7371165ed51bf8cb8b",
+		Dependencies: []*helmChart.Dependency{
+			{Name: "zookeeper", Version: "5.5.5"},
+		},
 	}
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
@@ -73,7 +79,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	chartPath := path.Join(testTmpDir, "kafka")
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
 	// Update file
-	if err := updateRequirementsFile(chartPath, chartDependencies, source.Repo, target); err != nil {
+	if err := updateRequirementsFile(chartPath, lock, source.Repo, target); err != nil {
 		t.Fatal(err)
 	}
 
@@ -92,10 +98,10 @@ func TestUpdateRequirementsFile(t *testing.T) {
 
 	// Check properties
 	if newDeps.Dependencies[0].Repository != target.Repo.Url {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", newDeps.Dependencies[0].Repository, target.Repo.Url)
+		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
 	}
 	if newDeps.Dependencies[0].Version != "5.5.5" {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", newDeps.Dependencies[0].Version, "5.5.5")
+		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.5.5")
 	}
 }
 

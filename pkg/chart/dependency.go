@@ -42,14 +42,13 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
 
-	dependenciesMap, err := getDependencies(lock, sourceRepo, target, tc)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	for i := range lock.Dependencies {
-		depName := lock.Dependencies[i].Name
-		depVersion := lock.Dependencies[i].Version
-		depRepository := lock.Dependencies[i].Repository
+	for _, lockDep := range lock.Dependencies {
+		depName := lockDep.Name
+		depVersion := lockDep.Version
+		depRepository := lockDep.Repository
 		if depRepository != sourceRepo.Url {
 			continue
 		}
@@ -78,7 +77,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 
 	if !missingDependencies {
 		klog.V(3).Info("Updating requirements.yaml file...")
-		if err := updateRequirementsFile(chartPath, dependenciesMap, sourceRepo, target); err != nil {
+		if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
 			return errors.Trace(err)
 		}
 		if err := helmcli.UpdateDependencies(chartPath); err != nil {
@@ -88,19 +87,8 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	return errs
 }
 
-// getDependencies returns the list of dependencies
-func getDependencies(lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo, tc repo.ChartRepoAPI) (map[string]string, error) {
-	dependenciesMap := make(map[string]string)
-	for i := range lock.Dependencies {
-		depName := lock.Dependencies[i].Name
-		depVersion := lock.Dependencies[i].Version
-		dependenciesMap[depName] = depVersion
-	}
-	return dependenciesMap, nil
-}
-
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies
-func updateRequirementsFile(chartPath string, chartDependencies map[string]string, sourceRepo *api.Repo, target *api.TargetRepo) error {
+func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
 	// Update requirements.yaml file to point to target repo
 	requirements, err := ioutil.ReadFile(requirementsFile)
@@ -113,19 +101,29 @@ func updateRequirementsFile(chartPath string, chartDependencies map[string]strin
 	if err != nil {
 		return errors.Annotatef(err, "Error unmarshaling %s file", requirementsFile)
 	}
-	for i := range deps.Dependencies {
+	for _, dep := range deps.Dependencies {
 		// Specify the exact dependencies versions used in the original requirements.lock file
 		// so when running helm dep up we get the same versions resolved.
-		deps.Dependencies[i].Version = chartDependencies[deps.Dependencies[i].Name]
+		//deps.Dependencies[i].Version = chartDependencies[deps.Dependencies[i].Name]
+		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
-		if deps.Dependencies[i].Repository == sourceRepo.Url {
-			deps.Dependencies[i].Repository = target.Repo.Url
+		if dep.Repository == sourceRepo.Url {
+			dep.Repository = target.Repo.Url
 		}
 	}
 	// Write updated requirements yamls file
 	writeRequirementsFile(chartPath, deps)
+	return nil
+}
+
+func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart.Dependency {
+	for _, dep := range dependencies {
+		if dep.Name == name {
+			return dep
+		}
+	}
 	return nil
 }
 
