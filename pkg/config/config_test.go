@@ -10,7 +10,7 @@ import (
 // LoadConfig unmarshall config file into Config struct
 func TestLoadConfig(t *testing.T) {
 	var syncConfig api.Config
-	cfgFile := "/home/bitnami/projects/chart-repository-syncer/testdata/example-config.yaml"
+	cfgFile := "../../testdata/example-config.yaml"
 	viper.SetConfigFile(cfgFile)
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
