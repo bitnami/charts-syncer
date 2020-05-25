@@ -75,6 +75,6 @@ func initConfig() {
 func main() {
 	defer klog.Flush()
 	if err := rootCmd.Execute(); err != nil {
-		klog.Fatal(err)
+		klog.Fatalf("%+v", err)
 	}
 }
