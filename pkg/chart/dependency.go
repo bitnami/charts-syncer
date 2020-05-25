@@ -20,7 +20,7 @@ type dependencies struct {
 	Dependencies []*helmChart.Dependency `json:"dependencies"`
 }
 
-// syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary
+// syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary.
 func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool) error {
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
@@ -87,10 +87,9 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	return errs
 }
 
-// updateRequirementsFile returns the full list of dependencies and the list of missing dependencies
+// updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
 func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
-	// Update requirements.yaml file to point to target repo
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -118,6 +117,7 @@ func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *
 	return nil
 }
 
+// findDepByName returns the dependency that matches a provided name from a list of dependencies.
 func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart.Dependency {
 	for _, dep := range dependencies {
 		if dep.Name == name {
@@ -127,7 +127,7 @@ func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart
 	return nil
 }
 
-// writeRequirementsFile writes a requirements.yaml file to disk
+// writeRequirementsFile writes a requirements.yaml file to disk.
 func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	data, err := yaml.Marshal(deps)
 	if err != nil {
