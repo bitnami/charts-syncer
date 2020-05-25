@@ -168,9 +168,25 @@ func TestWriteRequirementsFile(t *testing.T) {
 
 	// Check properties
 	if newDeps.Dependencies[0].Repository != target.Repo.Url {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", newDeps.Dependencies[0].Repository, target.Repo.Url)
+		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
 	}
 	if newDeps.Dependencies[0].Version != "5.x.x" {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", newDeps.Dependencies[0].Version, "5.x.x")
+		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.x.x")
+	}
+}
+
+func TestFindDepByName(t *testing.T) {
+	deps := &dependencies{
+		Dependencies: []*helmChart.Dependency{
+			{Name: "mariadb", Version: "1.2.3"},
+			{Name: "postgresql", Version: "4.5.6"},
+		},
+	}
+	dep := findDepByName(deps.Dependencies, "postgresql")
+	if dep.Name != "postgresql" {
+		t.Errorf("Wrong dependency, got: %s , want: %s", dep.Name, "postgresql")
+	}
+	if dep.Version != "4.5.6" {
+		t.Errorf("Wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
 	}
 }
