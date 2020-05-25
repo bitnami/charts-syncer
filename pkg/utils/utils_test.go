@@ -48,10 +48,10 @@ func TestChartExistInIndex(t *testing.T) {
 
 func TestDownloadIndex(t *testing.T) {
 	indexFile, err := downloadIndex(source.Repo)
-	defer os.Remove(indexFile)
 	if err != nil {
 		t.Errorf("Error downloading index.yaml: %v ", err)
 	}
+	defer os.Remove(indexFile)
 
 	if _, err := os.Stat(indexFile); err != nil {
 		t.Errorf("Index file does not exist.")
@@ -62,10 +62,10 @@ func TestUntar(t *testing.T) {
 	filepath := "../../testdata/apache-7.3.15.tgz"
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 	if err := Untar(filepath, testTmpDir); err != nil {
 		t.Fatal(err)
 	}

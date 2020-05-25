@@ -13,27 +13,6 @@ import (
 	helmChart "helm.sh/helm/v3/pkg/chart"
 )
 
-var (
-	source = &api.SourceRepo{
-		Repo: &api.Repo{
-			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "HELM",
-		},
-	}
-	target = &api.TargetRepo{
-		Repo: &api.Repo{
-			Url:  "http://fake.target/com",
-			Kind: "CHARTMUSEUM",
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
-			},
-		},
-		ContainerRegistry:   "test.registry.io",
-		ContainerRepository: "test/repo",
-	}
-)
-
 func TestSyncDependencies(t *testing.T) {
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 	if err != nil {

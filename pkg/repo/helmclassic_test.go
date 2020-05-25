@@ -27,10 +27,10 @@ var (
 func TestDownloadFromHelmClassic(t *testing.T) {
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
 	// Create client for source repo
 	sc, err := NewClient(sourceHelm.Repo)

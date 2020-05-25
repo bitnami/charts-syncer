@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"testing"
@@ -67,10 +68,10 @@ func TestSync(t *testing.T) {
 				// Create temporary working directory
 				testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
 				t.Logf("Working dir is: %s", testTmpDir)
-				//defer os.RemoveAll(testTmpDir)
 				if err != nil {
 					t.Errorf("Error creating temporary: %s", testTmpDir)
 				}
+				defer os.RemoveAll(testTmpDir)
 				// Create client for target repo
 				tc, err := repo.NewClient(target.Repo)
 				if err != nil {

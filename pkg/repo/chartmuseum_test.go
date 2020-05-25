@@ -116,10 +116,10 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 
 			// Create temporary working directory
 			testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-			defer os.RemoveAll(testTmpDir)
 			if err != nil {
 				t.Errorf("Error creating temporary: %s", testTmpDir)
 			}
+			defer os.RemoveAll(testTmpDir)
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
 			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceCM.Repo)

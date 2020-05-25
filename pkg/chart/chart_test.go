@@ -22,6 +22,7 @@ var (
 			Url:  "http://fake.target/com",
 			Kind: "CHARTMUSEUM",
 			Auth: &api.Auth{
+				Username: "user",
 				Password: "password",
 			},
 		},
@@ -33,8 +34,10 @@ var (
 func TestDownload(t *testing.T) {
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
+		t.Errorf("Error creating temporary: %s", testTmpDir)
+	}
+	defer os.RemoveAll(testTmpDir)
 	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
 	// Create client for source repo
 	sc, err := repo.NewClient(source.Repo)
@@ -67,10 +70,10 @@ volumePermissions:
     tag: r0`
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 	sourceValuesFilePath := "../../testdata/values.yaml"
 	destValuesFilePath := path.Join(testTmpDir, "values.yaml")
 
