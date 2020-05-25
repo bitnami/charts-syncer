@@ -36,10 +36,10 @@ var (
 
 func TestSyncDependencies(t *testing.T) {
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 
 	sourceChart := "../../testdata/kafka-10.3.3.tgz"
 	if err := utils.Untar(sourceChart, testTmpDir); err != nil {
@@ -64,10 +64,10 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	}
 
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 
 	sourceChart := "../../testdata/kafka-10.3.3.tgz"
 	if err := utils.Untar(sourceChart, testTmpDir); err != nil {
@@ -114,10 +114,10 @@ func TestWriteRequirementsFile(t *testing.T) {
 	}
 
 	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
-	defer os.RemoveAll(testTmpDir)
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
+	defer os.RemoveAll(testTmpDir)
 
 	sourceChart := "../../testdata/kafka-10.3.3.tgz"
 	if err := utils.Untar(sourceChart, testTmpDir); err != nil {

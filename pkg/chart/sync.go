@@ -48,10 +48,10 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "c3tsyncer")
-	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		return errors.Annotatef(err, "Error creating temporary: %s", tmpDir)
 	}
+	defer os.RemoveAll(tmpDir)
 	srcDir := path.Join(tmpDir, "src")
 	destDir := path.Join(tmpDir, "dest")
 	for _, path := range []string{srcDir, destDir} {

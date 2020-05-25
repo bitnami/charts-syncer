@@ -22,13 +22,13 @@ const (
 // LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
 func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
-	defer os.Remove(indexFile)
 	if err != nil {
-		return nil, errors.Errorf("Error downloading index.yaml")
+		return nil, errors.Trace(err)
 	}
+	defer os.Remove(indexFile)
 	index, err := helmRepo.LoadIndexFile(indexFile)
 	if err != nil {
-		return nil, errors.Errorf("Error loading index.yaml")
+		return nil, errors.Trace(err)
 	}
 	return index, errors.Trace(err)
 }
