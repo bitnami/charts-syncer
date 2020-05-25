@@ -53,6 +53,21 @@ func TestDownload(t *testing.T) {
 }
 
 func TestUpdateValuesFile(t *testing.T) {
+	originalValues := `##
+## Simplified values yaml file to test registry and repository substitutions
+##
+global:
+  imageRegistry: ""
+image:
+  registry: new.registry.io
+  repository: test/repo/new/zookeeper
+  tag: 3.5.7-r7
+volumePermissions:
+  enabled: false
+  image:
+    registry: new.registry.io
+    repository: repo/new/custom-base-image
+    tag: r0`
 	want := `##
 ## Simplified values yaml file to test registry and repository substitutions
 ##
@@ -74,16 +89,10 @@ volumePermissions:
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
-	sourceValuesFilePath := "../../testdata/values.yaml"
 	destValuesFilePath := path.Join(testTmpDir, "values.yaml")
 
-	// Read source file
-	input, err := ioutil.ReadFile(sourceValuesFilePath)
-	if err != nil {
-		t.Errorf("Error reading source file")
-	}
 	// Write file
-	err = ioutil.WriteFile(destValuesFilePath, input, 0644)
+	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
 	if err != nil {
 		t.Errorf("Error writting destination file")
 	}
