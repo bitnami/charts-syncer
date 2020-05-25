@@ -27,7 +27,6 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	var missingDependencies = false
 	requirementsLockFile := path.Join(chartPath, "requirements.lock")
 
-	// Load requirements lock info
 	requirementsLock, err := ioutil.ReadFile(requirementsLockFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -128,7 +127,7 @@ func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart
 	return nil
 }
 
-// writeRequirementsFile writes a requirements.yaml file to disk
+// writeRequirementsFile writes a requirements.yaml file to disk.
 func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	data, err := yaml.Marshal(deps)
 	if err != nil {
