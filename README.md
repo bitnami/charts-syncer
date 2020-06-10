@@ -69,7 +69,7 @@ Current available Kinds are `HELM` and `CHARTMUSEUM`
 
 ## How to build
 
-You need go and the GO protocol buffers pluging:
+You need go and the Go protocol buffers pluging:
 
 ~~~bash
 make gen # To generate Go code from protobuff definition
