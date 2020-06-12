@@ -6,8 +6,8 @@ version: 2
 ## Definitions
 install_helm_cli: &install_helm_cli
   run: |
-    wget https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
-    tar zxf helm-$HELM_VERSION-linux-amd64.tar.gz
+    wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+    tar zxf helm-v${HELM_VERSION}-linux-amd64.tar.gz
     sudo mv linux-amd64/helm /usr/local/bin/
 install_kubectl: &install_kubectl
   run: |
