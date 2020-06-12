@@ -32,6 +32,7 @@ jobs:
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    machine: true
     environment:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
