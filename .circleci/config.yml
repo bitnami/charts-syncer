@@ -2,24 +2,48 @@
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
+
+## Definitions
+install_helm_cli: &install_helm_cli
+  run: |
+    wget https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
+    tar zxf helm-$HELM_VERSION-linux-amd64.tar.gz
+    sudo mv linux-amd64/helm /usr/local/bin/
+install_kubectl: &install_kubectl
+  run: |
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
+install_kind: &install_kind
+  run: |
+    curl -LO https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-Linux-amd64
+    chmod +x kind-Linux-amd64
+    sudo mv kind-Linux-amd64 /usr/local/bin/kind
+
+
 jobs:
   build:
     docker:
       # specify the version
-      - image: circleci/golang:1.9
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+      - image: circleci/golang:1.14
 
     #### TEMPLATE_NOTE: go expects specific checkout path representing url
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    environment:
+      KIND_VERSION: "0.8.1"
+      KUBECTL_VERSION: "1.18.0"
+      HELM_VERSION: "3.2.3"
     steps:
       - checkout
-
-      # specify any bash command here prefixed with `run: `
-      - run: go test -v ./...
+      # Install kind
+      - <<: *install_kind
+      - run: kind create cluster
+      - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      - <<: *install_kubectl
+      - <<: *install_helm_cli
+      - run: kind --version
+      - run: kubectl --version
+      - run: helm --version
