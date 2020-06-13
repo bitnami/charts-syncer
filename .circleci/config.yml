@@ -37,5 +37,7 @@ jobs:
       - <<: *install_kubectl
       - <<: *install_helm_cli
       - run: kind --version
-      - run: kubectl --version
-      - run: helm --version
+      - run: kubectl version
+      - run: helm version
+      - run: ./script/setup-harbor.sh --namespace "harbor" --disable-clair --disable-notary
+      - run: kubectl get pods --namespace harbor
