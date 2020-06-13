@@ -28,6 +28,7 @@ jobs:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
       HELM_VERSION: "3.2.3"
+      DEBUG_MODE: "true"
     steps:
       - checkout
       # Install kind
