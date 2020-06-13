@@ -19,7 +19,10 @@ install_kind: &install_kind
     curl -LO https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-Linux-amd64
     chmod +x kind-Linux-amd64
     sudo mv kind-Linux-amd64 /usr/local/bin/kind
-
+add_bitnami_helm: &add_bitnami_helm
+  run: |
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm repo update
 
 jobs:
   build:
@@ -37,6 +40,7 @@ jobs:
       - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
       - <<: *install_kubectl
       - <<: *install_helm_cli
+      - <<: *add_bitnami_helm
       - run: kind --version
       - run: kubectl version
       - run: helm version
