@@ -45,7 +45,7 @@ jobs:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
       HELM_VERSION: "3.2.3"
-      MINIKUBE_VERSION: "1.10.0"
+      MINIKUBE_VERSION: "1.8.2"
       DEBUG_MODE: "true"
     steps:
       - checkout
