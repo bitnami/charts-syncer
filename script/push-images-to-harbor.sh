@@ -68,13 +68,17 @@ fi
 # We will use the Kafka chart as testing asset.
 # kafka-11.2.0 chart images (including zookeeper dependencies)
 kafkaChartImages=(
-    "kafka:2.5.0-debian-10-r66"
-    "kubectl:1.17.4-debian-10-r91"
-    "minideb:buster"
-    "kafka-exporter:1.2.0-debian-10-r140"
-    "jmx-exporter:0.13.0-debian-10-r29"
+    # "kafka:2.5.0-debian-10-r66"
+    # "kubectl:1.17.4-debian-10-r91"
+    # "minideb:buster"
+    # "kafka-exporter:1.2.0-debian-10-r140"
+    # "jmx-exporter:0.13.0-debian-10-r29"
     "zookeeper:3.6.1-debian-10-r37"
 )
+
+# Login to harbor registry
+kubectl get secret --namespace harbor harbor-core-envvars -o jsonpath="{.data.HARBOR_ADMIN_PASSWORD}" | base64 --decode > ~/harbor_password.txt
+docker login --username admin --password-stdin ${domain} < ~/harbor_password.txt
 
 # Pull images from bitnami, tag it and push it to harbor
 for image in "${kafkaChartImages[@]}"
