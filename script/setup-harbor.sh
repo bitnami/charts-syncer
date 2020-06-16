@@ -88,8 +88,14 @@ fi
 # Harbor values
 values="$(cat << EOF
 service:
+  type: ClusterIP
   tls:
-    enabled: false
+    enabled: true
+ingress:
+  enabled: true
+  hosts:
+    core: harbor.local
+externalURL: https://harbor.local
 chartmuseum:
   enabled: $([[ "$disable_chartmuseum" -eq 0 ]] && echo "true" || echo "false")
 clair:
@@ -121,7 +127,6 @@ info "Waiting for Harbor components to be ready..."
 deployments=(
     "harbor-core"
     "harbor-jobservice"
-    "harbor-nginx"
     "harbor-portal"
     "harbor-registry"
 )

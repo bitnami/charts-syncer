@@ -19,10 +19,23 @@ install_kind: &install_kind
     curl -LO https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-Linux-amd64
     chmod +x kind-Linux-amd64
     sudo mv kind-Linux-amd64 /usr/local/bin/kind
+install_minikube: &install_minikube
+  run: |
+    curl -LO https://github.com/kubernetes/minikube/releases/download/v${MINIKUBE_VERSION}/minikube-linux-amd64
+    chmod +x minikube-linux-amd64
+    sudo mv minikube-linux-amd64 /usr/local/bin/minikube
 add_bitnami_helm: &add_bitnami_helm
   run: |
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo update
+fake_local_ingress: &fake_local_ingress
+  run: |
+    echo "$(minikube ip) harbor.local" | sudo tee -a /etc/hosts
+authorize_harbor_docker: &authorize_harbor_docker
+  run: |
+    curl -kJLO 'https://harbor.local/api/v2.0/systeminfo/getcert'
+    sudo mkdir -p /etc/docker/certs.d/harbor.local/
+    sudo mv ca.crt /etc/docker/certs.d/harbor.local/
 
 jobs:
   build:
@@ -31,18 +44,25 @@ jobs:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
       HELM_VERSION: "3.2.3"
+      MINIKUBE_VERSION: "1.11.0"
       DEBUG_MODE: "true"
     steps:
       - checkout
       # Install kind
-      - <<: *install_kind
-      - run: kind create cluster
-      - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      # - <<: *install_kind
+      # - run: kind create cluster
+      # - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      # Install minikube
+      - <<: *install_minikube
+      - run: minikube start
+      - run: minikube addons enable ingress
       - <<: *install_kubectl
       - <<: *install_helm_cli
       - <<: *add_bitnami_helm
-      - run: kind --version
-      - run: kubectl version
-      - run: helm version
+      # Install harbor
       - run: ./script/setup-harbor.sh --namespace "harbor" --disable-clair --disable-notary
       - run: kubectl get pods --namespace harbor
+      - run: kubectl get ingress --namespace harbor
+      - <<: *fake_local_ingress
+      - <<: *authorize_harbor_docker
+      - run: ./script/push-images-to-harbor.sh --domain harbor.local
