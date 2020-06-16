@@ -39,12 +39,13 @@ authorize_harbor_docker: &authorize_harbor_docker
 
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     environment:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
       HELM_VERSION: "3.2.3"
-      MINIKUBE_VERSION: "1.10.1"
+      MINIKUBE_VERSION: "1.10.0"
       DEBUG_MODE: "true"
     steps:
       - checkout
