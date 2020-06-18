@@ -49,6 +49,8 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.14
+    environment:
+      HELM_VERSION: "3.2.3"
     steps:
       - checkout
       - run: make build
