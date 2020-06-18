@@ -8,15 +8,13 @@ set -o pipefail
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
-## Wait for Ghost service (Timeout in 30s)
-wait-for-port --state=inuse 80
-sleep 5
-
-## Check that Ghost service is running
-if curl -sI http://127.0.0.1 | grep -q "200 OK" && curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
-    echo "[PASS] Ghost service running."
+## Check Ghost pod log to see if service is running
+ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].metadata.name}')
+ghostLog=$(kubectl logs ${ghostPod})
+if echo ${ghostLog} | grep -q "Your site is now available on"; then
+    echo "[PASS] Ghost site is running"
 else
-    echo "[FAILED] No Ghost service found"
+    echo "[FAILED] Ghost site is not running"
     FAILED_TEST=1
 fi
 
