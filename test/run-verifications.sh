@@ -11,6 +11,17 @@ FAILED_TEST=0
 ## Check Ghost pod log to see if service is running
 ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].metadata.name}')
 ghostLog=$(kubectl logs ${ghostPod})
+
+## -------- Debug --------
+
+kubectl get pods
+
+kubectl describe pod ${ghostPod}
+
+echo "${ghostLog}"
+
+## -----------------------
+
 if echo ${ghostLog} | grep -q "Your site is now available on"; then
     echo "[PASS] Ghost site is running"
 else
