@@ -63,21 +63,31 @@ jobs:
       KIND_VERSION: "0.8.1"
       KUBECTL_VERSION: "1.18.0"
       HELM_VERSION: "3.2.3"
-      MINIKUBE_VERSION: "1.8.2"
       DEBUG_MODE: "true"
     steps:
       - checkout
       # Install kind
-      #- <<: *install_kind
-      #- run: kind create cluster
-      #- run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
-      #- <<: *install_chartmuseum
-      #- <<: *install_kubectl
-      #- <<: *install_helm_cli
-      #- <<: *add_bitnami_helm
-      #- run: ./script/load-images-to-kind.sh
+      - <<: *install_kind
+      - run: kind create cluster
+      - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      - <<: *install_chartmuseum
+      - <<: *install_kubectl
+      - <<: *install_helm_cli
+      - <<: *add_bitnami_helm
+      - run: ./test/load-images-to-kind.sh
+      - run:
+          background: true
+          command: |
+              chartmuseum --basic-auth-user admin --basic-auth-pass dummypassword  --storage local --storage-local-rootdir /tmp/chartstorage &
       # Attach workspace with compiled tool
       - attach_workspace:
           at: /tmp/dist
-      - run: ls /tmp/dist/
-      - run: /tmp/dist/c3tsyncer --help
+      - run: ./test/run-c3tsyncer.sh
+      - run: |
+          helm repo update
+          helm install --wait ghost-test target/ghost --version 10.0.10 --set ghostHost=127.0.0.1 --set service.type=ClusterIP
+      # Expose Ghost service
+      - run:
+          background: true
+          command: |
+              sudo kubectl port-forward svc/ghost-test 80:80

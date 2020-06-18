@@ -1,0 +1,16 @@
+#
+# Test config file
+#
+source:
+  repo:
+    kind: "HELM"
+    url: "https://charts.bitnami.com/bitnami"
+target:
+  containerRegistry: "customer.io"
+  containerRepository: "library"
+  repo:
+    kind: "CHARTMUSEUM"
+    url: "http://127.0.0.1:8080"
+    auth:
+      username: "admin"
+      password: "dummypassword"
