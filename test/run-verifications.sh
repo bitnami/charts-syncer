@@ -8,24 +8,39 @@ set -o pipefail
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
-## Check Ghost pod log to see if service is running
+########################
+# Waits until a pod log contains certain string
+# Arguments:
+#   $1 - pod (as a string)
+#   $2 - string (as a string)
+#   $3 - max retries. Default: 12
+#   $4 - sleep between retries (in seconds). Default: 5
+#########################
+wait_for_string_in_pod() {
+    local -r pod="${1:?pod is missing}"
+    local -r string="${2:?string is missing}"
+    local -r retries="${3:-12}"
+    local -r sleep_time="${4:-5}"
+
+    for ((i = 1 ; i <= retries ; i+=1 )); do
+        ghostLog=$(kubectl logs ${pod})
+        if echo ${ghostLog} | grep -q "${string}"; then
+            break
+        fi
+        sleep "$sleep_time"
+    done
+}
+
+
+## Wait until Ghost is up and running
 ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].metadata.name}')
-ghostLog=$(kubectl logs ${ghostPod})
+wait_for_string_in_pod ${ghostPod} "Your site is now available on"
 
-## -------- Debug --------
-
-kubectl get pods
-
-kubectl describe pod ${ghostPod}
-
-echo "${ghostLog}"
-
-## -----------------------
-
-if echo ${ghostLog} | grep -q "Your site is now available on"; then
-    echo "[PASS] Ghost site is running"
+## Check that Ghost service is running
+if curl -sI http://127.0.0.1 | grep -q "200 OK" && curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
+    echo "[PASS] Ghost service running."
 else
-    echo "[FAILED] Ghost site is not running"
+    echo "[FAILED] No Ghost service found"
     FAILED_TEST=1
 fi
 
