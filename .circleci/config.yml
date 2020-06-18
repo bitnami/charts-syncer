@@ -72,7 +72,7 @@ jobs:
       # - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
       - <<: *install_chartmuseum
       # - <<: *install_kubectl
-      # - <<: *install_helm_cli
+      - <<: *install_helm_cli
       # - <<: *add_bitnami_helm
       # - run: ./test/load-images-to-kind.sh
       - run:
