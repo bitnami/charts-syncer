@@ -101,5 +101,5 @@ jobs:
       - run: ./script/load-images-to-kind.sh
       # Attach workspace with compiled tool
       - attach_workspace:
-        at: /tmp/dist
+          at: /tmp/dist
       - run: ./tmp/dist/c3tsyncer --help
