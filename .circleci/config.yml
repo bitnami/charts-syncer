@@ -1,0 +1,97 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+
+## Definitions
+install_helm_cli: &install_helm_cli
+  run: |
+    wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+    tar zxf helm-v${HELM_VERSION}-linux-amd64.tar.gz
+    sudo mv linux-amd64/helm /usr/local/bin/
+install_kubectl: &install_kubectl
+  run: |
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    chmod +x kubectl
+    sudo mv kubectl /usr/local/bin/
+install_kind: &install_kind
+  run: |
+    curl -LO https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-Linux-amd64
+    chmod +x kind-Linux-amd64
+    sudo mv kind-Linux-amd64 /usr/local/bin/kind
+install_minikube: &install_minikube
+  run: |
+    curl -LO https://github.com/kubernetes/minikube/releases/download/v${MINIKUBE_VERSION}/minikube-linux-amd64
+    chmod +x minikube-linux-amd64
+    sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+install_chartmuseum: &install_chartmuseum
+  run: |
+    curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum
+    chmod +x chartmuseum
+    sudo mv chartmuseum /usr/local/bin/
+add_bitnami_helm: &add_bitnami_helm
+  run: |
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm repo update
+
+# Main workflow
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+              - build
+
+# Jobs
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.14
+    environment:
+      HELM_VERSION: "3.2.3"
+    steps:
+      - checkout
+      - run: make build
+      - <<: *install_helm_cli
+      - run: GO111MODULE=on go test ./...
+      # Persist compiled tool
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - "*"
+  test:
+    machine:
+      image: ubuntu-1604:201903-01
+    environment:
+      KIND_VERSION: "0.8.1"
+      KUBECTL_VERSION: "1.18.0"
+      HELM_VERSION: "3.2.3"
+      DEBUG_MODE: "true"
+    steps:
+      - checkout
+      - <<: *install_kind
+      - run: kind create cluster
+      - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      - <<: *install_chartmuseum
+      - <<: *install_kubectl
+      - <<: *install_helm_cli
+      - <<: *add_bitnami_helm
+      - run: ./test/load-images-to-kind.sh
+      - run:
+          background: true
+          command: |
+              chartmuseum --basic-auth-user admin --basic-auth-pass dummypassword  --storage local --storage-local-rootdir /tmp/chartstorage
+      # Attach workspace with compiled tool
+      - attach_workspace:
+          at: /tmp/dist
+      - run: ./test/run-c3tsyncer.sh
+      - run: |
+          helm repo update
+          helm install --wait ghost-test target/ghost --version 10.0.10 --set ghostHost=127.0.0.1 --set service.type=ClusterIP
+      - run:
+          background: true
+          command: |
+              sudo kubectl port-forward svc/ghost-test 80:80
+      - run: ./test/run-verifications.sh
