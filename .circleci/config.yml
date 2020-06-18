@@ -21,6 +21,12 @@ install_chartmuseum: &install_chartmuseum
     curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum
     chmod +x chartmuseum
     sudo mv chartmuseum /usr/local/bin/
+install_wait_for_port: &install_wait_for_port
+  run: |
+    curl -LO https://github.com/bitnami/wait-for-port/releases/download/v1.0/wait-for-port.zip
+    unzip wait-for-port.zip
+    chmod +x wait-for-port
+    sudo mv wait-for-port /usr/local/bin/
 add_bitnami_helm: &add_bitnami_helm
   run: |
     helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -68,6 +74,7 @@ jobs:
       - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
       - <<: *install_chartmuseum
       - <<: *install_kubectl
+      - <<: *install_wait_for_port
       - <<: *install_helm_cli
       - <<: *add_bitnami_helm
       - run: ./test/load-images-to-kind.sh

@@ -8,6 +8,9 @@ set -o pipefail
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
+## Wait for Ghost service (Timeout in 30s)
+wait-for-port --state=inuse 80
+
 ## Check that Ghost service is running
 if curl -sI http://127.0.0.1 | grep -q "200 OK" && curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
     echo "[PASS] Ghost service running."
@@ -26,16 +29,15 @@ else
     FAILED_TEST=1
 fi
 
-## TODO (tompizmor): Enable this test once issue is fixed in the tool
 ## Check that Mariadb deployment is using the expected image
-# expectedMariadbImage='customer.io/library/mariadb:10.3.23-debian-10-r25"'
-# mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -o  jsonpath='{.items[0].spec.containers[0].image}')
-# if [ ${mariadbImage} == ${expectedMariadbImage} ]; then
-#     echo "[PASS] Mariadb is using the expected image: ${mariadbImage}"
-# else
-#     echo "[FAILED] Mariadb is not using the expected image. Got ${mariadbImage}, expected: ${expectedMariadbImage}"
-#     FAILED_TEST=1
-# fi
+expectedMariadbImage='customer.io/library/mariadb:10.3.23-debian-10-r25"'
+mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -o  jsonpath='{.items[0].spec.containers[0].image}')
+if [ ${mariadbImage} == ${expectedMariadbImage} ]; then
+    echo "[PASS] Mariadb is using the expected image: ${mariadbImage}"
+else
+    echo "[FAILED] Mariadb is not using the expected image. Got ${mariadbImage}, expected: ${expectedMariadbImage}"
+    FAILED_TEST=1
+fi
 
 if [ ${FAILED_TEST} != 0 ]; then
     echo ""
