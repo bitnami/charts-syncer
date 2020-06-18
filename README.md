@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/bitnami-labs/chart-repository-syncer/tree/master.svg?style=svg)](https://circleci.com/gh/bitnami-labs/chart-repository-syncer/tree/master)
+
 # c3tsyncer
 
 Sync chart packages between chart repositories
