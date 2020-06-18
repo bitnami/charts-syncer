@@ -29,24 +29,10 @@ install_chartmuseum: &install_chartmuseum
     curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum
     chmod +x chartmuseum
     sudo mv chartmuseum /usr/local/bin/
-install_go: &install_go
-  run: |
-    curl -LO https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
-    sudo tar -C /usr/local -xzf go1.14.4.linux-amd64.tar.gz
-    echo "export PATH=$PATH:/usr/local/go/bin" | sudo tee -a ~/.profile
-    source ~/.profile
 add_bitnami_helm: &add_bitnami_helm
   run: |
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo update
-fake_local_ingress: &fake_local_ingress
-  run: |
-    echo "$(minikube ip) harbor.local" | sudo tee -a /etc/hosts
-authorize_harbor_docker: &authorize_harbor_docker
-  run: |
-    curl -kJLO 'https://harbor.local/api/v2.0/systeminfo/getcert'
-    sudo mkdir -p /etc/docker/certs.d/harbor.local/
-    sudo mv ca.crt /etc/docker/certs.d/harbor.local/
 
 # Main workflow
 workflows:
@@ -82,26 +68,16 @@ jobs:
     steps:
       - checkout
       # Install kind
-      - <<: *install_kind
-      - run: kind create cluster
-      - run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
-      # Install minikube
-      # - <<: *install_minikube
-      # - run: minikube start
-      # - run: minikube addons enable ingress
-      - <<: *install_chartmuseum
-      - <<: *install_kubectl
-      - <<: *install_helm_cli
-      - <<: *add_bitnami_helm
-      # Install harbor
-      # - run: ./script/setup-harbor.sh --namespace "harbor" --disable-clair --disable-notary
-      # - run: kubectl get pods --namespace harbor
-      # - run: kubectl get ingress --namespace harbor
-      # - <<: *fake_local_ingress
-      # - <<: *authorize_harbor_docker
-      #- run: ./script/push-images-to-harbor.sh --domain harbor.local
-      - run: ./script/load-images-to-kind.sh
+      #- <<: *install_kind
+      #- run: kind create cluster
+      #- run: echo "export KUBECONFIG=$(kind get kubeconfig-path --name=kind)" >> $BASH_ENV
+      #- <<: *install_chartmuseum
+      #- <<: *install_kubectl
+      #- <<: *install_helm_cli
+      #- <<: *add_bitnami_helm
+      #- run: ./script/load-images-to-kind.sh
       # Attach workspace with compiled tool
       - attach_workspace:
           at: /tmp/dist
-      - run: ./tmp/dist/c3tsyncer --help
+      - run: ls /tmp/dist/
+      - run: /tmp/dist/c3tsyncer --help
