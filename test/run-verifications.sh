@@ -8,15 +8,6 @@ set -o pipefail
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
-## -------- Debug ---------
-ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].metadata.name}')
-
-kubectl logs ${ghostPod}
-
-kubectl get pods
-
-kubectl describe pod ${ghostPod}
-
 ## Check that Ghost service is running
 if curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
     echo "[PASS] Ghost service running."
