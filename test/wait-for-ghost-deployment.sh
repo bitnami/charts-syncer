@@ -9,7 +9,7 @@ set -o pipefail
 # Arguments:
 #   $1 - pod (as a string)
 #   $2 - string (as a string)
-#   $3 - repetitions (as a string)
+#   $3 - repetitions. Default: 1
 #   $4 - max retries. Default: 12
 #   $5 - sleep between retries (in seconds). Default: 5
 #########################
@@ -20,9 +20,19 @@ wait_for_string_in_pod() {
     local -r retries="${4:-12}"
     local -r sleep_time="${5:-5}"
 
+    echo "[DEBUG] Pod is: ${pod}"
+    echo "[DEBUG] String is: ${string}"
+    echo "[DEBUG] Repetitions is: ${repetitions}"
+
     for ((i = 1 ; i <= retries ; i+=1 )); do
+        logContent=$(kubectl logs ${pod})
+        grepText=$(kubectl logs ${pod} | grep "${string}")
+        echo "[DEBUG] logContent is: ${logContent}"
+        echo "[DEBUG] grepText is: ${grepText}"
         matches=$(kubectl logs ${pod} | grep "${string}" | wc -l)
+        echo "[DEBUG] matches is: ${matches}"
         if [ ${matches} -ge ${repetitions} ]; then
+            echo "[DEBUG] Found enough repetitions of string. Exiting..."
             break
         fi
         sleep "$sleep_time"
