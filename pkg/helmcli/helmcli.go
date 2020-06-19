@@ -1,6 +1,7 @@
 package helmcli
 
 import (
+	"os"
 	"os/exec"
 	"path"
 
@@ -23,6 +24,10 @@ func Package(chartPath, name, version, destDir string) (string, error) {
 // UpdateDependencies uses helm cli to update dependencies of a chart.
 func UpdateDependencies(chartPath string) error {
 	klog.V(3).Info(`Updating dependencies with "helm dependency update"`)
+	// Delete the charts folder so helm dep up update packages dependencies from target repo
+	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
+		return err
+	}
 	cmd := exec.Command("helm", "dependency", "update", chartPath)
 	if _, err := cmd.Output(); err != nil {
 		return errors.Errorf("Error updading dependencies for %s", chartPath)
