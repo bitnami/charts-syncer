@@ -8,14 +8,6 @@ set -o pipefail
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
-## Check that Ghost service is running
-if curl -sI http://127.0.0.1 | grep -q "200 OK" && curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
-    echo "[PASS] Ghost service running."
-else
-    echo "[FAILED] No Ghost service found"
-    FAILED_TEST=1
-fi
-
 ## Check that Ghost deployment is using the expected image
 expectedGhostImage='customer.io/library/ghost:3.20.1-debian-10-r0'
 ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].spec.containers[0].image}')
