@@ -9,7 +9,8 @@ ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
 
 ## Check that Ghost service is running
-if curl -s http://127.0.0.1 | grep -q "Welcome to Ghost" ; then
+ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].metadata.name}')
+if kubectl exec ${ghostPod} -- curl -s 127.0.0.1:2368 | grep -q "Welcome to Ghost" ; then
     echo "[PASS] Ghost service running."
 else
     echo "[FAILED] No Ghost service found"
