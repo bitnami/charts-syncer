@@ -19,7 +19,7 @@ else
 fi
 
 ## Check that Mariadb deployment is using the expected image
-expectedMariadbImage='customer.io/library/mariadb:10.3.23-debian-10-r25"'
+expectedMariadbImage='customer.io/library/mariadb:10.3.23-debian-10-r25'
 mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -o  jsonpath='{.items[0].spec.containers[0].image}')
 if [ ${mariadbImage} == ${expectedMariadbImage} ]; then
     echo "[PASS] Mariadb is using the expected image: ${mariadbImage}"
