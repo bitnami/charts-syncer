@@ -56,6 +56,9 @@ func syncChart() error {
 	if err := config.LoadConfig(&syncConfig); err != nil {
 		return errors.Trace(fmt.Errorf("Error loading config file"))
 	}
+	if err := config.ValidateConfig(&syncConfig); err != nil {
+		return errors.Trace(err)
+	}
 	source := syncConfig.Source
 	target := syncConfig.Target
 

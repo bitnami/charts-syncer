@@ -34,3 +34,22 @@ func TestLoadConfig(t *testing.T) {
 		t.Errorf("Got: %s, want %s", target.ContainerRepository, "user/demo")
 	}
 }
+
+func TestValidateConfig(t *testing.T) {
+	var syncConfig api.Config
+	cfgFile := "../../testdata/example-config.yaml"
+	viper.SetConfigFile(cfgFile)
+	if err := viper.ReadInConfig(); err != nil {
+		t.Errorf("Error reading config file: %+v", err)
+	}
+	if err := LoadConfig(&syncConfig); err != nil {
+		t.Errorf("Error loading config file")
+	}
+	// Alter sample config to make it wrong
+	syncConfig.Source.Repo.Url = "wrong-url.com"
+	expectedError := "Source repo URL should be a valid URL"
+	err := ValidateConfig(&syncConfig)
+	if err != nil && err.Error() != expectedError {
+		t.Errorf("Incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
+	}
+}
