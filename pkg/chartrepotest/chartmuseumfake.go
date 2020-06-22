@@ -36,24 +36,6 @@ type tChartMuseumFake struct {
 	index map[string][]*ChartVersion
 }
 
-// Metadata in Chart.yaml files
-type Metadata struct {
-	AppVersion string `json:"appVersion"`
-	Name       string `json:"name"`
-	Version    string `json:"version"`
-}
-
-type ChartVersion struct {
-	Name    string   `json:"name"`
-	Version string   `json:"version"`
-	URLs    []string `json:"urls"`
-}
-
-type httpError struct {
-	status int
-	body   string
-}
-
 func newChartMuseumFake(t *testing.T, username, password string) *tChartMuseumFake {
 	return &tChartMuseumFake{
 		t:        t,

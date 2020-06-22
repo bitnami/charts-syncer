@@ -6,6 +6,25 @@ import (
 	"testing"
 )
 
+// Metadata in Chart.yaml files
+type Metadata struct {
+	AppVersion string `json:"appVersion"`
+	Name       string `json:"name"`
+	Version    string `json:"version"`
+}
+
+// ChartVersion type
+type ChartVersion struct {
+	Name    string   `json:"name"`
+	Version string   `json:"version"`
+	URLs    []string `json:"urls"`
+}
+
+type httpError struct {
+	status int
+	body   string
+}
+
 var (
 	username string = "user"
 	password string = "password"
