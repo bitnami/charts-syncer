@@ -76,8 +76,6 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	}
 	defer res.Body.Close()
 	// Check status code
-
-	klog.V(4).Infof("[DEBUG] Status code for %s is %d", downloadURL, res.StatusCode)
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		return "", errors.Errorf("Error downloading index.yaml from %s. Status code is %d", repo.Url, res.StatusCode)
 	}

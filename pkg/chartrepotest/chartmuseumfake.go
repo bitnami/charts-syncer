@@ -17,6 +17,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	cmRegex *regexp.Regexp = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+)
+
 // A tChartMuseumFake is a fake ChartMuseum implementation useful for (fast)
 // unit tests.
 //
@@ -71,8 +75,7 @@ func (cm *tChartMuseumFake) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cm.indexGet(w, r)
 		return
 	}
-	re := regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	if re.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+	if cmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		chartPackage := strings.Split(r.URL.Path, "/")[2]
 		cm.chartPackageGet(w, r, chartPackage)
 		return

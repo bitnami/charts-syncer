@@ -11,6 +11,10 @@ import (
 	"testing"
 )
 
+var (
+	harborRegex *regexp.Regexp = regexp.MustCompile(`(?m)\/chartrepo/library/charts\/(.*.tgz)`)
+)
+
 // A tHarborFake is a fake ChartMuseum implementation useful for (fast)
 // unit tests.
 //
@@ -65,8 +69,7 @@ func (h *tHarborFake) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.indexGet(w, r)
 		return
 	}
-	re := regexp.MustCompile(`(?m)\/chartrepo/library/charts\/(.*.tgz)`)
-	if re.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+	if harborRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		chartPackage := strings.Split(r.URL.Path, "/")[4]
 		h.chartPackageGet(w, r, chartPackage)
 		return
