@@ -14,13 +14,13 @@ var (
 	source = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "HELM",
+			Kind: api.Kind_HELM,
 		},
 	}
 	target = &api.TargetRepo{
 		Repo: &api.Repo{
 			Url:  "http://fake.target/com",
-			Kind: "CHARTMUSEUM",
+			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",

@@ -1,53 +1,44 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
-	"net/url"
+	"io/ioutil"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/pbjson"
+	"github.com/golang/protobuf/proto"
 	"github.com/juju/errors"
 	"github.com/spf13/viper"
+	"sigs.k8s.io/yaml"
 )
 
-// LoadConfig unmarshall config file into Config struct.
-func LoadConfig(Config *api.Config) error {
+// Load unmarshall config file into Config struct.
+func Load(config *api.Config) error {
 	viper.BindEnv("source.auth.username", "SOURCE_AUTH_USERNAME")
 	viper.BindEnv("source.auth.password", "SOURCE_AUTH_PASSWORD")
 	viper.BindEnv("target.auth.username", "TARGET_AUTH_USERNAME")
 	viper.BindEnv("target.auth.password", "TARGET_AUTH_PASSWORD")
 
-	err := viper.Unmarshal(&Config)
+	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
-		return errors.Trace(fmt.Errorf("Error unmarshalling config file: %w", err))
+		return errors.Trace(fmt.Errorf("tritri Error unmarshalling config file: %w", err))
 	}
+
 	return nil
 }
 
-// ValidateConfig validates the config file is correct
-func ValidateConfig(Config *api.Config) error {
-	if _, err := url.ParseRequestURI(Config.Source.Repo.Url); err != nil {
-		return errors.Errorf("Source repo URL should be a valid URL")
+// yamlToProto unmarshals `path` into the provided proto message
+func yamlToProto(path string, v proto.Message) error {
+	yamlBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return errors.Trace(err)
 	}
-	if _, err := url.ParseRequestURI(Config.Target.Repo.Url); err != nil {
-		return errors.Errorf("Target repo URL should be a valid URL")
+	jsonBytes, err := yaml.YAMLToJSONStrict(yamlBytes)
+	if err != nil {
+		return errors.Trace(err)
 	}
-	if Config.Target.ContainerRegistry == "" {
-		return errors.Errorf("Container Registry cannot be empty")
-	}
-	if Config.Target.ContainerRepository == "" {
-		return errors.Errorf("Container Repository cannot be empty")
-	}
-	switch Config.Source.Repo.Kind {
-	case api.Kind_HELM.String():
-	case api.Kind_CHARTMUSEUM.String():
-	default:
-		return errors.Errorf("Repo kind %q is not supported for source repo", Config.Source.Repo.Kind)
-	}
-	switch Config.Target.Repo.Kind {
-	case api.Kind_HELM.String():
-	case api.Kind_CHARTMUSEUM.String():
-	default:
-		return errors.Errorf("Repo kind %q is not supported for target repo", Config.Target.Repo.Kind)
-	}
-	return nil
+	r := bytes.NewReader(jsonBytes)
+	err = pbjson.NewDecoder(r).Decode(v)
+	return errors.Trace(err)
 }

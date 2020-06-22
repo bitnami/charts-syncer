@@ -13,13 +13,13 @@ var (
 	sourceHelm = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: "HELM",
+			Kind: api.Kind_HELM,
 		},
 	}
 	targetHelm = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "https://fake.repo.com",
-			Kind: "HELM",
+			Kind: api.Kind_HELM,
 		},
 	}
 )

@@ -23,7 +23,7 @@ message TargetRepo {
 // Generic repo representation
 message Repo {
     string url = 1;
-    string kind = 2;
+    Kind kind = 2;
     Auth auth = 3;
 }
 

@@ -16,21 +16,21 @@ func TestNewClient(t *testing.T) {
 	}{
 		{
 			&api.Repo{
-				Kind: "HELM",
+				Kind: api.Kind_HELM,
 			},
 			"*repo.ClassicHelmClient",
 			"",
 		},
 		{
 			&api.Repo{
-				Kind: "CHARTMUSEUM",
+				Kind: api.Kind_CHARTMUSEUM,
 			},
 			"*repo.ChartMuseumClient",
 			"",
 		},
 		{
 			&api.Repo{
-				Kind: "UNKNOWN",
+				Kind: api.Kind_UNKNOWN,
 			},
 			"<nil>",
 			"unsupported repo kind \"UNKNOWN\"",

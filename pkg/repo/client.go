@@ -19,9 +19,9 @@ type ChartRepoAPI interface {
 // implementation, e.g. to return a fake.
 var NewClient = func(repo *api.Repo) (ChartRepoAPI, error) {
 	switch repo.Kind {
-	case api.Kind_HELM.String():
+	case api.Kind_HELM:
 		return NewClassicHelmClient(repo), nil
-	case api.Kind_CHARTMUSEUM.String():
+	case api.Kind_CHARTMUSEUM:
 		return NewChartMuseumClient(repo), nil
 	default:
 		return nil, fmt.Errorf("unsupported repo kind %q", repo.Kind)
