@@ -1,4 +1,4 @@
-package chartmuseumtest
+package chartrepotest
 
 import (
 	"net/http/httptest"
@@ -10,10 +10,10 @@ var (
 	username string = "user"
 	password string = "password"
 
-	// Execute the test twice, against real & fake ChartMuseum services. This
+	// ChartMuseumTests defines two tests, using real & fake ChartMuseum services. This
 	// validates the publisher is correct and, at the same time, provides
 	// reasonable confidence the fake implementation is good enough.
-	Tests = []struct {
+	ChartMuseumTests = []struct {
 		Desc       string
 		Skip       func(t *testing.T)
 		MakeServer func(t *testing.T) (string, func())
@@ -35,6 +35,24 @@ var (
 			func(t *testing.T) {},
 			func(t *testing.T) (string, func()) {
 				s := httptest.NewServer(newChartMuseumFake(t, username, password))
+				return s.URL, func() {
+					s.Close()
+				}
+			},
+		},
+	}
+
+	// HarborTests define a fake server for user with Harbor repositories
+	HarborTests = []struct {
+		Desc       string
+		Skip       func(t *testing.T)
+		MakeServer func(t *testing.T) (string, func())
+	}{
+		{
+			"fake service",
+			func(t *testing.T) {},
+			func(t *testing.T) (string, func()) {
+				s := httptest.NewServer(newHarborFake(t, username, password))
 				return s.URL, func() {
 					s.Close()
 				}

@@ -1,4 +1,4 @@
-package chartmuseumtest
+package chartrepotest
 
 import (
 	"archive/tar"

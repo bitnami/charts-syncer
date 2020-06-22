@@ -13,20 +13,20 @@ import (
 )
 
 var (
-	sourceCM = &api.SourceRepo{
+	sourceHarbor = &api.SourceRepo{
 		Repo: &api.Repo{
-			Url:  "http://fake.source.com",
-			Kind: api.Kind_CHARTMUSEUM,
+			Url:  "http://fake.source.com/chartrepo/library",
+			Kind: "HARBOR",
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
 			},
 		},
 	}
-	targetCM = &api.TargetRepo{
+	targetHarbor = &api.TargetRepo{
 		Repo: &api.Repo{
-			Url:  "http://fake.target.com",
-			Kind: api.Kind_CHARTMUSEUM,
+			Url:  "http://fake.target.com/chartrepo/library",
+			Kind: "HARBOR",
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
@@ -37,8 +37,8 @@ var (
 	}
 )
 
-func TestPublishToChartmuseum(t *testing.T) {
-	for _, test := range chartrepotest.ChartMuseumTests {
+func TestPublishToHarbor(t *testing.T) {
+	for _, test := range chartrepotest.HarborTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)
@@ -46,26 +46,27 @@ func TestPublishToChartmuseum(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Update source repo url
-			targetCM.Repo.Url = url
+			// Update target repo url
+			newURL := url + "/chartrepo/library"
+			targetHarbor.Repo.Url = newURL
 
 			// Create client for target repo
-			tc, err := NewClient(targetCM.Repo)
+			tc, err := NewClient(targetHarbor.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.PublishChart("../../testdata/apache-7.3.15.tgz", targetCM.Repo)
+			err = tc.PublishChart("../../testdata/apache-7.3.15.tgz", targetHarbor.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Check the chart really was added to the service's index.
-			req, err := http.NewRequest("GET", targetCM.Repo.Url+"/api/charts/apache", nil)
+			req, err := http.NewRequest("GET", targetHarbor.Repo.Url+"/apache", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			req.SetBasicAuth(targetCM.Repo.Auth.Username, targetCM.Repo.Auth.Password)
+			req.SetBasicAuth(targetHarbor.Repo.Auth.Username, targetHarbor.Repo.Auth.Password)
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
@@ -91,8 +92,8 @@ func TestPublishToChartmuseum(t *testing.T) {
 	}
 }
 
-func TestDownloadFromChartmuseum(t *testing.T) {
-	for _, test := range chartrepotest.ChartMuseumTests {
+func TestDownloadFromHarbor(t *testing.T) {
+	for _, test := range chartrepotest.HarborTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)
@@ -101,17 +102,13 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			defer cleanup()
 
 			// Update source repo url
-			sourceCM.Repo.Url = url
+			newURL := url + "/chartrepo/library"
+			sourceHarbor.Repo.Url = newURL
 
 			// Create client for source repo
-			sc, err := NewClient(sourceCM.Repo)
+			sc, err := NewClient(sourceHarbor.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
-			}
-
-			// If testing real docker chartmuseum, we must push the chart before download it
-			if test.Desc == "real service" {
-				sc.PublishChart("../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
 			}
 
 			// Create temporary working directory
@@ -122,7 +119,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			defer os.RemoveAll(testTmpDir)
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceCM.Repo)
+			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceHarbor.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -133,17 +130,17 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 	}
 }
 
-func TestChartExistsInChartMuseum(t *testing.T) {
+func TestChartExistsInHarbor(t *testing.T) {
 	// Update source repo url
 	// This repo is not a chartmuseum repo but there are no differences
 	// for the ChartExists function.
-	sourceCM.Repo.Url = "https://charts.bitnami.com/bitnami"
+	sourceHarbor.Repo.Url = "https://charts.bitnami.com/bitnami"
 	// Create client for source repo
-	sc, err := NewClient(sourceCM.Repo)
+	sc, err := NewClient(sourceHarbor.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceCM.Repo)
+	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceHarbor.Repo)
 	if err != nil {
 		t.Fatal(err)
 	}

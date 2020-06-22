@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartmuseumtest"
+	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartrepotest"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
 func TestSync(t *testing.T) {
-	for _, test := range chartmuseumtest.Tests {
+	for _, test := range chartrepotest.ChartMuseumTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)
@@ -47,7 +47,7 @@ func TestSync(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			charts := []*chartmuseumtest.ChartVersion{}
+			charts := []*chartrepotest.ChartVersion{}
 			if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
 				t.Fatal(err)
 			}
@@ -104,7 +104,7 @@ func TestSync(t *testing.T) {
 }
 
 func TestSyncAllVersions(t *testing.T) {
-	for _, test := range chartmuseumtest.Tests {
+	for _, test := range chartrepotest.ChartMuseumTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)

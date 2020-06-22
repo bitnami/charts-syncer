@@ -37,4 +37,5 @@ enum Kind {
     UNKNOWN = 0;
     HELM = 1;
     CHARTMUSEUM = 2;
+    HARBOR = 3;
 }

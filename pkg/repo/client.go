@@ -23,6 +23,8 @@ var NewClient = func(repo *api.Repo) (ChartRepoAPI, error) {
 		return NewClassicHelmClient(repo), nil
 	case api.Kind_CHARTMUSEUM:
 		return NewChartMuseumClient(repo), nil
+	case api.Kind_HARBOR.String():
+		return NewHarborClient(repo), nil
 	default:
 		return nil, fmt.Errorf("unsupported repo kind %q", repo.Kind)
 	}
