@@ -32,7 +32,7 @@ var (
 )
 
 func TestValidate(t *testing.T) {
-	expectedError := "source repo URL should be a valid URL"
+	expectedError := `"source.repo.url" should be a valid URL`
 	err := config.Validate()
 	if err != nil && err.Error() != expectedError {
 		t.Errorf("Incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
