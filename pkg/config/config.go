@@ -22,7 +22,7 @@ func Load(config *api.Config) error {
 
 	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
-		return errors.Trace(fmt.Errorf("tritri Error unmarshalling config file: %w", err))
+		return errors.Trace(fmt.Errorf("Error unmarshalling config file: %w", err))
 	}
 
 	return nil
