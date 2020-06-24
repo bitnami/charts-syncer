@@ -45,7 +45,7 @@ Below you can find an example configuration file:
 #
 source:
   repo:
-    kind: "HELM"
+    kind: HELM
     url: "http://localhost:8080" # local test source repo
     # auth:
     #   username: "USERNAME"
@@ -54,7 +54,7 @@ target:
   containerRegistry: "k8s.container.registry.io"
   containerRepository: "repository/demo/k8s"
   repo:
-    kind: "CHARTMUSEUM"
+    kind: CHARTMUSEUM
     url: "http://localhost:9090" # local test target repo
     # auth:
     #   username: "USERNAME"
@@ -68,7 +68,7 @@ Credentials can be provided using config file or the following environment varia
 - `TARGET_AUTH_USERNAME`
 - `TARGET_AUTH_PASSWORD`
 
-Current available Kinds are `HELM` and `CHARTMUSEUM`
+Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`
 
 ## How to build
 
