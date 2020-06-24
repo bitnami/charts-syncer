@@ -16,7 +16,7 @@ var (
 	sourceHarbor = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "http://fake.source.com/chartrepo/library",
-			Kind: "HARBOR",
+			Kind: api.Kind_HARBOR,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
@@ -26,7 +26,7 @@ var (
 	targetHarbor = &api.TargetRepo{
 		Repo: &api.Repo{
 			Url:  "http://fake.target.com/chartrepo/library",
-			Kind: "HARBOR",
+			Kind: api.Kind_HARBOR,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
