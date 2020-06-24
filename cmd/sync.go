@@ -41,8 +41,11 @@ func sync() error {
 	var errs error
 	// Load config file
 	var syncConfig api.Config
-	if err := config.LoadConfig(&syncConfig); err != nil {
-		return errors.Trace(fmt.Errorf("Error loading config file"))
+	if err := config.Load(&syncConfig); err != nil {
+		return errors.Trace(err)
+	}
+	if err := syncConfig.Validate(); err != nil {
+		return errors.Trace(err)
 	}
 	source := syncConfig.Source
 	target := syncConfig.Target

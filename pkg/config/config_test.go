@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// LoadConfig unmarshall config file into Config struct
-func TestLoadConfig(t *testing.T) {
+// Load unmarshall config file into Config struct
+func TestLoad(t *testing.T) {
 	var syncConfig api.Config
 	cfgFile := "../../testdata/example-config.yaml"
 	viper.SetConfigFile(cfgFile)
@@ -16,15 +16,15 @@ func TestLoadConfig(t *testing.T) {
 	if err := viper.ReadInConfig(); err != nil {
 		t.Errorf("Error reading config file: %+v", err)
 	}
-	if err := LoadConfig(&syncConfig); err != nil {
+	if err := Load(&syncConfig); err != nil {
 		t.Errorf("Error loading config file")
 	}
 	source := syncConfig.Source
 	target := syncConfig.Target
-	if source.Repo.Kind != "HELM" {
+	if source.Repo.Kind != api.Kind_HELM {
 		t.Errorf("Got: %s, want %s", source.Repo.Kind, "HELM")
 	}
-	if target.Repo.Kind != "CHARTMUSEUM" {
+	if target.Repo.Kind != api.Kind_CHARTMUSEUM {
 		t.Errorf("Got: %s, want %s", target.Repo.Kind, "CHARTMUSEUM")
 	}
 	if target.ContainerRegistry != "test.registry.io" {

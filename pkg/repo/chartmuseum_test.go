@@ -16,7 +16,7 @@ var (
 	sourceCM = &api.SourceRepo{
 		Repo: &api.Repo{
 			Url:  "http://fake.source.com",
-			Kind: "CHARTMUSEUM",
+			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
@@ -26,7 +26,7 @@ var (
 	targetCM = &api.TargetRepo{
 		Repo: &api.Repo{
 			Url:  "http://fake.target.com",
-			Kind: "CHARTMUSEUM",
+			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
