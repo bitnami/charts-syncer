@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
@@ -9,30 +10,31 @@ import (
 	"k8s.io/klog"
 )
 
-// ChartMuseumClient implements ChartRepoAPI for a ChartMuseum implementation.
-type ChartMuseumClient struct {
+// HarborClient implements ChartRepoAPI for a Harbor implementation.
+type HarborClient struct {
 	repo *api.Repo
 }
 
-// NewChartMuseumClient creates a new `ChartMuseumClient`.
-func NewChartMuseumClient(repo *api.Repo) *ChartMuseumClient {
-	return &ChartMuseumClient{repo: repo}
+// NewHarborClient creates a new `HarborClient`.
+func NewHarborClient(repo *api.Repo) *HarborClient {
+	return &HarborClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to ChartsMuseum repository.
-func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) error {
-	klog.V(3).Infof("Publishing %s to chartmuseum repo", filepath)
-	apiEndpoint := targetRepo.Url + "/api/charts"
+// PublishChart publishes a packaged chart to Harbor repository.
+func (c *HarborClient) PublishChart(filepath string, targetRepo *api.Repo) error {
+	klog.V(3).Infof("Publishing %s to Harbor repo", filepath)
+	apiEndpoint := strings.Replace(targetRepo.Url, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
 	if err := pushToChartMuseumLike(apiEndpoint, filepath, targetRepo); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
 }
 
-// DownloadChart downloads a packaged chart from ChartsMuseum repository.
-func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error {
+// DownloadChart downloads a packaged chart from Harbor repository.
+func (c *HarborClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error {
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
 	apiEndpoint := sourceRepo.Url + "/charts/" + name + "-" + version + ".tgz"
+	klog.V(4).Infof("XXXXXXXXXX .  XXXX .   XXXXX .   XXXX : apiEndpotint for download is: %s", apiEndpoint)
 	if err := downloadFromChartMuseumLike(apiEndpoint, filepath, name, version, sourceRepo); err != nil {
 		return errors.Trace(err)
 	}
@@ -40,7 +42,7 @@ func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version 
 }
 
 // ChartExists checks if a chart exists in the repo.
-func (c *ChartMuseumClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
+func (c *HarborClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
 	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
 	index, err := utils.LoadIndexFromRepo(repo)
 	if err != nil {

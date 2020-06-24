@@ -1,4 +1,4 @@
-package chartmuseumtest
+package chartrepotest
 
 import (
 	"archive/tar"
@@ -15,6 +15,10 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
+)
+
+var (
+	cmRegex *regexp.Regexp = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
 )
 
 // A tChartMuseumFake is a fake ChartMuseum implementation useful for (fast)
@@ -34,24 +38,6 @@ type tChartMuseumFake struct {
 
 	// Map of chart name to indexed versions, as returned by the charts API.
 	index map[string][]*ChartVersion
-}
-
-// Metadata in Chart.yaml files
-type Metadata struct {
-	AppVersion string `json:"appVersion"`
-	Name       string `json:"name"`
-	Version    string `json:"version"`
-}
-
-type ChartVersion struct {
-	Name    string   `json:"name"`
-	Version string   `json:"version"`
-	URLs    []string `json:"urls"`
-}
-
-type httpError struct {
-	status int
-	body   string
 }
 
 func newChartMuseumFake(t *testing.T, username, password string) *tChartMuseumFake {
@@ -89,8 +75,7 @@ func (cm *tChartMuseumFake) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cm.indexGet(w, r)
 		return
 	}
-	re := regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	if re.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+	if cmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		chartPackage := strings.Split(r.URL.Path, "/")[2]
 		cm.chartPackageGet(w, r, chartPackage)
 		return
