@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
+	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
 // ChartRepoAPI defines the methods a repo must implement.
 type ChartRepoAPI interface {
-	DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error
+	DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error
 	PublishChart(filepath string, targetRepo *api.Repo) error
 	ChartExists(name string, version string, targetRepo *api.Repo) (bool, error)
 }

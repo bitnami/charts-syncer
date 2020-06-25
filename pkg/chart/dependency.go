@@ -12,6 +12,7 @@ import (
 	"github.com/mkmik/multierror"
 	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
+	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 )
 
@@ -21,7 +22,7 @@ type dependencies struct {
 }
 
 // syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary.
-func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool) error {
+func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, syncDeps bool) error {
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
 	var missingDependencies = false
@@ -62,7 +63,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 			continue
 		}
 		klog.Infof("Dependency %s-%s not synced yet. Syncing now", depName, depVersion)
-		if err := Sync(depName, depVersion, sourceRepo, target, true); err != nil {
+		if err := Sync(depName, depVersion, sourceRepo, target, sourceIndex, true); err != nil {
 			return errors.Trace(err)
 		}
 		chartExists, err := tc.ChartExists(depName, depVersion, target.Repo)

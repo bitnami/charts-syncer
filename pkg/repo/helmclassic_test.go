@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 )
 
 var (
@@ -37,7 +38,11 @@ func TestDownloadFromHelmClassic(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not create a client for the source repo", err)
 	}
-	if err := sc.DownloadChart(chartPath, "nginx", "5.3.1", sourceHelm.Repo); err != nil {
+	sourceIndex, err := utils.LoadIndexFromRepo(sourceHelm.Repo)
+	if err != nil {
+		t.Errorf("Error loading index.yaml: %w", err)
+	}
+	if err := sc.DownloadChart(chartPath, "nginx", "5.3.1", sourceHelm.Repo, sourceIndex); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(chartPath); err != nil {

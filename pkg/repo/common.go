@@ -15,12 +15,12 @@ import (
 )
 
 // download downloads a packaged from the given repo.
-func download(filepath string, name string, version string, downloadURL string, sourceRepo *api.Repo) error {
+func download(filepath string, downloadURL string, sourceRepo *api.Repo) error {
 	// Get the data
 	req, err := http.NewRequest("GET", downloadURL, nil)
 	klog.V(4).Infof("GET %q", downloadURL)
 	if err != nil {
-		return errors.Annotatef(err, "Error getting %q chart from %q", name, downloadURL)
+		return errors.Annotatef(err, "Error getting chart from %q", downloadURL)
 	}
 	if sourceRepo.Auth != nil && sourceRepo.Auth.Username != "" && sourceRepo.Auth.Password != "" {
 		klog.V(4).Infof("Using basic authentication %q:****", sourceRepo.Auth.Username)
@@ -35,7 +35,7 @@ func download(filepath string, name string, version string, downloadURL string, 
 
 	// Check status code
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return errors.Errorf("Error downloading chart %s-%s. Status code is %d", name, version, res.StatusCode)
+		return errors.Errorf("Error downloading chart %s. Status code is %d", downloadURL, res.StatusCode)
 	}
 	// Create the file
 	out, err := os.Create(filepath)
@@ -106,8 +106,8 @@ func pushToChartMuseumLike(apiEndpoint string, filepath string, targetRepo *api.
 }
 
 // downloadFromChartMuseumLike downloads a chart from a repo implementing the ChartMuseum API (chartmuseum and harbor)
-func downloadFromChartMuseumLike(apiEndpoint string, filepath string, name string, version string, sourceRepo *api.Repo) error {
-	if err := download(filepath, name, version, apiEndpoint, sourceRepo); err != nil {
+func downloadFromChartMuseumLike(apiEndpoint string, filepath string, sourceRepo *api.Repo) error {
+	if err := download(filepath, apiEndpoint, sourceRepo); err != nil {
 		return errors.Trace(err)
 	}
 	// Check contentType

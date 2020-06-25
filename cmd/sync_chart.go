@@ -100,7 +100,7 @@ func syncChart() error {
 			klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
 			return nil
 		}
-		if err := chart.Sync(name, version, source.Repo, target, false); err != nil {
+		if err := chart.Sync(name, version, source.Repo, target, sourceIndex, false); err != nil {
 			return errors.Trace(err)
 		}
 	}
