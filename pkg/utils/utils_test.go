@@ -104,7 +104,7 @@ func TestGetDownloadURL(t *testing.T) {
 	downloadURL, _ := GetDownloadURL("apache", "7.3.15", sourceIndex)
 	expectedDownloadURL := "https://repo-url.com/charts/apache-7.3.15.tgz"
 	if downloadURL != expectedDownloadURL {
-		t.Errorf("Wrong dependency, got: %s , want: %s", downloadURL, expectedDownloadURL)
+		t.Errorf("Wrong download URL, got: %s , want: %s", downloadURL, expectedDownloadURL)
 	}
 }
 
@@ -113,9 +113,9 @@ func TestFindChartByVersion(t *testing.T) {
 	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
 	chart := findChartByVersion(sourceIndex.Entries["apache"], "7.3.15")
 	if chart.Name != "apache" {
-		t.Errorf("Wrong dependency, got: %s , want: %s", chart.Name, "apache")
+		t.Errorf("Wrong chart, got: %s , want: %s", chart.Name, "apache")
 	}
 	if chart.Version != "7.3.15" {
-		t.Errorf("Wrong dependency, got: %s , want: %s", chart.Version, "7.3.15")
+		t.Errorf("Wrong chart version, got: %s , want: %s", chart.Version, "7.3.15")
 	}
 }
