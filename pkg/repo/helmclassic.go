@@ -29,11 +29,11 @@ func (c *ClassicHelmClient) PublishChart(filepath string, targetRepo *api.Repo) 
 // DownloadChart downloads a packaged chart from a classic helm repository.
 func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
-	downloadURL, err := utils.GetDownloadURL(name, version, index)
+	downloadURL, err := utils.FindChartURL(name, version, index)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if err := download(filepath, name, version, downloadURL, sourceRepo); err != nil {
+	if err := download(filepath, downloadURL, sourceRepo); err != nil {
 		return errors.Trace(err)
 	}
 	// Check contentType

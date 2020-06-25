@@ -101,10 +101,18 @@ func TestGetDateThreshold(t *testing.T) {
 func TestGetDownloadURL(t *testing.T) {
 	sourceIndex := helmRepo.NewIndexFile()
 	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
-	downloadURL, _ := GetDownloadURL("apache", "7.3.15", sourceIndex)
+	downloadURL, err := FindChartURL("apache", "7.3.15", sourceIndex)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedDownloadURL := "https://repo-url.com/charts/apache-7.3.15.tgz"
 	if downloadURL != expectedDownloadURL {
 		t.Errorf("Wrong download URL, got: %s , want: %s", downloadURL, expectedDownloadURL)
+	}
+	expectedError := "unable to find chart url in index"
+	downloadURL, err = FindChartURL("apache", "0.0.333", sourceIndex)
+	if err.Error() != expectedError {
+		t.Errorf("Wrong error message, got: %s , want: %s", err.Error(), expectedError)
 	}
 }
 

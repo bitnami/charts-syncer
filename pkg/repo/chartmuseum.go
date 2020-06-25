@@ -33,11 +33,11 @@ func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) 
 // DownloadChart downloads a packaged chart from ChartsMuseum repository.
 func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
-	apiEndpoint, err := utils.GetDownloadURL(name, version, index)
+	apiEndpoint, err := utils.FindChartURL(name, version, index)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if err := downloadFromChartMuseumLike(apiEndpoint, filepath, name, version, sourceRepo); err != nil {
+	if err := downloadFromChartMuseumLike(apiEndpoint, filepath, sourceRepo); err != nil {
 		return errors.Trace(err)
 	}
 	return nil

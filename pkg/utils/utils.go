@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -134,10 +135,13 @@ func GetDateThreshold(date string) (time.Time, error) {
 	return dateThreshold, nil
 }
 
-// GetDownloadURL will return the chart url
-func GetDownloadURL(name string, version string, index *helmRepo.IndexFile) (string, error) {
+// FindChartURL will return the chart url
+func FindChartURL(name string, version string, index *helmRepo.IndexFile) (string, error) {
 	chart := findChartByVersion(index.Entries[name], version)
-	return chart.URLs[0], nil
+	if chart != nil {
+		return chart.URLs[0], nil
+	}
+	return "", fmt.Errorf("unable to find chart url in index")
 }
 
 // findChartByVersion returns the chart that matches a provided version from a list of charts.
