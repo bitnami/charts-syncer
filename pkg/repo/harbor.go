@@ -7,6 +7,7 @@ import (
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
 	"github.com/juju/errors"
+	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 )
 
@@ -31,10 +32,12 @@ func (c *HarborClient) PublishChart(filepath string, targetRepo *api.Repo) error
 }
 
 // DownloadChart downloads a packaged chart from Harbor repository.
-func (c *HarborClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo) error {
+func (c *HarborClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
-	apiEndpoint := sourceRepo.Url + "/charts/" + name + "-" + version + ".tgz"
-	klog.V(4).Infof("XXXXXXXXXX .  XXXX .   XXXXX .   XXXX : apiEndpotint for download is: %s", apiEndpoint)
+	apiEndpoint, err := utils.GetDownloadURL(name, version, index)
+	if err != nil {
+		return errors.Trace(err)
+	}
 	if err := downloadFromChartMuseumLike(apiEndpoint, filepath, name, version, sourceRepo); err != nil {
 		return errors.Trace(err)
 	}

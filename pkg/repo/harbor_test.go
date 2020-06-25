@@ -10,6 +10,8 @@ import (
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
 	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartrepotest"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/repo"
 )
 
 var (
@@ -118,8 +120,11 @@ func TestDownloadFromHarbor(t *testing.T) {
 			}
 			defer os.RemoveAll(testTmpDir)
 
+			sourceIndex := repo.NewIndexFile()
+			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", newURL+"/charts", "sha256:1234567890")
+
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceHarbor.Repo)
+			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceHarbor.Repo, sourceIndex)
 			if err != nil {
 				t.Fatal(err)
 			}

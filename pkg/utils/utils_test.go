@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
@@ -94,5 +95,27 @@ func TestGetDateThreshold(t *testing.T) {
 	}
 	if dateThreshold != date {
 		t.Errorf("Incorrect dateThreshold, expected: %v, got %v", date, dateThreshold)
+	}
+}
+
+func TestGetDownloadURL(t *testing.T) {
+	sourceIndex := helmRepo.NewIndexFile()
+	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
+	downloadURL, _ := GetDownloadURL("apache", "7.3.15", sourceIndex)
+	expectedDownloadURL := "https://repo-url.com/charts/apache-7.3.15.tgz"
+	if downloadURL != expectedDownloadURL {
+		t.Errorf("Wrong dependency, got: %s , want: %s", downloadURL, expectedDownloadURL)
+	}
+}
+
+func TestFindChartByVersion(t *testing.T) {
+	sourceIndex := helmRepo.NewIndexFile()
+	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
+	chart := findChartByVersion(sourceIndex.Entries["apache"], "7.3.15")
+	if chart.Name != "apache" {
+		t.Errorf("Wrong dependency, got: %s , want: %s", chart.Name, "apache")
+	}
+	if chart.Version != "7.3.15" {
+		t.Errorf("Wrong dependency, got: %s , want: %s", chart.Version, "7.3.15")
 	}
 }

@@ -84,7 +84,7 @@ func sync() error {
 				continue
 			}
 			klog.Infof("Syncing %s-%s", chartName, chartVersion)
-			if err := chart.Sync(chartName, chartVersion, source.Repo, target, true); err != nil {
+			if err := chart.Sync(chartName, chartVersion, source.Repo, target, sourceIndex, true); err != nil {
 				errs = multierror.Append(errs, errors.Trace(err))
 			}
 		}

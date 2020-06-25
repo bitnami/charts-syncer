@@ -133,3 +133,19 @@ func GetDateThreshold(date string) (time.Time, error) {
 	}
 	return dateThreshold, nil
 }
+
+// GetDownloadURL will return the chart url
+func GetDownloadURL(name string, version string, index *helmRepo.IndexFile) (string, error) {
+	chart := findChartByVersion(index.Entries[name], version)
+	return chart.URLs[0], nil
+}
+
+// findChartByVersion returns the chart that matches a provided version from a list of charts.
+func findChartByVersion(chartVersions []*helmRepo.ChartVersion, version string) *helmRepo.ChartVersion {
+	for _, chart := range chartVersions {
+		if chart.Version == version {
+			return chart
+		}
+	}
+	return nil
+}

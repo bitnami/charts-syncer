@@ -27,9 +27,14 @@ func TestSync(t *testing.T) {
 			// Update target url
 			target.Repo.Url = url
 
+			sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
+			if err != nil {
+				t.Errorf("Error loading index.yaml: %w", err)
+			}
+
 			name := "zookeeper"
 			version := "5.11.0"
-			if err := Sync(name, version, source.Repo, target, false); err != nil {
+			if err := Sync(name, version, source.Repo, target, sourceIndex, false); err != nil {
 				t.Fatal(err)
 			}
 
@@ -78,7 +83,7 @@ func TestSync(t *testing.T) {
 					t.Fatal("could not create a client for the source repo", err)
 				}
 				chartPath := path.Join(testTmpDir, "zookeeper-5.11.0.tgz")
-				if err := tc.DownloadChart(chartPath, "zookeeper", "5.11.0", target.Repo); err != nil {
+				if err := tc.DownloadChart(chartPath, "zookeeper", "5.11.0", target.Repo, sourceIndex); err != nil {
 					t.Fatal(err)
 				}
 				if err := utils.Untar(chartPath, testTmpDir); err != nil {

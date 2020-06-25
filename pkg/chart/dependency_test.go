@@ -25,8 +25,13 @@ func TestSyncDependencies(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
+	if err != nil {
+		t.Errorf("Error loading index.yaml: %w", err)
+	}
+
 	chartPath := path.Join(testTmpDir, "kafka")
-	err = syncDependencies(chartPath, source.Repo, target, false)
+	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, false)
 	expectedError := "Please sync zookeeper-5.14.3 dependency first"
 	if err != nil && err.Error() != expectedError {
 		t.Errorf("Incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
