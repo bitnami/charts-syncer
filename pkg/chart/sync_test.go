@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartrepotest"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
@@ -71,7 +71,7 @@ func TestSync(t *testing.T) {
 			// and check that all the expected changes have been applied
 			if test.Desc == "real service" {
 				// Create temporary working directory
-				testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+				testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 				t.Logf("Working dir is: %s", testTmpDir)
 				if err != nil {
 					t.Errorf("Error creating temporary: %s", testTmpDir)

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 )
 
 func TestNewClient(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/pbjson"
 	"github.com/golang/protobuf/proto"
 	"github.com/juju/errors"

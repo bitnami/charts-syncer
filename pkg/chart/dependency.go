@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"path"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"gopkg.in/yaml.v2"

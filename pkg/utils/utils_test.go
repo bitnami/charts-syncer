@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
@@ -62,7 +62,7 @@ func TestDownloadIndex(t *testing.T) {
 func TestUntar(t *testing.T) {
 	filepath := "../../testdata/apache-7.3.15.tgz"
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}

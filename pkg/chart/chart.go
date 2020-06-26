@@ -7,7 +7,7 @@ import (
 
 	"github.com/juju/errors"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 )
 
 // updateValuesFile performs some substitutions to a given values.yaml file.

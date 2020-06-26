@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: c3tsyncer-config
+  name: charts-syncer-config
 data:
-  c3tsyncer.yaml: |-
+  charts-syncer.yaml: |-
     #
     # Example config file
     #

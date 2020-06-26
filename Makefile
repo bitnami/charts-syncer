@@ -1,4 +1,4 @@
-OUTPUT = ./dist/c3tsyncer
+OUTPUT = ./dist/charts-syncer
 GO_SOURCES = $(shell find . -type f -name '*.go')
 
 test:
@@ -12,7 +12,7 @@ fullcover:
 	GO111MODULE=on go tool cover -func=coverage.out
 
 gen:
-	go generate github.com/bitnami-labs/chart-repository-syncer/...
+	go generate github.com/bitnami-labs/charts-syncer/...
 
 build: $(GO_SOURCES)
 	GO111MODULE=on go build -o $(OUTPUT) ./cmd/

@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/spf13/viper"
 )
 
