@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	"github.com/juju/errors"
 	"k8s.io/klog"
 )

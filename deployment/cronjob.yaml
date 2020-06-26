@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: c3tsyncer
+  name: charts-syncer
 spec:
   schedule: "*/30 * * * *"
   jobTemplate:
@@ -13,7 +13,7 @@ spec:
           - name: c3styncer
             imagePullPolicy: Always
             image: IMAGE_NAME:TAG
-            args: ["sync", "--config", "/c3tsyncer.yaml", "-v", "4"]
+            args: ["sync", "--config", "/charts-syncer.yaml", "-v", "4"]
             # env:
             #   - name: SOURCE_REPO_USERNAME
             #     valueFrom:
@@ -37,10 +37,10 @@ spec:
             #         key: target-password
             volumeMounts:
               - name: config
-                mountPath: /c3tsyncer.yaml
-                subPath: c3tsyncer.yaml
+                mountPath: /charts-syncer.yaml
+                subPath: charts-syncer.yaml
           restartPolicy: OnFailure
           volumes:
             - name: config
               configMap:
-                name: c3tsyncer-config
+                name: charts-syncer-config

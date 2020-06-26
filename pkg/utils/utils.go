@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/juju/errors"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 

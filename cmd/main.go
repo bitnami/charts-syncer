@@ -18,9 +18,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "c3tsyncer",
+	Use:   "charts-syncer",
 	Short: "tool to syncronize helm chart repositories",
-	Long: `c3tsyncer (chart-repository-syncer) is a tool to syncronize
+	Long: `charts-syncer is a tool to syncronize
 chart repositories from a source repository to a target repository.
 
 You can sync a single chart or the whole repository`,
@@ -35,7 +35,7 @@ func init() {
 	flag.CommandLine.Lookup("v").Value.Set("2")
 
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.c3tsyncer.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.charts-syncer.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "only shows the charts pending to be synced without syncing them")
 
 	flag.Usage = func() {
@@ -60,9 +60,9 @@ func initConfig() {
 			klog.Info(err)
 			os.Exit(1)
 		}
-		// Search config in home directory with name ".c3tsyncer" (without extension).
+		// Search config in home directory with name ".charts-syncer" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".c3tsyncer")
+		viper.SetConfigName(".charts-syncer")
 	}
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {

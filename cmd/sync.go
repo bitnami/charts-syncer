@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/chart"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/config"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/chart"
+	"github.com/bitnami-labs/charts-syncer/pkg/config"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog"

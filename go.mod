@@ -1,4 +1,4 @@
-module github.com/bitnami-labs/chart-repository-syncer
+module github.com/bitnami-labs/charts-syncer
 
 go 1.13
 

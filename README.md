@@ -1,7 +1,7 @@
-[![CircleCI](https://circleci.com/gh/bitnami-labs/chart-repository-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami-labs/chart-repository-syncer/tree/master)
+[![CircleCI](https://circleci.com/gh/bitnami-labs/charts-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami-labs/charts-syncer/tree/master)
 
 
-# c3tsyncer
+# charts-syncer
 
 Sync chart packages between chart repositories
 
@@ -10,25 +10,25 @@ Sync chart packages between chart repositories
 #### Sync a specific chart
 
 ~~~bash
-$ c3tsyncer syncChart --name nginx --version 1.0.0 --config ./c3tsyncer.yaml
+$ charts-syncer syncChart --name nginx --version 1.0.0 --config ./charts-syncer.yaml
 ~~~
 
 #### Sync all versions for a specific chart
 
 ~~~bash
-$ c3tsyncer syncChart --name nginx --all-versions --config ./c3tsyncer.yaml
+$ charts-syncer syncChart --name nginx --all-versions --config ./charts-syncer.yaml
 ~~~
 
 #### Sync all charts and versions
 
 ~~~bash
-$ c3tsyncer sync --config ./c3tsyncer.yaml
+$ charts-syncer sync --config ./charts-syncer.yaml
 ~~~
 
 #### Sync all charts and versions from specific date
 
 ~~~bash
-$ c3tsyncer sync --config --from-date 2020-05-15 ./c3tsyncer.yaml
+$ charts-syncer sync --config --from-date 2020-05-15 ./charts-syncer.yaml
 ~~~
 
  > Date should be in format YYYY-MM-DD

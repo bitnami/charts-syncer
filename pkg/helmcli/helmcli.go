@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"path"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/juju/errors"
 	"k8s.io/klog"
 )

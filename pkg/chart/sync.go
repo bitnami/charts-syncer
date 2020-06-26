@@ -10,10 +10,10 @@ import (
 	"github.com/mkmik/multierror"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
@@ -47,7 +47,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 // Sync is the main function. It downloads, transform, package and publish a chart.
 func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, syncDeps bool) error {
 	// Create temporary working directory
-	tmpDir, err := ioutil.TempDir("", "c3tsyncer")
+	tmpDir, err := ioutil.TempDir("", "charts-syncer")
 	if err != nil {
 		return errors.Annotatef(err, "Error creating temporary: %s", tmpDir)
 	}

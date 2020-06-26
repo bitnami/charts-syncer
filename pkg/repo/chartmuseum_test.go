@@ -8,8 +8,8 @@ import (
 	"path"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/chartrepotest"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
 )
@@ -117,7 +117,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			}
 
 			// Create temporary working directory
-			testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+			testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 			if err != nil {
 				t.Errorf("Error creating temporary: %s", testTmpDir)
 			}

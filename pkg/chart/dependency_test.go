@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
 )
 
 func TestSyncDependencies(t *testing.T) {
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
@@ -47,7 +47,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 		},
 	}
 
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
@@ -97,7 +97,7 @@ func TestWriteRequirementsFile(t *testing.T) {
 		ContainerRepository: "test/repo",
 	}
 
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}

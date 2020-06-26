@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/chart"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/config"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/chart"
+	"github.com/bitnami-labs/charts-syncer/pkg/config"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
@@ -30,7 +30,7 @@ func newSyncChart() *cobra.Command {
 		Long: `Syncronize a specific chart version between chart repos:
 
 	Example:
-	$ c3tsyncer syncChart --name nginx --version 1.0.0 --config .c3tsyncer.yaml`,
+	$ charts-syncer syncChart --name nginx --version 1.0.0 --config .charts-syncer.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.Trace(syncChart())
 		},

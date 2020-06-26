@@ -6,9 +6,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/repo"
-	"github.com/bitnami-labs/chart-repository-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 var (
@@ -34,7 +34,7 @@ var (
 
 func TestDownload(t *testing.T) {
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}
@@ -89,7 +89,7 @@ volumePermissions:
     repository: test/repo/custom-base-image
     tag: r0`
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "c3tsyncer-tests")
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
 		t.Errorf("Error creating temporary: %s", testTmpDir)
 	}

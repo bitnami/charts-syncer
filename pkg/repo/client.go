@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 
-	"github.com/bitnami-labs/chart-repository-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/api"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
