@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	"github.com/juju/errors"
+	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 )
@@ -57,4 +59,31 @@ func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo)
 		}
 	}
 	return errors.Trace(err)
+}
+
+// updateReadmeFile performs some substitutions to a given README.md file.
+func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName string) error {
+	klog.V(2).Infof("Updating README file")
+	readme, err := ioutil.ReadFile(readmeFile)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	// Update helm repo add with string replacement
+	addBitnamiRepoLine := fmt.Sprintf("helm repo add bitnami %s", sourceURL)
+	addCustomRepoLine := fmt.Sprintf("helm repo add %s %s", repoName, targetURL)
+	newContent := strings.ReplaceAll(string(readme), addBitnamiRepoLine, addCustomRepoLine)
+	// Update bitnami/chart references with regex
+	regexString := fmt.Sprintf(`(?m)(\s)(bitnami/%s)(\s)`, chartName)
+	regex := regexp.MustCompile(regexString)
+	submatch := regex.FindStringSubmatch(string(readme))
+	if len(submatch) > 0 {
+		klog.V(2).Infof("Updating bitnami/ references")
+		replaceText := fmt.Sprintf("%s%s/%s%s", submatch[1], repoName, chartName, submatch[3])
+		newContent = regex.ReplaceAllString(newContent, replaceText)
+	}
+	err = ioutil.WriteFile(readmeFile, []byte(newContent), 0)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	return nil
 }

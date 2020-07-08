@@ -18,6 +18,7 @@ message TargetRepo {
     Repo repo = 1;
     string container_registry = 2;
     string container_repository = 3;
+    string repo_name = 4;
 }
 
 // Generic repo representation

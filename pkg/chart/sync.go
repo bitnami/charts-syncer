@@ -90,11 +90,22 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	valuesProductionFile := path.Join(chartPath, "values-production.yaml")
 	if _, err := os.Stat(valuesFile); err == nil {
 		klog.V(3).Infof("Chart %s-%s has values.yaml file...", name, version)
-		updateValuesFile(valuesFile, target)
+		if err := updateValuesFile(valuesFile, target); err != nil {
+			return errors.Trace(err)
+		}
 	}
 	if _, err := os.Stat(valuesProductionFile); err == nil {
 		klog.V(3).Infof("Chart %s-%s has values-production.yaml...", name, version)
-		updateValuesFile(valuesProductionFile, target)
+		if err := updateValuesFile(valuesProductionFile, target); err != nil {
+			return errors.Trace(err)
+		}
+	}
+	readmeFile := path.Join(chartPath, "README.md")
+	if _, err := os.Stat(readmeFile); err == nil {
+		klog.V(3).Infof("Chart %s-%s has README.md...", name, version)
+		if err := updateReadmeFile(readmeFile, sourceRepo.Url, target.Repo.Url, name, target.RepoName); err != nil {
+			return errors.Trace(err)
+		}
 	}
 
 	// Package chart
