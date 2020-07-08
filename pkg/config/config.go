@@ -30,7 +30,7 @@ func Load(config *api.Config) error {
 		return errors.Trace(fmt.Errorf("Error unmarshalling config file: %w", err))
 	}
 	if config.Target.RepoName == "" {
-		klog.V(2).Infof("'target.repoName' property is empty. Using 'myrepo' default value")
+		klog.Warning("'target.repoName' property is empty. Using 'myrepo' default value")
 		config.Target.RepoName = defaultRepoName
 	}
 

@@ -12,6 +12,11 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 )
 
+var (
+	repositoryRegex = regexp.MustCompile(`(?m)(repository:[[:blank:]])(.*)(/)`)
+	registryRegex   = regexp.MustCompile(`(?m)(registry:[[:blank:]])(.*)(.*$)`)
+)
+
 // updateValuesFile performs some substitutions to a given values.yaml file.
 func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 	if err := updateContainerImageRegistry(valuesFile, targetRepo); err != nil {
@@ -25,15 +30,14 @@ func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 
 // updateContainerImageRepository updates the container repository in a values.yaml file.
 func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRepo) error {
-	regex := regexp.MustCompile(`(?m)(repository:[[:blank:]])(.*)(/)`)
 	values, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	submatch := regex.FindStringSubmatch(string(values))
+	submatch := repositoryRegex.FindStringSubmatch(string(values))
 	if len(submatch) > 0 {
 		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], targetRepo.ContainerRepository, submatch[3])
-		newContents := regex.ReplaceAllString(string(values), replaceLine)
+		newContents := repositoryRegex.ReplaceAllString(string(values), replaceLine)
 		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {
 			return errors.Trace(err)
@@ -44,15 +48,14 @@ func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRep
 
 // updateContainerImageRegistry updates the container registry in a values.yaml file.
 func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo) error {
-	regex := regexp.MustCompile(`(?m)(registry:[[:blank:]])(.*)(.*$)`)
 	values, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	submatch := regex.FindStringSubmatch(string(values))
+	submatch := registryRegex.FindStringSubmatch(string(values))
 	if len(submatch) > 0 {
 		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], targetRepo.ContainerRegistry, submatch[3])
-		newContents := regex.ReplaceAllString(string(values), replaceLine)
+		newContents := registryRegex.ReplaceAllString(string(values), replaceLine)
 		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {
 			return errors.Trace(err)
@@ -63,7 +66,7 @@ func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo)
 
 // updateReadmeFile performs some substitutions to a given README.md file.
 func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName string) error {
-	klog.V(2).Infof("Updating README file")
+	klog.V(3).Infof("Updating README file")
 	readme, err := ioutil.ReadFile(readmeFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -77,13 +80,9 @@ func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName stri
 	regex := regexp.MustCompile(regexString)
 	submatch := regex.FindStringSubmatch(string(readme))
 	if len(submatch) > 0 {
-		klog.V(2).Infof("Updating bitnami/ references")
+		klog.V(4).Infof("Updating bitnami/ references")
 		replaceText := fmt.Sprintf("%s%s/%s%s", submatch[1], repoName, chartName, submatch[3])
 		newContent = regex.ReplaceAllString(newContent, replaceText)
 	}
-	err = ioutil.WriteFile(readmeFile, []byte(newContent), 0)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	return nil
+	return errors.Trace(ioutil.WriteFile(readmeFile, []byte(newContent), 0))
 }
