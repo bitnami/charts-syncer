@@ -28,7 +28,7 @@ $ charts-syncer sync --config ./charts-syncer.yaml
 #### Sync all charts and versions from specific date
 
 ~~~bash
-$ charts-syncer sync --config --from-date 2020-05-15 ./charts-syncer.yaml
+$ charts-syncer sync --from-date 2020-05-15 --config ./charts-syncer.yaml
 ~~~
 
  > Date should be in format YYYY-MM-DD
@@ -62,6 +62,10 @@ target:
     #   password: "PASSWORD"#
 ~~~
 
+> Note the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
+>
+> Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
+
 Credentials can be provided using config file or the following environment variables:
 
 - `SOURCE_AUTH_USERNAME`
@@ -69,9 +73,19 @@ Credentials can be provided using config file or the following environment varia
 - `TARGET_AUTH_USERNAME`
 - `TARGET_AUTH_PASSWORD`
 
-Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`
+Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`. Below you can find the compatibility matrix betweeen source and targets repositories.
 
-> Note the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`. Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
+| Source Repo | Target Repo | Supported |
+|-------------|-------------|-----------|
+| HELM        | HELM        | Yes       |
+| HELM        | CHARTMUSEUM | Yes       |
+| HELM        | HARBOR      | Yes       |
+| CHARTMUSEUM | HELM        | No        |
+| CHARTMUSEUM | CHARTMUSEUM | Yes       |
+| CHARTMUSEUM | HARBOR      | Yes       |
+| HARBOR      | HELM        | No        |
+| HARBOR      | CHARTMUSEUM | Yes       |
+| HARBOR      | HARBOR      | Yes       |
 
 
 ### Harbor example
@@ -123,7 +137,13 @@ These files are updated with the new container registry where the chart should p
 
 If the chart has any dependency, they should be registered in this file. The requirements.yaml and requirements.lock file will be updated to retrieve the dependencies from the target repository.
 
-Let's see the performed changes with an example. Imagine I just synced the Ghost chart from the Bitnami chart repo to a local chartmuseum repo with no authentication.
+#### Update README.md
+
+README files for bitnami charts includes a TLDR section with instructions to add the helm repository to helm cli and 
+
+------
+
+Let's see the performed changes with an example. Imagine I sync the Ghost chart from the Bitnami chart repo to a local chartmuseum repo with no authentication.
 
 I would use this config file:
 
@@ -140,7 +160,9 @@ target:
     url: "http://localhost:8080"
 ~~~
 
-After executing the tool, these are the changes performed to the values.yaml file
+After executing the tool, these are the changes performed to the following files:
+
+#### values.yaml
 
 ~~~diff
 diff --git a/values.yaml b/values.yaml
@@ -171,7 +193,7 @@ index dff53b1..a9d5884 100755
      ## Optionally specify an array of imagePullSecrets.
 ~~~
 
-And this the changes performed to the requirements.lock file:
+#### requirements.yaml
 
 ~~~diff
 diff --git a/requirements.lock b/requirements.lock
@@ -192,6 +214,51 @@ index ae8a2c5..ea23e53 100755
 -generated: "2020-07-06T18:13:45.662082005Z"
 +digest: sha256:fbd22a3fc7b93ce6875a37902a3c8ccbb5dd3db2611ec9860b99e49d9f23196e
 +generated: "2020-07-07T12:57:28.573258+02:00"
+~~~
+
+#### README.md
+
+~~~diff
+diff --git a/README.md b/README.md
+index 3fa7d7b..504894e 100755
+--- a/README.md
++++ b/README.md
+@@ -5,8 +5,8 @@
+ ## TL;DR;
+
+ ```console
+-$ helm repo add bitnami https://charts.bitnami.com/bitnami
+-$ helm install my-release bitnami/ghost
++$ helm repo add myrepo http://localhost:8080
++$ helm install my-release myrepo/ghost
+ ```
+
+ ## Introduction
+@@ -29,7 +29,7 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
+ To install the chart with the release name `my-release`:
+
+ ```console
+-$ helm install my-release bitnami/ghost
++$ helm install my-release myrepo/ghost
+ ```
+
+ The command deploys Ghost on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+@@ -168,7 +168,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
+ ```console
+ $ helm install my-release \
+   --set ghostUsername=admin,ghostPassword=password,mariadb.mariadbRootPassword=secretpassword \
+-    bitnami/ghost
++    myrepo/ghost
+ ```
+
+ The above command sets the Ghost administrator account username and password to `admin` and `password` respectively. Additionally, it sets the MariaDB `root` user password to `secretpassword`.
+@@ -176,7 +176,7 @@ The above command sets the Ghost administrator account username and password to
+ Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
+
+ ```console
+-$ helm install my-release -f values.yaml bitnami/ghost
++$ helm install my-release -f values.yaml myrepo/ghost
+ ```
 ~~~
 
 
