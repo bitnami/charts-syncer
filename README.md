@@ -75,17 +75,17 @@ Credentials can be provided using config file or the following environment varia
 
 Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`. Below you can find the compatibility matrix betweeen source and targets repositories.
 
-| Source Repo | Target Repo | Supported |
-|-------------|-------------|-----------|
-| HELM        | HELM        | Yes       |
-| HELM        | CHARTMUSEUM | Yes       |
-| HELM        | HARBOR      | Yes       |
-| CHARTMUSEUM | HELM        | No        |
-| CHARTMUSEUM | CHARTMUSEUM | Yes       |
-| CHARTMUSEUM | HARBOR      | Yes       |
-| HARBOR      | HELM        | No        |
-| HARBOR      | CHARTMUSEUM | Yes       |
-| HARBOR      | HARBOR      | Yes       |
+| Source Repo | Target Repo | Supported          |
+|-------------|-------------|--------------------|
+| HELM        | HELM        | :white_check_mark: |
+| HELM        | CHARTMUSEUM | :white_check_mark: |
+| HELM        | HARBOR      | :white_check_mark: |
+| CHARTMUSEUM | HELM        | :x:                |
+| CHARTMUSEUM | CHARTMUSEUM | :white_check_mark: |
+| CHARTMUSEUM | HARBOR      | :white_check_mark: |
+| HARBOR      | HELM        | :x:                |
+| HARBOR      | CHARTMUSEUM | :white_check_mark: |
+| HARBOR      | HARBOR      | :white_check_mark: |
 
 
 ### Harbor example
@@ -123,7 +123,7 @@ The important thing is that the image name is specified with `registry`, `reposi
 
 The values of the parameteres `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. The `tag` remains unchanged.
 
-> ⚠️ Be aware that this tool expect the images to be already present in the target container registry.
+> :warning: Be aware that this tool expect the images to be already present in the target container registry.
 
 ## Changes performed in a chart
 
@@ -329,3 +329,4 @@ The recommended way to specify credentials is using environment variables in the
 ~~~
 
 The above environment variables are retrieved from a secret called `chart-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.
+
