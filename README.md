@@ -127,7 +127,7 @@ The values of the parameteres `containerRegistry` and `containerRepositories` fr
 
 ## Changes performed in a chart
 
-In order to migrate a chart from one repository to another and retrieve the images from a new container registry, this tools performs the following changes in the chart code:
+In order to migrate a chart from one repository to another and retrieve the images from a new container registry, this tool performs the following changes in the chart code:
 
 #### Update *values.yaml* and *values-production.yaml* (if exists)
 
@@ -135,7 +135,7 @@ These files are updated with the new container registry where the chart should p
 
 #### Update *requirements.yaml* and *requirements.lock*
 
-If the chart has any dependency, they should be registered in this file. The *requirements.yaml* and requirements.lock file will be updated to retrieve the dependencies from the target repository.
+If the chart has any dependency, they should be registered in this file. The *requirements.yaml* and *requirements.lock* file will be updated to retrieve the dependencies from the target repository.
 
 #### Update *README.md*
 
@@ -155,6 +155,7 @@ source:
     kind: HELM
     url: https://charts.bitnami.com/bitnami
 target:
+  repoName: myrepo
   containerRegistry: "my.registry.io"
   containerRepository: "test"
   repo:
