@@ -77,7 +77,7 @@ Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`. Below you can fi
 
 | Source Repo | Target Repo | Supported          |
 |-------------|-------------|--------------------|
-| HELM        | HELM        | :white_check_mark: |
+| HELM        | HELM        | :x:                |
 | HELM        | CHARTMUSEUM | :white_check_mark: |
 | HELM        | HARBOR      | :white_check_mark: |
 | CHARTMUSEUM | HELM        | :x:                |
