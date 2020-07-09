@@ -112,3 +112,49 @@ volumePermissions:
 		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
 	}
 }
+
+func TestUpdateReadmeFile(t *testing.T) {
+	originalValues := `
+# Ghost
+[Ghost](https://ghost.org/) is one of the most versatile open source content management systems on the market.
+
+## TL;DR;
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm install my-release bitnami/ghost
+...
+The above parameters map to the env variables defined in [bitnami/ghost](http://github.com/bitnami/bitnami-docker-ghost).
+	`
+	want := `
+# Ghost
+[Ghost](https://ghost.org/) is one of the most versatile open source content management systems on the market.
+
+## TL;DR;
+$ helm repo add mytestrepo https://my-new-chart-repo.com
+$ helm install my-release mytestrepo/ghost
+...
+The above parameters map to the env variables defined in [bitnami/ghost](http://github.com/bitnami/bitnami-docker-ghost).
+	`
+	// Create temporary working directory
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	if err != nil {
+		t.Errorf("Error creating temporary: %s", testTmpDir)
+	}
+	defer os.RemoveAll(testTmpDir)
+	destValuesFilePath := path.Join(testTmpDir, "README.md")
+
+	// Write file
+	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
+	if err != nil {
+		t.Errorf("Error writting destination file")
+	}
+
+	updateReadmeFile(destValuesFilePath, "https://charts.bitnami.com/bitnami", "https://my-new-chart-repo.com", "ghost", "mytestrepo")
+	readmeFile, err := ioutil.ReadFile(destValuesFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(readmeFile)
+	if want != got {
+		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
+	}
+}

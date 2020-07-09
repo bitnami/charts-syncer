@@ -51,6 +51,7 @@ source:
     #   username: "USERNAME"
     #   password: "PASSWORD"
 target:
+  repoName: "myrepo"
   containerRegistry: "k8s.container.registry.io"
   containerRepository: "repository/demo/k8s"
   repo:
@@ -111,7 +112,7 @@ In order to ease and accelerate the deployment, basic Kubernetes templates have 
 The recommended way to specify credentials is using environment variables in the CronJob manifest.
 
 ~~~yaml
-  - name: c3styncer
+  - name: charts-syncer
     image: IMAGE_NAME:TAG
     env:
       - name: SOURCE_REPO_USERNAME

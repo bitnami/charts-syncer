@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	cmRegex *regexp.Regexp = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+	cmRegex = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
 )
 
 // A tChartMuseumFake is a fake ChartMuseum implementation useful for (fast)

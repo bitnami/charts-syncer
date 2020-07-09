@@ -10,7 +10,12 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/juju/errors"
 	"github.com/spf13/viper"
+	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
+)
+
+const (
+	defaultRepoName = "myrepo"
 )
 
 // Load unmarshall config file into Config struct.
@@ -23,6 +28,10 @@ func Load(config *api.Config) error {
 	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("Error unmarshalling config file: %w", err))
+	}
+	if config.Target.RepoName == "" {
+		klog.Warning("'target.repoName' property is empty. Using 'myrepo' default value")
+		config.Target.RepoName = defaultRepoName
 	}
 
 	return nil
