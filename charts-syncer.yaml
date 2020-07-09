@@ -1,20 +1,36 @@
 #
 # Example config file
 #
+
+# source includes relevant information about the source chart repository
 source:
   repo:
+    # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: HELM
-    url: "http://localhost:8080" # local test source repo
-    # auth:
-    #   username: "USERNAME"
-    #   password: "PASSWORD"
+    # url is the url of the chart repository
+    url: http://localhost:8080 # local test source repo
+    # auth is used if the source repository is protected with basic auth (Optional section)
+    auth:
+      # username is the username used to authenticate against the source chart repo
+      username: "USERNAME"
+      # password is the password used to authenticate against the source chart repo
+      password: "PASSWORD"
+# target includes relevant information about the target chart repository
 target:
-  repoName: "myrepo"
-  containerRegistry: "demo.registry.io"
-  containerRepository: "tpizarro/demo"
+  # repoName is used to modify the README of the chart. Default value: `myrepo`
+  repoName: myrepo
+  # containerRegistry is used to update the image registry section of the values.yaml file
+  containerRegistry: demo.registry.io
+  # containerRepository is used to update the image repository section of the values.yaml file
+  containerRepository: tpizarro/demo
   repo:
+    # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: CHARTMUSEUM
-    url: "http://localhost:9090" # local test target repo
-    # auth:
-    #   username: "USERNAME"
-    #   password: "PASSWORD"
+    # url is the url of the chart repository
+    url: http://localhost:9090 # local test target repo
+    # auth is used if the target repository is protected with basic auth (Optional section)
+    auth:
+      # username is the username used to authenticate against the target chart repo
+      username: "USERNAME"
+      # password is the password used to authenticate against the target chart repo
+      password: "PASSWORD"

@@ -3,17 +3,17 @@
 #
 source:
   repo:
-    kind: "HELM"
-    url: "http://localhost:8080" # local test source repo
+    kind: HELM
+    url: http://localhost:8080 # local test source repo
     auth:
-      username: "user123"
-      password: "password123"
+      username: user123
+      password: password123
 target:
-  containerRegistry: "test.registry.io"
-  containerRepository: "user/demo"
+  containerRegistry: test.registry.io
+  containerRepository: user/demo
   repo:
-    kind: "CHARTMUSEUM"
-    url: "http://localhost:9090" # local test target repo
+    kind: CHARTMUSEUM
+    url: http://localhost:9090 # local test target repo
     auth:
-      username: "user456"
-      password: "password456"
+      username: user456
+      password: password456

@@ -37,7 +37,7 @@ $ charts-syncer sync --from-date 2020-05-15 --config ./charts-syncer.yaml
 
 ## Configuration
 
-Below you can find an example configuration file:
+Below you can find an example configuration file. To all the available entries see the [example-config.yaml](./charts-syncer.yaml) as it includes explanatory comments for each configuration key.
 
 ~~~yaml
 #
@@ -46,20 +46,20 @@ Below you can find an example configuration file:
 source:
   repo:
     kind: HELM
-    url: "http://localhost:8080" # local test source repo
+    url: http://localhost:8080 # local test source repo
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
 target:
-  repoName: "myrepo"
-  containerRegistry: "k8s.container.registry.io"
-  containerRepository: "repository/demo/k8s"
+  repoName: myrepo
+  containerRegistry: k8s.container.registry.io
+  containerRepository: repository/demo/k8s
   repo:
     kind: CHARTMUSEUM
-    url: "http://localhost:9090" # local test target repo
+    url: http://localhost:9090 # local test target repo
     # auth:
     #   username: "USERNAME"
-    #   password: "PASSWORD"#
+    #   password: "PASSWORD"
 ~~~
 
 > Note the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
@@ -100,14 +100,14 @@ So if HARBOR_DOMAIN=my.harbor.com and HARBOR_PROJECT=my-project, you would need 
 target:
  repo:
    kind: HARBOR
-   url: "https://my.harbor.com/chartrepo/my-project"
+   url: https://my.harbor.com/chartrepo/my-project
 ~~~
 
 ## Requirements
 
 In order for this tool to be able to successfully migrate a chart from a source repository to another it must fulfill the following requirements:
 
-- If the chart has dependencies they are specified in a requirements.yaml file. Currently, if the dependencies are specified in the Chart.yaml file the tool won't be able to manage them.
+- If the chart has dependencies they are specified in a *requirements.yaml* file. Currently, if the dependencies are specified in the Chart.yaml file the tool won't be able to manage them.
 - The images used by the chart must be specified in the following way in the values.yaml file:
 
 ~~~yaml
@@ -129,17 +129,19 @@ The values of the parameteres `containerRegistry` and `containerRepositories` fr
 
 In order to migrate a chart from one repository to another and retrieve the images from a new container registry, this tools performs the following changes in the chart code:
 
-#### Update values.yaml and values-production.yaml (if exists)
+#### Update *values.yaml* and *values-production.yaml* (if exists)
 
 These files are updated with the new container registry where the chart should pull the images from.
 
-#### Update requirements.yaml and requirements.lock
+#### Update *requirements.yaml* and *requirements.lock*
 
-If the chart has any dependency, they should be registered in this file. The requirements.yaml and requirements.lock file will be updated to retrieve the dependencies from the target repository.
+If the chart has any dependency, they should be registered in this file. The *requirements.yaml* and requirements.lock file will be updated to retrieve the dependencies from the target repository.
 
-#### Update README.md
+#### Update *README.md*
 
-README files for bitnami charts includes a TLDR section with instructions to add the helm repository to helm cli and 
+README files for bitnami charts includes a TL;DR; section with instructions to add the helm repository to the helm cli and a simple command to deploy the chart.
+
+As the chart repository URL and chart repository name should have changed, the instructions in the README should be updated too.
 
 ------
 
@@ -151,13 +153,13 @@ I would use this config file:
 source:
   repo:
     kind: HELM
-    url: "https://charts.bitnami.com/bitnami"
+    url: https://charts.bitnami.com/bitnami
 target:
   containerRegistry: "my.registry.io"
   containerRepository: "test"
   repo:
     kind: CHARTMUSEUM
-    url: "http://localhost:8080"
+    url: http://localhost:8080
 ~~~
 
 After executing the tool, these are the changes performed to the following files:
@@ -261,15 +263,11 @@ index 3fa7d7b..504894e 100755
  ```
 ~~~
 
+> In order to obtain these diffs check the [developer docs](docs/development.md).
 
 ## How to build
 
-You need go and the Go protocol buffers pluging:
-
-~~~bash
-make gen # To generate Go code from protobuff definition
-make build # To actually build the binary
-~~~~
+> Check the [developer docs](docs/development.md).
 
 ## Deploy to Kubernetes
 
