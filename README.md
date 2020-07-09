@@ -37,7 +37,7 @@ $ charts-syncer sync --from-date 2020-05-15 --config ./charts-syncer.yaml
 
 ## Configuration
 
-Below you can find an example configuration file. To all the available entries see the [example-config.yaml](./charts-syncer.yaml) as it includes explanatory comments for each configuration key.
+Below you can find an example configuration file. To know all the available configuration keys see the [charts-syncer](./charts-syncer.yaml) file as it includes explanatory comments for each configuration key.
 
 ~~~yaml
 #
@@ -46,7 +46,7 @@ Below you can find an example configuration file. To all the available entries s
 source:
   repo:
     kind: HELM
-    url: http://localhost:8080 # local test source repo
+    url: http://localhost:8080
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
@@ -56,13 +56,13 @@ target:
   containerRepository: repository/demo/k8s
   repo:
     kind: CHARTMUSEUM
-    url: http://localhost:9090 # local test target repo
+    url: http://localhost:9090
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
 ~~~
 
-> Note the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
+> Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
 >
 > Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
 

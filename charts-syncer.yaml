@@ -12,8 +12,10 @@ source:
     # auth is used if the source repository is protected with basic auth (Optional section)
     auth:
       # username is the username used to authenticate against the source chart repo
+      # `SOURCE_AUTH_USERNAME` env var can be used instead of this entry
       username: "USERNAME"
       # password is the password used to authenticate against the source chart repo
+      # `SOURCE_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
 # target includes relevant information about the target chart repository
 target:
@@ -31,6 +33,8 @@ target:
     # auth is used if the target repository is protected with basic auth (Optional section)
     auth:
       # username is the username used to authenticate against the target chart repo
+      # `TARGET_AUTH_USERNAME` env var can be used instead of this entry
       username: "USERNAME"
       # password is the password used to authenticate against the target chart repo
+      # `TARGET_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
