@@ -77,7 +77,10 @@ func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName stri
 	newContent := strings.ReplaceAll(string(readme), addBitnamiRepoLine, addCustomRepoLine)
 	// Update bitnami/chart references with regex
 	regexString := fmt.Sprintf(`(?m)(\s)(bitnami/%s)(\s)`, chartName)
-	regex := regexp.MustCompile(regexString)
+	regex, err := regexp.Compile(regexString)
+	if err != nil {
+		return errors.Trace(err)
+	}
 	submatch := regex.FindStringSubmatch(string(readme))
 	if len(submatch) > 0 {
 		klog.V(4).Infof("Updating bitnami/ references")
