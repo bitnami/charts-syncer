@@ -59,7 +59,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		}
 		if !syncDeps {
 			missingDependencies = true
-			errs = multierror.Append(errs, errors.Errorf("Please sync %s-%s dependency first", depName, depVersion))
+			errs = multierror.Append(errs, errors.Errorf("please sync %s-%s dependency first", depName, depVersion))
 			continue
 		}
 		klog.Infof("Dependency %s-%s not synced yet. Syncing now", depName, depVersion)
@@ -71,7 +71,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 			return errors.Trace(err)
 		}
 		if !chartExists {
-			return errors.Errorf("Dependency %s-%s not available yet", depName, depVersion)
+			return errors.Errorf("dependency %s-%s not available yet", depName, depVersion)
 		}
 		klog.Infof("Dependency %s-%s synced", depName, depVersion)
 	}

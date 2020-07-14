@@ -36,7 +36,7 @@ func TestDownload(t *testing.T) {
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
@@ -47,13 +47,13 @@ func TestDownload(t *testing.T) {
 	}
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 	if err != nil {
-		t.Errorf("Error loading index.yaml: %w", err)
+		t.Fatalf("error loading index.yaml: %v", err)
 	}
 	if err := sc.DownloadChart(chartPath, "nginx", "5.3.1", source.Repo, sourceIndex); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(chartPath); err != nil {
-		t.Errorf("Chart package does not exist")
+		t.Errorf("chart package does not exist")
 	}
 }
 
@@ -91,7 +91,7 @@ volumePermissions:
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 	destValuesFilePath := path.Join(testTmpDir, "values.yaml")
@@ -99,7 +99,7 @@ volumePermissions:
 	// Write file
 	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
 	if err != nil {
-		t.Errorf("Error writting destination file")
+		t.Fatalf("error writting destination file")
 	}
 
 	updateValuesFile(destValuesFilePath, target)
@@ -109,7 +109,7 @@ volumePermissions:
 	}
 	got := string(valuesFile)
 	if want != got {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
+		t.Errorf("incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
 	}
 }
 
@@ -137,7 +137,7 @@ The above parameters map to the env variables defined in [bitnami/ghost](http://
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 	destValuesFilePath := path.Join(testTmpDir, "README.md")
@@ -145,7 +145,7 @@ The above parameters map to the env variables defined in [bitnami/ghost](http://
 	// Write file
 	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
 	if err != nil {
-		t.Errorf("Error writting destination file")
+		t.Fatalf("error writting destination file")
 	}
 
 	updateReadmeFile(destValuesFilePath, "https://charts.bitnami.com/bitnami", "https://my-new-chart-repo.com", "ghost", "mytestrepo")
@@ -155,6 +155,6 @@ The above parameters map to the env variables defined in [bitnami/ghost](http://
 	}
 	got := string(readmeFile)
 	if want != got {
-		t.Errorf("Incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
+		t.Errorf("incorrect modification, got: \n %s \n, want: \n %s \n", got, want)
 	}
 }

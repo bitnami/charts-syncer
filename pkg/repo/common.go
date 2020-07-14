@@ -35,7 +35,7 @@ func download(filepath string, downloadURL string, sourceRepo *api.Repo) error {
 
 	// Check status code
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return errors.Errorf("Error downloading chart %s. Status code is %d", downloadURL, res.StatusCode)
+		return errors.Errorf("error downloading chart %s. Status code is %d", downloadURL, res.StatusCode)
 	}
 	// Create the file
 	out, err := os.Create(filepath)
@@ -113,10 +113,10 @@ func downloadFromChartMuseumLike(apiEndpoint string, filepath string, sourceRepo
 	// Check contentType
 	contentType, err := utils.GetFileContentType(filepath)
 	if err != nil {
-		return errors.Annotatef(err, "Error checking contentType of %s file", filepath)
+		return errors.Trace(err)
 	}
 	if contentType != "application/x-gzip" {
-		return errors.Errorf("The downloaded chart %s is not a gzipped tarball", filepath)
+		return errors.Errorf("the downloaded chart %s is not a gzipped tarball", filepath)
 	}
 	return nil
 }

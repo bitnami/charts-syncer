@@ -58,7 +58,7 @@ func sync() error {
 	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 	if err != nil {
-		return errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 	// Add target repo to helm CLI
 	helmcli.AddRepoToHelm(target.Repo.Url, target.Repo.Auth)

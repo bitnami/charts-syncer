@@ -29,7 +29,7 @@ func TestSync(t *testing.T) {
 
 			sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 			if err != nil {
-				t.Errorf("Error loading index.yaml: %w", err)
+				t.Fatalf("error loading index.yaml: %v", err)
 			}
 
 			name := "zookeeper"
@@ -72,9 +72,8 @@ func TestSync(t *testing.T) {
 			if test.Desc == "real service" {
 				// Create temporary working directory
 				testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
-				t.Logf("Working dir is: %s", testTmpDir)
 				if err != nil {
-					t.Errorf("Error creating temporary: %s", testTmpDir)
+					t.Fatalf("error creating temporary: %s", testTmpDir)
 				}
 				defer os.RemoveAll(testTmpDir)
 				// Create client for target repo
@@ -98,10 +97,10 @@ func TestSync(t *testing.T) {
 				expectedRegistryText := "registry: test.registry.io"
 				expectedRepositoryText := "repository: test/repo/zookeeper"
 				if !strings.Contains(valuesText, expectedRegistryText) {
-					t.Errorf("Expected values.yaml file to contain %q", expectedRegistryText)
+					t.Errorf("expected values.yaml file to contain %q", expectedRegistryText)
 				}
 				if !strings.Contains(valuesText, expectedRepositoryText) {
-					t.Errorf("Expected values.yaml file to contain %q", expectedRepositoryText)
+					t.Errorf("expected values.yaml file to contain %q", expectedRepositoryText)
 				}
 			}
 		})
@@ -128,7 +127,7 @@ func TestSyncAllVersions(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := SyncAllVersions(name, source.Repo, target, false, index, false); err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
 		})
 	}

@@ -16,7 +16,7 @@ import (
 func TestSyncDependencies(t *testing.T) {
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 
@@ -27,14 +27,14 @@ func TestSyncDependencies(t *testing.T) {
 
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 	if err != nil {
-		t.Errorf("Error loading index.yaml: %w", err)
+		t.Fatalf("error loading index.yaml: %v", err)
 	}
 
 	chartPath := path.Join(testTmpDir, "kafka")
 	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, false)
-	expectedError := "Please sync zookeeper-5.14.3 dependency first"
+	expectedError := "please sync zookeeper-5.14.3 dependency first"
 	if err != nil && err.Error() != expectedError {
-		t.Errorf("Incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
+		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
 	}
 }
 
@@ -49,7 +49,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 
@@ -66,20 +66,20 @@ func TestUpdateRequirementsFile(t *testing.T) {
 
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
-		t.Errorf("Error reading updated %s file", requirementsFile)
+		t.Fatalf("error reading updated %s file", requirementsFile)
 	}
 
 	newDeps := &dependencies{}
 	err = yaml.Unmarshal(requirements, newDeps)
 	if err != nil {
-		t.Errorf("Error unmarshaling %s file", requirementsFile)
+		t.Fatalf("error unmarshaling %s file", requirementsFile)
 	}
 
 	if newDeps.Dependencies[0].Repository != target.Repo.Url {
-		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
+		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
 	}
 	if newDeps.Dependencies[0].Version != "5.5.5" {
-		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.5.5")
+		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.5.5")
 	}
 }
 
@@ -99,7 +99,7 @@ func TestWriteRequirementsFile(t *testing.T) {
 
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 
@@ -112,13 +112,13 @@ func TestWriteRequirementsFile(t *testing.T) {
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
-		t.Errorf("Error reading %s file", requirementsFile)
+		t.Fatalf("error reading %s file", requirementsFile)
 	}
 
 	deps := &dependencies{}
 	err = yaml.Unmarshal(requirements, deps)
 	if err != nil {
-		t.Errorf("Error unmarshaling %s file", requirementsFile)
+		t.Fatalf("error unmarshaling %s file", requirementsFile)
 	}
 
 	deps.Dependencies[0].Repository = target.Repo.Url
@@ -129,20 +129,20 @@ func TestWriteRequirementsFile(t *testing.T) {
 
 	requirements, err = ioutil.ReadFile(requirementsFile)
 	if err != nil {
-		t.Errorf("Error reading updated %s file", requirementsFile)
+		t.Fatalf("error reading updated %s file", requirementsFile)
 	}
 
 	newDeps := &dependencies{}
 	err = yaml.Unmarshal(requirements, newDeps)
 	if err != nil {
-		t.Errorf("Error unmarshaling %s file", requirementsFile)
+		t.Fatalf("error unmarshaling %s file", requirementsFile)
 	}
 
 	if newDeps.Dependencies[0].Repository != target.Repo.Url {
-		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
+		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
 	}
 	if newDeps.Dependencies[0].Version != "5.x.x" {
-		t.Errorf("Incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.x.x")
+		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.x.x")
 	}
 }
 
@@ -155,9 +155,9 @@ func TestFindDepByName(t *testing.T) {
 	}
 	dep := findDepByName(deps.Dependencies, "postgresql")
 	if dep.Name != "postgresql" {
-		t.Errorf("Wrong dependency, got: %s , want: %s", dep.Name, "postgresql")
+		t.Errorf("wrong dependency, got: %s , want: %s", dep.Name, "postgresql")
 	}
 	if dep.Version != "4.5.6" {
-		t.Errorf("Wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
+		t.Errorf("wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
 	}
 }

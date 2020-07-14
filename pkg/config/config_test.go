@@ -14,10 +14,10 @@ func TestLoad(t *testing.T) {
 	viper.SetConfigFile(cfgFile)
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		t.Errorf("Error reading config file: %+v", err)
+		t.Fatalf("error reading config file: %+v", err)
 	}
 	if err := Load(&syncConfig); err != nil {
-		t.Errorf("Error loading config file")
+		t.Fatalf("error loading config file")
 	}
 	source := syncConfig.Source
 	target := syncConfig.Target

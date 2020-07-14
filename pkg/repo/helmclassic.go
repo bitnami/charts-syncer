@@ -23,7 +23,7 @@ func NewClassicHelmClient(repo *api.Repo) *ClassicHelmClient {
 // PublishChart publishes a packaged chart to classic helm repository.
 func (c *ClassicHelmClient) PublishChart(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to classic helm repo", filepath)
-	return errors.Errorf("Publishing to a Helm classic repository is not supported yet")
+	return errors.Errorf("publishing to a Helm classic repository is not supported yet")
 }
 
 // DownloadChart downloads a packaged chart from a classic helm repository.
@@ -39,10 +39,10 @@ func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version 
 	// Check contentType
 	contentType, err := utils.GetFileContentType(filepath)
 	if err != nil {
-		return errors.Annotatef(err, "Error checking contentType of %s file", filepath)
+		return errors.Trace(err)
 	}
 	if contentType != "application/x-gzip" {
-		return errors.Errorf("The downloaded chart %s is not a gzipped tarball", filepath)
+		return errors.Errorf("the downloaded chart %s is not a gzipped tarball", filepath)
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func (c *ClassicHelmClient) ChartExists(name string, version string, repo *api.R
 	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
 	index, err := utils.LoadIndexFromRepo(repo)
 	if err != nil {
-		return false, errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
+		return false, errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 	chartExists, err := utils.ChartExistInIndex(name, version, index)
 	if err != nil {
