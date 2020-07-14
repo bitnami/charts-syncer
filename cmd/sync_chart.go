@@ -31,6 +31,15 @@ func newSyncChart() *cobra.Command {
 
 	Example:
 	$ charts-syncer syncChart --name nginx --version 1.0.0 --config .charts-syncer.yaml`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !syncAllVersions && version == "" {
+				return errors.Trace(fmt.Errorf(`missing "--version" flag: Please use either "--version VERSION" or "--all-versions"`))
+			}
+			if syncAllVersions && version != "" {
+				klog.Warningf(`Ignoring "--version" flag: "--all-versions" is set`)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.Trace(syncChart())
 		},
@@ -47,10 +56,6 @@ func newSyncChart() *cobra.Command {
 }
 
 func syncChart() error {
-	if !syncAllVersions && version == "" {
-		return errors.Trace(fmt.Errorf("please specify a version to sync with --version VERSION or sync all versions with --all-versions"))
-	}
-
 	// Load config file
 	var syncConfig api.Config
 	if err := config.Load(&syncConfig); err != nil {
