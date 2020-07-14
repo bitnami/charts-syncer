@@ -116,7 +116,7 @@ func TestDownloadFromHarbor(t *testing.T) {
 			// Create temporary working directory
 			testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 			if err != nil {
-				t.Errorf("Error creating temporary: %s", testTmpDir)
+				t.Fatalf("error creating temporary: %s", testTmpDir)
 			}
 			defer os.RemoveAll(testTmpDir)
 
@@ -129,7 +129,7 @@ func TestDownloadFromHarbor(t *testing.T) {
 				t.Fatal(err)
 			}
 			if _, err := os.Stat(chartPath); err != nil {
-				t.Errorf("Expected %s to exists", chartPath)
+				t.Errorf("expected %s to exists", chartPath)
 			}
 		})
 	}

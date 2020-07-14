@@ -29,7 +29,7 @@ func TestDownloadFromHelmClassic(t *testing.T) {
 	// Create temporary working directory
 	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
 	if err != nil {
-		t.Errorf("Error creating temporary: %s", testTmpDir)
+		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
@@ -40,13 +40,13 @@ func TestDownloadFromHelmClassic(t *testing.T) {
 	}
 	sourceIndex, err := utils.LoadIndexFromRepo(sourceHelm.Repo)
 	if err != nil {
-		t.Errorf("Error loading index.yaml: %w", err)
+		t.Fatalf("error loading index.yaml: %v", err)
 	}
 	if err := sc.DownloadChart(chartPath, "nginx", "5.3.1", sourceHelm.Repo, sourceIndex); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(chartPath); err != nil {
-		t.Errorf("Expected %s to exists", chartPath)
+		t.Errorf("expected %s to exists", chartPath)
 	}
 }
 
@@ -73,8 +73,8 @@ func TestPublishToHelmClassic(t *testing.T) {
 	}
 	chartPath := "../../testdata/apache-7.3.15.tgz"
 	err = tc.PublishChart(chartPath, targetHelm.Repo)
-	expectedErrorMsg := "Publishing to a Helm classic repository is not supported yet"
+	expectedErrorMsg := "publishing to a Helm classic repository is not supported yet"
 	if err.Error() != expectedErrorMsg {
-		t.Errorf("Incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedErrorMsg)
+		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedErrorMsg)
 	}
 }

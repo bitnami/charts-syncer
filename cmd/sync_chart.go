@@ -31,6 +31,15 @@ func newSyncChart() *cobra.Command {
 
 	Example:
 	$ charts-syncer syncChart --name nginx --version 1.0.0 --config .charts-syncer.yaml`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !syncAllVersions && version == "" {
+				return errors.Trace(fmt.Errorf(`missing "--version" flag: Please use either "--version VERSION" or "--all-versions"`))
+			}
+			if syncAllVersions && version != "" {
+				klog.Warningf(`Ignoring "--version" flag: "--all-versions" is set`)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.Trace(syncChart())
 		},
@@ -47,10 +56,6 @@ func newSyncChart() *cobra.Command {
 }
 
 func syncChart() error {
-	if !syncAllVersions && version == "" {
-		return errors.Trace(fmt.Errorf("Please specify a version to sync with --version VERSION or sync all versions with --all-versions"))
-	}
-
 	// Load config file
 	var syncConfig api.Config
 	if err := config.Load(&syncConfig); err != nil {
@@ -65,7 +70,7 @@ func syncChart() error {
 	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
 	if err != nil {
-		return errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 
 	// Add target repo to helm CLI
@@ -86,14 +91,14 @@ func syncChart() error {
 			return errors.Trace(err)
 		}
 		if !srcExists {
-			return errors.Errorf("Chart %s-%s not found in source index.yaml", name, version)
+			return errors.Errorf("chart %s-%s not found in source index.yaml", name, version)
 		}
 		targetExists, err := tc.ChartExists(name, version, target.Repo)
 		if err != nil {
 			return errors.Trace(err)
 		}
 		if targetExists {
-			klog.Infof("Chart %s-%s already exists in target repo", name, version)
+			klog.Infof("chart %s-%s already exists in target repo", name, version)
 			return nil
 		}
 		if dryRun {

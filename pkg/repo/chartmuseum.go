@@ -48,7 +48,7 @@ func (c *ChartMuseumClient) ChartExists(name string, version string, repo *api.R
 	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
 	index, err := utils.LoadIndexFromRepo(repo)
 	if err != nil {
-		return false, errors.Trace(fmt.Errorf("Error loading index.yaml: %w", err))
+		return false, errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 	chartExists, err := utils.ChartExistInIndex(name, version, index)
 	if err != nil {
