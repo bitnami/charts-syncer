@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/pbjson"
@@ -20,11 +21,6 @@ const (
 
 // Load unmarshall config file into Config struct.
 func Load(config *api.Config) error {
-	viper.BindEnv("source.auth.username", "SOURCE_AUTH_USERNAME")
-	viper.BindEnv("source.auth.password", "SOURCE_AUTH_PASSWORD")
-	viper.BindEnv("target.auth.username", "TARGET_AUTH_USERNAME")
-	viper.BindEnv("target.auth.password", "TARGET_AUTH_PASSWORD")
-
 	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
@@ -33,7 +29,26 @@ func Load(config *api.Config) error {
 		klog.Warning("'target.repoName' property is empty. Using 'myrepo' default value")
 		config.Target.RepoName = defaultRepoName
 	}
-
+	if config.Source.Repo.Auth == nil {
+		sourceAuth := &api.Auth{}
+		if su := os.Getenv("SOURCE_AUTH_USERNAME"); su != "" {
+			sourceAuth.Username = su
+		}
+		if sp := os.Getenv("SOURCE_AUTH_PASSWORD"); sp != "" {
+			sourceAuth.Password = sp
+		}
+		config.Source.Repo.Auth = sourceAuth
+	}
+	if config.Target.Repo.Auth == nil {
+		targetAuth := &api.Auth{}
+		if tu := os.Getenv("TARGET_AUTH_USERNAME"); tu != "" {
+			targetAuth.Username = tu
+		}
+		if tp := os.Getenv("TARGET_AUTH_PASSWORD"); tp != "" {
+			targetAuth.Password = tp
+		}
+		config.Target.Repo.Auth = targetAuth
+	}
 	return nil
 }
 
