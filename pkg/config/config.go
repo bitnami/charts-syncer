@@ -29,25 +29,11 @@ func Load(config *api.Config) error {
 		klog.Warning("'target.repoName' property is empty. Using 'myrepo' default value")
 		config.Target.RepoName = defaultRepoName
 	}
-	if config.Source.Repo.Auth == nil {
-		sourceAuth := &api.Auth{}
-		if su := os.Getenv("SOURCE_AUTH_USERNAME"); su != "" {
-			sourceAuth.Username = su
-		}
-		if sp := os.Getenv("SOURCE_AUTH_PASSWORD"); sp != "" {
-			sourceAuth.Password = sp
-		}
-		config.Source.Repo.Auth = sourceAuth
+	if err := config.Source.Repo.SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
+		return err
 	}
-	if config.Target.Repo.Auth == nil {
-		targetAuth := &api.Auth{}
-		if tu := os.Getenv("TARGET_AUTH_USERNAME"); tu != "" {
-			targetAuth.Username = tu
-		}
-		if tp := os.Getenv("TARGET_AUTH_PASSWORD"); tp != "" {
-			targetAuth.Password = tp
-		}
-		config.Target.Repo.Auth = targetAuth
+	if err := config.Target.Repo.SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
+		return err
 	}
 	return nil
 }
