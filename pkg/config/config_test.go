@@ -97,16 +97,16 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"tp": "password456",
 			},
 		},
-		"no-overwrite-user-with-env-var": {
+		"overwrite-user-with-env-var": {
 			"example-config.yaml",
 			map[string]string{
 				"SOURCE_AUTH_USERNAME": "newSourceUserFromEnvVar",
 				"TARGET_AUTH_USERNAME": "newTargetUserFromEnvVar",
 			},
 			map[string]string{
-				"su": "user123",
+				"su": "newSourceUserFromEnvVar",
 				"sp": "password123",
-				"tu": "user456",
+				"tu": "newTargetUserFromEnvVar",
 				"tp": "password456",
 			},
 		},

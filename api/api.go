@@ -9,15 +9,16 @@ func (r *Repo) SetBasicAuth(username string, password string) error {
 	if username == "" && password == "" {
 		return nil
 	}
-	// If username or password are already set, the value from
-	// config file has preference over environment variable
+	// If username or password are already set, the value will
+	// be override with the environment variable one as it
+	// has preference.
 	if r.Auth == nil {
 		r.Auth = &Auth{Username: username, Password: password}
 	} else {
-		if r.Auth.Username == "" {
+		if username != "" {
 			r.Auth.Username = username
 		}
-		if r.Auth.Password == "" {
+		if password != "" {
 			r.Auth.Password = password
 		}
 	}
