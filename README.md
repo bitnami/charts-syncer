@@ -305,22 +305,22 @@ The recommended way to specify credentials is using environment variables in the
   - name: charts-syncer
     image: IMAGE_NAME:TAG
     env:
-      - name: SOURCE_REPO_USERNAME
+      - name: SOURCE_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: chart-syncer-credentials
             key: source-username
-      - name: SOURCE_REPO_PASSWORD
+      - name: SOURCE_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: chart-syncer-credentials
             key: source-password
-      - name: TARGET_REPO_USERNAME
+      - name: TARGET_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: chart-syncer-credentials
             key: target-username
-      - name: TARGET_REPO_PASSWORD
+      - name: TARGET_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: chart-syncer-credentials
