@@ -7,6 +7,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/proto"
 )
 
 // Load unmarshall config file into Config struct
@@ -24,25 +25,26 @@ func TestLoad(t *testing.T) {
 	source := syncConfig.Source
 	target := syncConfig.Target
 	if source.Repo.Kind != api.Kind_HELM {
-		t.Errorf("Got: %s, want %s", source.Repo.Kind, "HELM")
+		t.Errorf("got: %s, want %s", source.Repo.Kind, "HELM")
 	}
 	if target.Repo.Kind != api.Kind_CHARTMUSEUM {
-		t.Errorf("Got: %s, want %s", target.Repo.Kind, "CHARTMUSEUM")
+		t.Errorf("got: %s, want %s", target.Repo.Kind, "CHARTMUSEUM")
 	}
 	if target.ContainerRegistry != "test.registry.io" {
-		t.Errorf("Got: %s, want %s", target.ContainerRegistry, "test.registry.io")
+		t.Errorf("got: %s, want %s", target.ContainerRegistry, "test.registry.io")
 	}
 	if target.ContainerRepository != "user/demo" {
-		t.Errorf("Got: %s, want %s", target.ContainerRepository, "user/demo")
+		t.Errorf("got: %s, want %s", target.ContainerRepository, "user/demo")
 	}
 }
 
 // Get auth properties from env vars
 func TestGetAuthFromEnvVar(t *testing.T) {
 	tests := map[string]struct {
-		inputFile string
-		envVars   map[string]string
-		expected  map[string]string
+		inputFile          string
+		envVars            map[string]string
+		expectedSourceAuth *api.Auth
+		expectedTargetAuth *api.Auth
 	}{
 		"full-env-vars": {
 			"example-config-no-auth.yaml",
@@ -52,22 +54,14 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"TARGET_AUTH_USERNAME": "tUsername",
 				"TARGET_AUTH_PASSWORD": "tPassword",
 			},
-			map[string]string{
-				"su": "sUsername",
-				"sp": "sPassword",
-				"tu": "tUsername",
-				"tp": "tPassword",
-			},
+			&api.Auth{Username: "sUsername", Password: "sPassword"},
+			&api.Auth{Username: "tUsername", Password: "tPassword"},
 		},
 		"full-file": {
 			"example-config.yaml",
 			map[string]string{},
-			map[string]string{
-				"su": "user123",
-				"sp": "password123",
-				"tu": "user456",
-				"tp": "password456",
-			},
+			&api.Auth{Username: "user123", Password: "password123"},
+			&api.Auth{Username: "user456", Password: "password456"},
 		},
 		"user-file-pass-env": {
 			"example-config-user-file.yaml",
@@ -75,12 +69,8 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"SOURCE_AUTH_PASSWORD": "sourcePassEnv",
 				"TARGET_AUTH_PASSWORD": "targetPassEnv",
 			},
-			map[string]string{
-				"su": "sourceUserFile",
-				"sp": "sourcePassEnv",
-				"tu": "targetUserFile",
-				"tp": "targetPassEnv",
-			},
+			&api.Auth{Username: "sourceUserFile", Password: "sourcePassEnv"},
+			&api.Auth{Username: "targetUserFile", Password: "targetPassEnv"},
 		},
 		"full-file-existing-empty-env-vars": {
 			"example-config.yaml",
@@ -90,12 +80,8 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"TARGET_AUTH_USERNAME": "",
 				"TARGET_AUTH_PASSWORD": "",
 			},
-			map[string]string{
-				"su": "user123",
-				"sp": "password123",
-				"tu": "user456",
-				"tp": "password456",
-			},
+			&api.Auth{Username: "user123", Password: "password123"},
+			&api.Auth{Username: "user456", Password: "password456"},
 		},
 		"overwrite-user-with-env-var": {
 			"example-config.yaml",
@@ -103,12 +89,8 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"SOURCE_AUTH_USERNAME": "newSourceUserFromEnvVar",
 				"TARGET_AUTH_USERNAME": "newTargetUserFromEnvVar",
 			},
-			map[string]string{
-				"su": "newSourceUserFromEnvVar",
-				"sp": "password123",
-				"tu": "newTargetUserFromEnvVar",
-				"tp": "password456",
-			},
+			&api.Auth{Username: "newSourceUserFromEnvVar", Password: "password123"},
+			&api.Auth{Username: "newTargetUserFromEnvVar", Password: "password456"},
 		},
 	}
 
@@ -132,19 +114,12 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			for k := range tc.envVars {
 				os.Unsetenv(k)
 			}
-			if source.Repo.Auth.Username != tc.expected["su"] {
-				t.Errorf("Got: %s, want %s", source.Repo.Auth.Username, tc.expected["su"])
+			if got, want := source.Repo.Auth, tc.expectedSourceAuth; !proto.Equal(got, want) {
+				t.Errorf("got: %+v, want %+v", got, want)
 			}
-			if source.Repo.Auth.Password != tc.expected["sp"] {
-				t.Errorf("Got: %s, want %s", source.Repo.Auth.Password, tc.expected["sp"])
+			if got, want := target.Repo.Auth, tc.expectedTargetAuth; !proto.Equal(got, want) {
+				t.Errorf("got: %+v, want %+v", got, want)
 			}
-			if target.Repo.Auth.Username != tc.expected["tu"] {
-				t.Errorf("Got: %s, want %s", target.Repo.Auth.Username, tc.expected["tu"])
-			}
-			if target.Repo.Auth.Password != tc.expected["tp"] {
-				t.Errorf("Got: %s, want %s", target.Repo.Auth.Password, tc.expected["tp"])
-			}
-
 		})
 	}
 }
