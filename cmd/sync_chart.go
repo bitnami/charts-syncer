@@ -19,6 +19,7 @@ var (
 	name            string
 	version         string
 	syncAllVersions bool
+	syncDeps        bool
 )
 
 func newSyncChart() *cobra.Command {
@@ -50,6 +51,7 @@ func newSyncChart() *cobra.Command {
 	f.StringVarP(&name, "name", "", "", "Name of the chart to be synced")
 	f.StringVarP(&version, "version", "", "", "Version of the chart to be synced")
 	f.BoolVarP(&syncAllVersions, "all-versions", "", false, "Sync all versions of the provided chart")
+	f.BoolVarP(&syncDeps, "sync-deps", "", false, "Also sync dependencies of the chart is they are not found in the target registry")
 	cmd.MarkFlagRequired("name")
 
 	return cmd
@@ -82,7 +84,7 @@ func syncChart() error {
 	}
 
 	if syncAllVersions {
-		if err := chart.SyncAllVersions(name, source.Repo, target, false, sourceIndex, dryRun); err != nil {
+		if err := chart.SyncAllVersions(name, source.Repo, target, syncDeps, sourceIndex, dryRun); err != nil {
 			return errors.Trace(err)
 		}
 	} else {
@@ -105,7 +107,7 @@ func syncChart() error {
 			klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
 			return nil
 		}
-		if err := chart.Sync(name, version, source.Repo, target, sourceIndex, false); err != nil {
+		if err := chart.Sync(name, version, source.Repo, target, sourceIndex, syncDeps); err != nil {
 			return errors.Trace(err)
 		}
 	}
