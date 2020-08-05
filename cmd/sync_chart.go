@@ -51,7 +51,7 @@ func newSyncChart() *cobra.Command {
 	f.StringVarP(&name, "name", "", "", "Name of the chart to be synced")
 	f.StringVarP(&version, "version", "", "", "Version of the chart to be synced")
 	f.BoolVarP(&syncAllVersions, "all-versions", "", false, "Sync all versions of the provided chart")
-	f.BoolVarP(&syncDeps, "sync-deps", "", false, "Also sync dependencies of the chart is they are not found in the target registry")
+	f.BoolVarP(&syncDeps, "sync-deps", "", false, "Also sync dependencies of the chart if they are not found in the target repository")
 	cmd.MarkFlagRequired("name")
 
 	return cmd
