@@ -69,8 +69,11 @@ func syncChart() error {
 	source := syncConfig.Source
 	target := syncConfig.Target
 
-	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
+	}
+	targetIndex, err := utils.LoadIndexFromRepo(target.Repo)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
@@ -84,7 +87,7 @@ func syncChart() error {
 	}
 
 	if syncAllVersions {
-		if err := chart.SyncAllVersions(name, source.Repo, target, syncDeps, sourceIndex, dryRun); err != nil {
+		if err := chart.SyncAllVersions(name, source.Repo, target, syncDeps, sourceIndex, targetIndex, dryRun); err != nil {
 			return errors.Trace(err)
 		}
 	} else {
@@ -95,7 +98,7 @@ func syncChart() error {
 		if !srcExists {
 			return errors.Errorf("chart %s-%s not found in source index.yaml", name, version)
 		}
-		targetExists, err := tc.ChartExists(name, version, target.Repo)
+		targetExists, err := tc.ChartExists(name, version, targetIndex)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -107,7 +110,7 @@ func syncChart() error {
 			klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
 			return nil
 		}
-		if err := chart.Sync(name, version, source.Repo, target, sourceIndex, syncDeps); err != nil {
+		if err := chart.Sync(name, version, source.Repo, target, sourceIndex, targetIndex, syncDeps); err != nil {
 			return errors.Trace(err)
 		}
 	}

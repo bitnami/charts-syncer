@@ -22,7 +22,7 @@ type dependencies struct {
 }
 
 // syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary.
-func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, syncDeps bool) error {
+func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, syncDeps bool) error {
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
 	var missingDependencies = false
@@ -53,7 +53,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		if depRepository != sourceRepo.Url {
 			continue
 		}
-		if chartExists, _ := tc.ChartExists(depName, depVersion, target.Repo); chartExists {
+		if chartExists, _ := tc.ChartExists(depName, depVersion, targetIndex); chartExists {
 			klog.V(3).Infof("Dependency %s-%s already synced", depName, depVersion)
 			continue
 		}
@@ -63,10 +63,10 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 			continue
 		}
 		klog.Infof("Dependency %s-%s not synced yet. Syncing now", depName, depVersion)
-		if err := Sync(depName, depVersion, sourceRepo, target, sourceIndex, true); err != nil {
+		if err := Sync(depName, depVersion, sourceRepo, target, sourceIndex, targetIndex, true); err != nil {
 			return errors.Trace(err)
 		}
-		chartExists, err := tc.ChartExists(depName, depVersion, target.Repo)
+		chartExists, err := tc.ChartExists(depName, depVersion, targetIndex)
 		if err != nil {
 			return errors.Trace(err)
 		}

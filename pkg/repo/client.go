@@ -11,7 +11,7 @@ import (
 type ChartRepoAPI interface {
 	DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error
 	PublishChart(filepath string, targetRepo *api.Repo) error
-	ChartExists(name string, version string, targetRepo *api.Repo) (bool, error)
+	ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error)
 }
 
 // NewClient returns a client implementation for the given repo.

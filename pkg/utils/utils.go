@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"time"
@@ -136,10 +137,14 @@ func GetDateThreshold(date string) (time.Time, error) {
 }
 
 // FindChartURL will return the chart url
-func FindChartURL(name string, version string, index *helmRepo.IndexFile) (string, error) {
+func FindChartURL(name string, version string, index *helmRepo.IndexFile, sourceUrl string) (string, error) {
 	chart := findChartByVersion(index.Entries[name], version)
 	if chart != nil {
-		return chart.URLs[0], nil
+		if isValidURL(chart.URLs[0]) {
+			klog.Infof("%s is valid url", chart.URLs[0])
+			return chart.URLs[0], nil
+		}
+		return fmt.Sprintf("%s/%s", sourceUrl, chart.URLs[0]), nil
 	}
 	return "", fmt.Errorf("unable to find chart url in index")
 }
@@ -152,4 +157,17 @@ func findChartByVersion(chartVersions []*helmRepo.ChartVersion, version string) 
 		}
 	}
 	return nil
+}
+
+// isValidUrl tests a string to determine if it is a well-structured url or not.
+func isValidURL(text string) bool {
+	_, err := url.ParseRequestURI(text)
+	if err != nil {
+		return false
+	}
+	u, err := url.Parse(text)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+	return true
 }

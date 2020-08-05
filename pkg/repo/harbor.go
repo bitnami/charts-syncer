@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -34,7 +33,7 @@ func (c *HarborClient) PublishChart(filepath string, targetRepo *api.Repo) error
 // DownloadChart downloads a packaged chart from Harbor repository.
 func (c *HarborClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
-	apiEndpoint, err := utils.FindChartURL(name, version, index)
+	apiEndpoint, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -45,12 +44,8 @@ func (c *HarborClient) DownloadChart(filepath string, name string, version strin
 }
 
 // ChartExists checks if a chart exists in the repo.
-func (c *HarborClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
-	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
-	index, err := utils.LoadIndexFromRepo(repo)
-	if err != nil {
-		return false, errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
-	}
+func (c *HarborClient) ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error) {
+	klog.V(3).Infof("Checking if %s-%s chart exists", name, version)
 	chartExists, err := utils.ChartExistInIndex(name, version, index)
 	if err != nil {
 		return false, errors.Trace(err)

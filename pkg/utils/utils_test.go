@@ -99,9 +99,10 @@ func TestGetDateThreshold(t *testing.T) {
 }
 
 func TestGetDownloadURL(t *testing.T) {
+	sourceRepoURL := "https://repo-url.com/charts"
 	sourceIndex := helmRepo.NewIndexFile()
-	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
-	downloadURL, err := FindChartURL("apache", "7.3.15", sourceIndex)
+	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", sourceRepoURL, "sha256:1234567890")
+	downloadURL, err := FindChartURL("apache", "7.3.15", sourceIndex, sourceRepoURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +111,7 @@ func TestGetDownloadURL(t *testing.T) {
 		t.Errorf("wrong download URL, got: %s , want: %s", downloadURL, expectedDownloadURL)
 	}
 	expectedError := "unable to find chart url in index"
-	downloadURL, err = FindChartURL("apache", "0.0.333", sourceIndex)
+	downloadURL, err = FindChartURL("apache", "0.0.333", sourceIndex, sourceRepoURL)
 	if err.Error() != expectedError {
 		t.Errorf("wrong error message, got: %s , want: %s", err.Error(), expectedError)
 	}
@@ -125,5 +126,16 @@ func TestFindChartByVersion(t *testing.T) {
 	}
 	if chart.Version != "7.3.15" {
 		t.Errorf("wrong chart version, got: %s , want: %s", chart.Version, "7.3.15")
+	}
+}
+
+func TestIsValidURL(t *testing.T) {
+	validURL := "https://chart.repo.com/charts/zookeeper-1.0.0.tgz"
+	invalidURL := "charts/zookeeper-1.0.0.tgz"
+	if res := isValidURL(validURL); res != true {
+		t.Errorf("got: %t , want: %t", res, true)
+	}
+	if res := isValidURL(invalidURL); res != false {
+		t.Errorf("got: %t , want: %t", res, true)
 	}
 }

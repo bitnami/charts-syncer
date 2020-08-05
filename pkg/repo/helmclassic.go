@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	"github.com/juju/errors"
@@ -29,7 +27,7 @@ func (c *ClassicHelmClient) PublishChart(filepath string, targetRepo *api.Repo) 
 // DownloadChart downloads a packaged chart from a classic helm repository.
 func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
-	downloadURL, err := utils.FindChartURL(name, version, index)
+	downloadURL, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -48,12 +46,8 @@ func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version 
 }
 
 // ChartExists checks if a chart exists in the repo.
-func (c *ClassicHelmClient) ChartExists(name string, version string, repo *api.Repo) (bool, error) {
-	klog.V(3).Infof("Checking if %s-%s chart exists in %q", name, version, repo.Url)
-	index, err := utils.LoadIndexFromRepo(repo)
-	if err != nil {
-		return false, errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
-	}
+func (c *ClassicHelmClient) ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error) {
+	klog.V(3).Infof("Checking if %s-%s chart exists", name, version)
 	chartExists, err := utils.ChartExistInIndex(name, version, index)
 	if err != nil {
 		return false, errors.Trace(err)

@@ -136,16 +136,14 @@ func TestDownloadFromHarbor(t *testing.T) {
 }
 
 func TestChartExistsInHarbor(t *testing.T) {
-	// Update source repo url
-	// This repo is not a chartmuseum repo but there are no differences
-	// for the ChartExists function.
-	sourceHarbor.Repo.Url = "https://charts.bitnami.com/bitnami"
+	sourceIndex := repo.NewIndexFile()
+	sourceIndex.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
 	// Create client for source repo
 	sc, err := NewClient(sourceHarbor.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceHarbor.Repo)
+	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceIndex)
 	if err != nil {
 		t.Fatal(err)
 	}
