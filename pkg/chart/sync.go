@@ -15,6 +15,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 
+	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
@@ -122,6 +123,9 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
 		return errors.Annotatef(err, "Error publishing chart %s-%s to target repo", name, version)
 	}
+	// Add just synced chart to our local target index so other charts that may have this as dependency
+	// know it is already synced in the target repository.
+	targetIndex.Add(&chart.Metadata{Name: name, Version: version}, "", "", "")
 	klog.Infof("Chart %s-%s published successfully", name, version)
 
 	return errors.Trace(err)

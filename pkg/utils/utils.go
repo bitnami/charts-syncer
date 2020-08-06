@@ -141,7 +141,6 @@ func FindChartURL(name string, version string, index *helmRepo.IndexFile, source
 	chart := findChartByVersion(index.Entries[name], version)
 	if chart != nil {
 		if isValidURL(chart.URLs[0]) {
-			klog.Infof("%s is valid url", chart.URLs[0])
 			return chart.URLs[0], nil
 		}
 		return fmt.Sprintf("%s/%s", sourceUrl, chart.URLs[0]), nil
