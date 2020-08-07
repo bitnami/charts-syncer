@@ -31,10 +31,11 @@ func TestSync(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error loading index.yaml: %v", err)
 			}
+			targetIndex := helmRepo.NewIndexFile()
 
 			name := "zookeeper"
 			version := "5.11.0"
-			if err := Sync(name, version, source.Repo, target, sourceIndex, false); err != nil {
+			if err := Sync(name, version, source.Repo, target, sourceIndex, targetIndex, false); err != nil {
 				t.Fatal(err)
 			}
 
@@ -76,13 +77,17 @@ func TestSync(t *testing.T) {
 					t.Fatalf("error creating temporary: %s", testTmpDir)
 				}
 				defer os.RemoveAll(testTmpDir)
+				targetIndex, err := utils.LoadIndexFromRepo(target.Repo)
+				if err != nil {
+					t.Fatalf("error loading index.yaml: %v", err)
+				}
 				// Create client for target repo
 				tc, err := repo.NewClient(target.Repo)
 				if err != nil {
 					t.Fatal("could not create a client for the source repo", err)
 				}
 				chartPath := path.Join(testTmpDir, "zookeeper-5.11.0.tgz")
-				if err := tc.DownloadChart(chartPath, "zookeeper", "5.11.0", target.Repo, sourceIndex); err != nil {
+				if err := tc.DownloadChart(chartPath, "zookeeper", "5.11.0", target.Repo, targetIndex); err != nil {
 					t.Fatal(err)
 				}
 				if err := utils.Untar(chartPath, testTmpDir); err != nil {
@@ -122,11 +127,12 @@ func TestSyncAllVersions(t *testing.T) {
 			name := "zookeeper"
 			indexFile := "../../testdata/zookeeper-index.yaml"
 			// Load index.yaml info into index object
-			index, err := helmRepo.LoadIndexFile(indexFile)
+			sourceIndex, err := helmRepo.LoadIndexFile(indexFile)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := SyncAllVersions(name, source.Repo, target, false, index, false); err != nil {
+			targetIndex := helmRepo.NewIndexFile()
+			if err := SyncAllVersions(name, source.Repo, target, false, sourceIndex, targetIndex, false); err != nil {
 				t.Error(err)
 			}
 		})

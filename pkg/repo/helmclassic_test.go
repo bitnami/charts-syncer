@@ -8,6 +8,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/repo"
 )
 
 var (
@@ -51,12 +53,14 @@ func TestDownloadFromHelmClassic(t *testing.T) {
 }
 
 func TestChartExistsInHelmClassic(t *testing.T) {
+	sourceIndex := repo.NewIndexFile()
+	sourceIndex.Add(&chart.Metadata{Name: "nginx", Version: "5.3.1"}, "nginx-5.3.1.tgz", "https://fake-url.com/charts", "sha256:1234567890")
 	// Create client for source repo
 	sc, err := NewClient(sourceHelm.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("nginx", "5.3.1", sourceHelm.Repo)
+	chartExists, err := sc.ChartExists("nginx", "5.3.1", sourceIndex)
 	if err != nil {
 		t.Fatal(err)
 	}

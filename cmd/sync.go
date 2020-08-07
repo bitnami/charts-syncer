@@ -55,8 +55,11 @@ func sync() error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	// Load index.yaml info into index object
 	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
+	}
+	targetIndex, err := utils.LoadIndexFromRepo(target.Repo)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
@@ -76,7 +79,7 @@ func sync() error {
 			if publishingTime.Before(dateThreshold) {
 				continue
 			}
-			if chartExists, _ := tc.ChartExists(chartName, chartVersion, target.Repo); chartExists {
+			if chartExists, _ := tc.ChartExists(chartName, chartVersion, targetIndex); chartExists {
 				continue
 			}
 			if dryRun {
@@ -84,7 +87,7 @@ func sync() error {
 				continue
 			}
 			klog.Infof("Syncing %s-%s", chartName, chartVersion)
-			if err := chart.Sync(chartName, chartVersion, source.Repo, target, sourceIndex, true); err != nil {
+			if err := chart.Sync(chartName, chartVersion, source.Repo, target, sourceIndex, targetIndex, true); err != nil {
 				errs = multierror.Append(errs, errors.Trace(err))
 			}
 		}

@@ -19,7 +19,7 @@ entries:
     sources:
     - https://github.com/bitnami/bitnami-docker-zookeeper
     urls:
-    - charts/zookeeper-5.14.3.tgz
+    - zookeeper-5.14.3.tgz
     version: 5.14.3
   - apiVersion: v1
     appVersion: 3.6.1
@@ -39,7 +39,7 @@ entries:
     sources:
     - https://github.com/bitnami/bitnami-docker-zookeeper
     urls:
-    - charts/zookeeper-5.14.2.tgz
+    - zookeeper-5.14.2.tgz
     version: 5.14.2
   - apiVersion: v1
     appVersion: 3.6.1
@@ -59,7 +59,7 @@ entries:
     sources:
     - https://github.com/bitnami/bitnami-docker-zookeeper
     urls:
-    - charts/zookeeper-5.14.1.tgz
+    - zookeeper-5.14.1.tgz
     version: 5.14.1
 generated: "2020-05-19T11:23:26Z"
 serverInfo: {}

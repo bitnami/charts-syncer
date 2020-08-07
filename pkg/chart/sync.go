@@ -15,24 +15,25 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 
+	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
 // SyncAllVersions will sync all versions of a specific chart.
-func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool, index *helmRepo.IndexFile, dryRun bool) error {
+func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, dryRun bool) error {
 	var errs error
 	// Create client for target repo
 	tc, err := repo.NewClient(target.Repo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if index.Entries[name] != nil {
-		for i := range index.Entries[name] {
-			if chartExists, err := tc.ChartExists(name, index.Entries[name][i].Metadata.Version, target.Repo); !chartExists && err == nil {
+	if sourceIndex.Entries[name] != nil {
+		for i := range sourceIndex.Entries[name] {
+			if chartExists, err := tc.ChartExists(name, sourceIndex.Entries[name][i].Metadata.Version, targetIndex); !chartExists && err == nil {
 				if dryRun {
-					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, index.Entries[name][i].Metadata.Version)
+					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, sourceIndex.Entries[name][i].Metadata.Version)
 				} else {
-					if err := Sync(name, index.Entries[name][i].Metadata.Version, sourceRepo, target, index, syncDeps); err != nil {
+					if err := Sync(name, sourceIndex.Entries[name][i].Metadata.Version, sourceRepo, target, sourceIndex, targetIndex, syncDeps); err != nil {
 						errs = multierror.Append(errs, errors.Trace(err))
 					}
 				}
@@ -45,7 +46,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 }
 
 // Sync is the main function. It downloads, transform, package and publish a chart.
-func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, syncDeps bool) error {
+func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, syncDeps bool) error {
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "charts-syncer")
 	if err != nil {
@@ -80,7 +81,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	// If chart has dependencies, check that they are already in the target repo.
 	chartPath := path.Join(destDir, name)
 	if _, err := os.Stat(path.Join(chartPath, "requirements.lock")); err == nil {
-		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, syncDeps); err != nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, syncDeps); err != nil {
 			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
 		}
 	}
@@ -122,6 +123,9 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
 		return errors.Annotatef(err, "Error publishing chart %s-%s to target repo", name, version)
 	}
+	// Add just synced chart to our local target index so other charts that may have this as dependency
+	// know it is already synced in the target repository.
+	targetIndex.Add(&chart.Metadata{Name: name, Version: version}, "", "", "")
 	klog.Infof("Chart %s-%s published successfully", name, version)
 
 	return errors.Trace(err)

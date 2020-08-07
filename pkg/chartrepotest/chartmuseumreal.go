@@ -45,7 +45,7 @@ func tChartMuseumReal(t *testing.T, username, password string) (string, func()) 
 		id,
 	))
 
-	return "http://localhost:" + port, func() {
+	return "http://127.0.0.1:" + port, func() {
 		tDockerExec(t, "stop", id)
 		tDockerExec(t, "rm", id)
 		tDockerVolumeRm(t, chartsVolume)
