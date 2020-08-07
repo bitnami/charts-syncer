@@ -137,13 +137,13 @@ func GetDateThreshold(date string) (time.Time, error) {
 }
 
 // FindChartURL will return the chart url
-func FindChartURL(name string, version string, index *helmRepo.IndexFile, sourceUrl string) (string, error) {
+func FindChartURL(name string, version string, index *helmRepo.IndexFile, sourceURL string) (string, error) {
 	chart := findChartByVersion(index.Entries[name], version)
-	if chart != nil {
+	if chart != nil && len(chart.URLs) > 0 {
 		if isValidURL(chart.URLs[0]) {
 			return chart.URLs[0], nil
 		}
-		return fmt.Sprintf("%s/%s", sourceUrl, chart.URLs[0]), nil
+		return fmt.Sprintf("%s/%s", sourceURL, chart.URLs[0]), nil
 	}
 	return "", fmt.Errorf("unable to find chart url in index")
 }
@@ -162,10 +162,6 @@ func findChartByVersion(chartVersions []*helmRepo.ChartVersion, version string) 
 func isValidURL(text string) bool {
 	_, err := url.ParseRequestURI(text)
 	if err != nil {
-		return false
-	}
-	u, err := url.Parse(text)
-	if err != nil || u.Scheme == "" || u.Host == "" {
 		return false
 	}
 	return true
