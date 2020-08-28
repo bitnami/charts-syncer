@@ -18,22 +18,22 @@ spec:
             #   - name: SOURCE_AUTH_USERNAME
             #     valueFrom:
             #       secretKeyRef:
-            #         name: chart-syncer-credentials
+            #         name: charts-syncer-credentials
             #         key: source-username
             #   - name: SOURCE_AUTH_PASSWORD
             #     valueFrom:
             #       secretKeyRef:
-            #         name: chart-syncer-credentials
+            #         name: charts-syncer-credentials
             #         key: source-password
             #   - name: TARGET_AUTH_USERNAME
             #     valueFrom:
             #       secretKeyRef:
-            #         name: chart-syncer-credentials
+            #         name: charts-syncer-credentials
             #         key: target-username
             #   - name: TARGET_AUTH_PASSWORD
             #     valueFrom:
             #       secretKeyRef:
-            #         name: chart-syncer-credentials
+            #         name: charts-syncer-credentials
             #         key: target-password
             volumeMounts:
               - name: config

@@ -308,24 +308,24 @@ The recommended way to specify credentials is using environment variables in the
       - name: SOURCE_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
-            name: chart-syncer-credentials
+            name: charts-syncer-credentials
             key: source-username
       - name: SOURCE_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: chart-syncer-credentials
+            name: charts-syncer-credentials
             key: source-password
       - name: TARGET_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
-            name: chart-syncer-credentials
+            name: charts-syncer-credentials
             key: target-username
       - name: TARGET_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: chart-syncer-credentials
+            name: charts-syncer-credentials
             key: target-password
 ~~~
 
-The above environment variables are retrieved from a secret called `chart-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.
+The above environment variables are retrieved from a secret called `charts-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.
 
