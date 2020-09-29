@@ -119,9 +119,8 @@ func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo 
 		return errors.Annotatef(err, "Error unmarshaling %s file", chartFile)
 	}
 	for _, dep := range chartMetadata.Dependencies {
-		// Specify the exact dependencies versions used in the original requirements.lock file
+		// Specify the exact dependencies versions used in the original Chart.lock file
 		// so when running helm dep up we get the same versions resolved.
-		//deps.Dependencies[i].Version = chartDependencies[deps.Dependencies[i].Name]
 		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
@@ -152,7 +151,6 @@ func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *
 	for _, dep := range deps.Dependencies {
 		// Specify the exact dependencies versions used in the original requirements.lock file
 		// so when running helm dep up we get the same versions resolved.
-		//deps.Dependencies[i].Version = chartDependencies[deps.Dependencies[i].Name]
 		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
