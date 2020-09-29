@@ -10,10 +10,10 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
-	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
+	"sigs.k8s.io/yaml"
 )
 
 // dependencies is the list of dependencies of a chart
@@ -22,20 +22,28 @@ type dependencies struct {
 }
 
 // syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary.
-func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, syncDeps bool) error {
+func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, apiVersion string, syncDeps bool) error {
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
 	var missingDependencies = false
-	requirementsLockFile := path.Join(chartPath, "requirements.lock")
+	lockFileName := ""
+	if apiVersion == "v1" {
+		lockFileName = "requirements.lock"
+	} else if apiVersion == "v2" {
+		lockFileName = "Chart.lock"
+	} else {
+		return errors.Errorf("unrecognised apiVersion %s", apiVersion)
+	}
+	lockFile := path.Join(chartPath, lockFileName)
 
-	requirementsLock, err := ioutil.ReadFile(requirementsLockFile)
+	lockContent, err := ioutil.ReadFile(lockFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	lock := &helmChart.Lock{}
-	err = yaml.Unmarshal(requirementsLock, lock)
+	err = yaml.Unmarshal(lockContent, lock)
 	if err != nil {
-		return errors.Annotatef(err, "Error unmarshaling %s file", requirementsLockFile)
+		return errors.Annotatef(err, "Error unmarshaling %s file", lockFile)
 	}
 
 	tc, err := repo.NewClient(target.Repo)
@@ -77,9 +85,18 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	}
 
 	if !missingDependencies {
-		klog.V(3).Info("Updating requirements.yaml file...")
-		if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
-			return errors.Trace(err)
+		klog.V(3).Info("Updating Chart.yaml file...")
+		switch apiVersion {
+		case "v1":
+			if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
+				return errors.Trace(err)
+			}
+		case "v2":
+			if err := updateChartMetadataFile(chartPath, lock, sourceRepo, target); err != nil {
+				return errors.Trace(err)
+			}
+		default:
+			return errors.Errorf("unrecognised %s as lock filename ", lockFileName)
 		}
 		if err := helmcli.UpdateDependencies(chartPath); err != nil {
 			return errors.Trace(err)
@@ -88,7 +105,38 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	return errs
 }
 
+// updateChartMetadataFile updates the dependencies in Chart.yaml
+// For helm v3 dependency management
+func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
+	chartFile := path.Join(chartPath, "Chart.yaml")
+	chart, err := ioutil.ReadFile(chartFile)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	chartMetadata := &helmChart.Metadata{}
+	err = yaml.Unmarshal(chart, chartMetadata)
+	if err != nil {
+		return errors.Annotatef(err, "Error unmarshaling %s file", chartFile)
+	}
+	for _, dep := range chartMetadata.Dependencies {
+		// Specify the exact dependencies versions used in the original requirements.lock file
+		// so when running helm dep up we get the same versions resolved.
+		//deps.Dependencies[i].Version = chartDependencies[deps.Dependencies[i].Name]
+		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
+		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
+		// the repository.
+		// For example, old charts pointing to helm/charts repo
+		if dep.Repository == sourceRepo.Url {
+			dep.Repository = target.Repo.Url
+		}
+	}
+	// Write updated requirements yamls file
+	writeChartMetadataFile(chartPath, chartMetadata)
+	return nil
+}
+
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
+// For helm v2 dependency management
 func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
 	requirementsFile := path.Join(chartPath, "requirements.yaml")
 	requirements, err := ioutil.ReadFile(requirementsFile)
@@ -129,6 +177,7 @@ func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart
 }
 
 // writeRequirementsFile writes a requirements.yaml file to disk.
+// For helm v2 dependency management
 func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	data, err := yaml.Marshal(deps)
 	if err != nil {
@@ -136,5 +185,17 @@ func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	}
 	requirementsFileName := "requirements.yaml"
 	dest := path.Join(chartPath, requirementsFileName)
+	return ioutil.WriteFile(dest, data, 0644)
+}
+
+// writeChartMetadataFile writes a Chart.yaml file to disk.
+// For helm v3 dependency management
+func writeChartMetadataFile(chartPath string, chartMetadata *helmChart.Metadata) error {
+	data, err := yaml.Marshal(chartMetadata)
+	if err != nil {
+		return err
+	}
+	chartMetadataFileName := "Chart.yaml"
+	dest := path.Join(chartPath, chartMetadataFileName)
 	return ioutil.WriteFile(dest, data, 0644)
 }

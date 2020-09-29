@@ -33,7 +33,7 @@ func TestSyncDependencies(t *testing.T) {
 	targetIndex := repo.NewIndexFile()
 
 	chartPath := path.Join(testTmpDir, "kafka")
-	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, targetIndex, false)
+	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, targetIndex, "v1", false)
 	expectedError := "please sync zookeeper-5.14.3 dependency first"
 	if err != nil && err.Error() != expectedError {
 		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
@@ -76,12 +76,69 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error unmarshaling %s file", requirementsFile)
 	}
-
-	if newDeps.Dependencies[0].Repository != target.Repo.Url {
-		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Repository, target.Repo.Url)
+	want := target.Repo.Url
+	if got := newDeps.Dependencies[0].Repository; got != want {
+		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
-	if newDeps.Dependencies[0].Version != "5.5.5" {
-		t.Errorf("incorrect modification, got: %s, want: %s", newDeps.Dependencies[0].Version, "5.5.5")
+	want = "5.5.5"
+	if got := newDeps.Dependencies[0].Version; got != want {
+		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
+	}
+}
+
+func TestupdateChartMetadataFile(t *testing.T) {
+	lock := &helmChart.Lock{
+		Generated: time.Now(),
+		Digest:    "sha256:fe26de7fc873dc8001404168feb920a61ba884a2fe211a7371165ed51bf8cb8b",
+		Dependencies: []*helmChart.Dependency{
+			{Name: "zookeeper", Version: "5.19.1"},
+		},
+	}
+
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	if err != nil {
+		t.Fatalf("error creating temporary: %s", testTmpDir)
+	}
+	t.Logf("Tmp dir is %q", testTmpDir)
+	//defer os.RemoveAll(testTmpDir)
+
+	sourceFile, err := ioutil.ReadFile("../../testdata/kafka-chart.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	chartPath := path.Join(testTmpDir, "kafka")
+	chartFile := path.Join(chartPath, "Chart.yaml")
+	err = os.MkdirAll(chartPath, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ioutil.WriteFile(chartFile, sourceFile, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := updateChartMetadataFile(chartPath, lock, source.Repo, target); err != nil {
+		t.Fatal(err)
+	}
+
+	chartFileContent, err := ioutil.ReadFile(chartFile)
+	if err != nil {
+		t.Fatalf("error reading updated %s file", chartFile)
+	}
+
+	chartMetadata := &helmChart.Metadata{}
+	err = yaml.Unmarshal(chartFileContent, chartMetadata)
+	if err != nil {
+		t.Fatalf("error unmarshaling %s file", chartFile)
+	}
+
+	want := target.Repo.Url
+	if got := chartMetadata.Dependencies[0].Repository; got != want {
+		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
+	}
+	want = "5.19.1"
+	if got := chartMetadata.Dependencies[0].Version; got != want {
+		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
 }
 
