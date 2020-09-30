@@ -20,7 +20,7 @@ func download(filepath string, downloadURL string, sourceRepo *api.Repo) error {
 	req, err := http.NewRequest("GET", downloadURL, nil)
 	klog.V(4).Infof("GET %q", downloadURL)
 	if err != nil {
-		return errors.Annotatef(err, "Error getting chart from %q", downloadURL)
+		return errors.Annotatef(err, "error getting chart from %q", downloadURL)
 	}
 	if sourceRepo.Auth != nil && sourceRepo.Auth.Username != "" && sourceRepo.Auth.Password != "" {
 		klog.V(4).Infof("Using basic authentication %q:****", sourceRepo.Auth.Username)
@@ -29,7 +29,7 @@ func download(filepath string, downloadURL string, sourceRepo *api.Repo) error {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Annotate(err, "Error doing request")
+		return errors.Annotate(err, "error doing request")
 	}
 	defer res.Body.Close()
 
@@ -40,13 +40,13 @@ func download(filepath string, downloadURL string, sourceRepo *api.Repo) error {
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
-		return errors.Annotatef(err, "Error creating %s file", filepath)
+		return errors.Annotatef(err, "error creating %s file", filepath)
 	}
 	defer out.Close()
 
 	// Write the body to file
 	if _, err = io.Copy(out, res.Body); err != nil {
-		return errors.Annotatef(err, "Error write to file %s", filepath)
+		return errors.Annotatef(err, "error write to file %s", filepath)
 	}
 
 	return errors.Trace(err)
@@ -59,12 +59,12 @@ func pushToChartMuseumLike(apiEndpoint string, filepath string, targetRepo *api.
 
 	fileWriter, err := bodyWriter.CreateFormFile("chart", filepath)
 	if err != nil {
-		return errors.Annotate(err, "Error writing to buffer")
+		return errors.Annotate(err, "error writing to buffer")
 	}
 
 	fh, err := os.Open(filepath)
 	if err != nil {
-		return errors.Annotatef(err, "Error opening file %s", filepath)
+		return errors.Annotatef(err, "error opening file %s", filepath)
 	}
 	defer fh.Close()
 
@@ -80,7 +80,7 @@ func pushToChartMuseumLike(apiEndpoint string, filepath string, targetRepo *api.
 	klog.V(4).Infof("POST %q", apiEndpoint)
 	req.Header.Add("content-type", contentType)
 	if err != nil {
-		return errors.Annotatef(err, "Error creating POST request to %s", apiEndpoint)
+		return errors.Annotatef(err, "error creating POST request to %s", apiEndpoint)
 	}
 	if targetRepo.Auth != nil && targetRepo.Auth.Username != "" && targetRepo.Auth.Password != "" {
 		klog.V(4).Info("Target repo uses basic authentication...")
@@ -89,12 +89,12 @@ func pushToChartMuseumLike(apiEndpoint string, filepath string, targetRepo *api.
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Annotatef(err, "Error doing POST request to %s", apiEndpoint)
+		return errors.Annotatef(err, "error doing POST request to %s", apiEndpoint)
 	}
 	defer res.Body.Close()
 	respBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return errors.Annotatef(err, "Error reading POST response from %s", apiEndpoint)
+		return errors.Annotatef(err, "error reading POST response from %s", apiEndpoint)
 	}
 	klog.V(4).Infof("POST chart status Code: %d, Message: %s", res.StatusCode, string(respBody))
 	if res.StatusCode >= 200 && res.StatusCode <= 299 {

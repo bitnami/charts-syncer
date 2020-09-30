@@ -20,10 +20,10 @@ var (
 // updateValuesFile performs some substitutions to a given values.yaml file.
 func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 	if err := updateContainerImageRegistry(valuesFile, targetRepo); err != nil {
-		return errors.Annotatef(err, "Error updating %s file", valuesFile)
+		return errors.Annotatef(err, "error updating %s file", valuesFile)
 	}
 	if err := updateContainerImageRepository(valuesFile, targetRepo); err != nil {
-		return errors.Annotatef(err, "Error updating %s file", valuesFile)
+		return errors.Annotatef(err, "error updating %s file", valuesFile)
 	}
 	return nil
 }

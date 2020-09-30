@@ -79,7 +79,7 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	defer res.Body.Close()
 	// Check status code
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return "", errors.Errorf("Error downloading index.yaml from %s. Status code is %d", repo.Url, res.StatusCode)
+		return "", errors.Errorf("error downloading index.yaml from %s. Status code is %d", repo.Url, res.StatusCode)
 	}
 
 	// Create the file
@@ -100,7 +100,7 @@ func Untar(filepath, destDir string) error {
 	cmd := exec.Command("tar", "xzf", filepath, "--directory", destDir)
 	_, err := cmd.Output()
 	if err != nil {
-		return errors.Annotatef(err, "Error untaring chart package %s", filepath)
+		return errors.Annotatef(err, "error untaring chart package %s", filepath)
 	}
 	return errors.Trace(err)
 }
