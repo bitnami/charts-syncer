@@ -10,7 +10,6 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
-	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
@@ -258,7 +257,7 @@ func TestLockFilePath(t *testing.T) {
 			want := tc.expectedPath
 			got, err := lockFilePath(tc.chartPath, tc.apiVersion)
 			if tc.shouldFail {
-				if !assert.EqualError(t, tc.expectedError, err.Error()) {
+				if err.Error() != tc.expectedError.Error() {
 					t.Errorf("error does not match: [%v:%v]", tc.expectedError, err)
 				}
 			} else {

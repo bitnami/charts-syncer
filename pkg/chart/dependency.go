@@ -38,7 +38,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	lock := &helmChart.Lock{}
 	err = yaml.Unmarshal(lockContent, lock)
 	if err != nil {
-		return errors.Annotatef(err, "Error unmarshaling %s file", lockFilePath)
+		return errors.Annotatef(err, "error unmarshaling %s file", lockFilePath)
 	}
 
 	tc, err := repo.NewClient(target.Repo)
@@ -80,7 +80,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	}
 
 	if !missingDependencies {
-		klog.V(3).Info("Updating Chart.yaml file...")
+		klog.V(3).Info("Updating dependencies file...")
 		switch apiVersion {
 		case APIV1:
 			if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
@@ -111,7 +111,7 @@ func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo 
 	chartMetadata := &helmChart.Metadata{}
 	err = yaml.Unmarshal(chart, chartMetadata)
 	if err != nil {
-		return errors.Annotatef(err, "Error unmarshaling %s file", chartFile)
+		return errors.Annotatef(err, "error unmarshaling %s file", chartFile)
 	}
 	for _, dep := range chartMetadata.Dependencies {
 		// Specify the exact dependencies versions used in the original Chart.lock file
@@ -141,7 +141,7 @@ func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *
 	deps := &dependencies{}
 	err = yaml.Unmarshal(requirements, deps)
 	if err != nil {
-		return errors.Annotatef(err, "Error unmarshaling %s file", requirementsFile)
+		return errors.Annotatef(err, "error unmarshaling %s file", requirementsFile)
 	}
 	for _, dep := range deps.Dependencies {
 		// Specify the exact dependencies versions used in the original requirements.lock file
