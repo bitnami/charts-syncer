@@ -26,24 +26,19 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	klog.V(3).Info("Chart has dependencies...")
 	var errs error
 	var missingDependencies = false
-	lockFileName := ""
-	if apiVersion == "v1" {
-		lockFileName = "requirements.lock"
-	} else if apiVersion == "v2" {
-		lockFileName = "Chart.lock"
-	} else {
-		return errors.Errorf("unrecognised apiVersion %s", apiVersion)
-	}
-	lockFile := path.Join(chartPath, lockFileName)
 
-	lockContent, err := ioutil.ReadFile(lockFile)
+	lockFilePath, err := lockFilePath(chartPath, apiVersion)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	lockContent, err := ioutil.ReadFile(lockFilePath)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	lock := &helmChart.Lock{}
 	err = yaml.Unmarshal(lockContent, lock)
 	if err != nil {
-		return errors.Annotatef(err, "Error unmarshaling %s file", lockFile)
+		return errors.Annotatef(err, "Error unmarshaling %s file", lockFilePath)
 	}
 
 	tc, err := repo.NewClient(target.Repo)
@@ -96,7 +91,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 				return errors.Trace(err)
 			}
 		default:
-			return errors.Errorf("unrecognised %s as lock filename ", lockFileName)
+			return errors.Errorf("unrecognised apiVersion %s", apiVersion)
 		}
 		if err := helmcli.UpdateDependencies(chartPath); err != nil {
 			return errors.Trace(err)
@@ -196,4 +191,16 @@ func writeChartMetadataFile(chartPath string, chartMetadata *helmChart.Metadata)
 	chartMetadataFileName := "Chart.yaml"
 	dest := path.Join(chartPath, chartMetadataFileName)
 	return ioutil.WriteFile(dest, data, 0644)
+}
+
+// lockFilePath returns the path to the lock file according to provided Api version
+func lockFilePath(chartPath, apiVersion string) (string, error) {
+	switch apiVersion {
+	case "v1":
+		return path.Join(chartPath, "requirements.lock"), nil
+	case "v2":
+		return path.Join(chartPath, "Chart.lock"), nil
+	default:
+		return "", errors.Errorf("unrecognised apiVersion %q", apiVersion)
+	}
 }

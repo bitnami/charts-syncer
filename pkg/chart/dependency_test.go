@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
@@ -86,7 +88,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	}
 }
 
-func TestupdateChartMetadataFile(t *testing.T) {
+func TestUpdateChartMetadataFile(t *testing.T) {
 	lock := &helmChart.Lock{
 		Generated: time.Now(),
 		Digest:    "sha256:fe26de7fc873dc8001404168feb920a61ba884a2fe211a7371165ed51bf8cb8b",
@@ -99,8 +101,7 @@ func TestupdateChartMetadataFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
-	t.Logf("Tmp dir is %q", testTmpDir)
-	//defer os.RemoveAll(testTmpDir)
+	defer os.RemoveAll(testTmpDir)
 
 	sourceFile, err := ioutil.ReadFile("../../testdata/kafka-chart.yaml")
 	if err != nil {
@@ -218,5 +219,53 @@ func TestFindDepByName(t *testing.T) {
 	}
 	if dep.Version != "4.5.6" {
 		t.Errorf("wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
+	}
+}
+
+func TestLockFilePath(t *testing.T) {
+	tests := map[string]struct {
+		chartPath     string
+		apiVersion    string
+		expectedPath  string
+		shouldFail    bool
+		expectedError error
+	}{
+		"api v1 chart": {
+			"/tmp/kafka",
+			"v1",
+			"/tmp/kafka/requirements.lock",
+			false,
+			nil,
+		},
+		"api v2 chart": {
+			"/tmp/kafka",
+			"v2",
+			"/tmp/kafka/Chart.lock",
+			false,
+			nil,
+		},
+		"unexisting api chart": {
+			"/tmp/kafka",
+			"vvv000",
+			"",
+			true,
+			errors.New("unrecognised apiVersion \"vvv000\""),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			want := tc.expectedPath
+			got, err := lockFilePath(tc.chartPath, tc.apiVersion)
+			if tc.shouldFail {
+				if !assert.EqualError(t, tc.expectedError, err.Error()) {
+					t.Errorf("error does not match: [%v:%v]", tc.expectedError, err)
+				}
+			} else {
+				if got != want {
+					t.Errorf("got: %q, want %q", got, want)
+				}
+			}
+		})
 	}
 }

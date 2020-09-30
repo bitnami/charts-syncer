@@ -81,12 +81,12 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	// If chart has dependencies, check that they are already in the target repo.
 	chartPath := path.Join(destDir, name)
 	if _, err := os.Stat(path.Join(chartPath, "requirements.lock")); err == nil {
-		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, "v1", syncDeps); err != nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV1, syncDeps); err != nil {
 			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
 		}
 	}
 	if _, err := os.Stat(path.Join(chartPath, "Chart.lock")); err == nil {
-		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, "v2", syncDeps); err != nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV2, syncDeps); err != nil {
 			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
 		}
 	}
