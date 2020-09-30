@@ -15,8 +15,10 @@ As stated in the [README](../README.md) file, the tool performs some change in t
 
 - values.yaml
 - values-production.yaml (if exists)
-- requirements.yaml (if exists)
-- requirements.lock (if exists)
+- requirements.yaml (if requirements.lock exists, only for Helm v2 chart)
+- requirements.lock (if exists, only for Helm v2 chart)
+- Chart.yaml (if Chart.lock exists, only for Helm v3 chart)
+- Chart.lock (if exists, only for Helm v3 chart)
 - README.md (if exists)
 
 In order to get a `diff` view with the performed changes you can do the following:

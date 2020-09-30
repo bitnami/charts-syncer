@@ -94,7 +94,7 @@ volumePermissions:
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
-	destValuesFilePath := path.Join(testTmpDir, "values.yaml")
+	destValuesFilePath := path.Join(testTmpDir, ValuesFilename)
 
 	// Write file
 	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
@@ -140,7 +140,7 @@ The above parameters map to the env variables defined in [bitnami/ghost](http://
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
-	destValuesFilePath := path.Join(testTmpDir, "README.md")
+	destValuesFilePath := path.Join(testTmpDir, ReadmeFilename)
 
 	// Write file
 	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)

@@ -80,15 +80,20 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 
 	// If chart has dependencies, check that they are already in the target repo.
 	chartPath := path.Join(destDir, name)
-	if _, err := os.Stat(path.Join(chartPath, "requirements.lock")); err == nil {
-		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, syncDeps); err != nil {
+	if _, err := os.Stat(path.Join(chartPath, RequirementsLockFilename)); err == nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV1, syncDeps); err != nil {
+			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
+		}
+	}
+	if _, err := os.Stat(path.Join(chartPath, ChartLockFilename)); err == nil {
+		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV2, syncDeps); err != nil {
 			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
 		}
 	}
 
 	// Update values.yaml with new registry and repository info
-	valuesFile := path.Join(chartPath, "values.yaml")
-	valuesProductionFile := path.Join(chartPath, "values-production.yaml")
+	valuesFile := path.Join(chartPath, ValuesFilename)
+	valuesProductionFile := path.Join(chartPath, ValuesProductionFilename)
 	if _, err := os.Stat(valuesFile); err == nil {
 		klog.V(3).Infof("Chart %s-%s has values.yaml file...", name, version)
 		if err := updateValuesFile(valuesFile, target); err != nil {
@@ -101,7 +106,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 			return errors.Trace(err)
 		}
 	}
-	readmeFile := path.Join(chartPath, "README.md")
+	readmeFile := path.Join(chartPath, ReadmeFilename)
 	if _, err := os.Stat(readmeFile); err == nil {
 		klog.V(3).Infof("Chart %s-%s has README.md...", name, version)
 		if err := updateReadmeFile(readmeFile, sourceRepo.Url, target.Repo.Url, name, target.RepoName); err != nil {
