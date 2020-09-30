@@ -30,7 +30,7 @@ func UpdateDependencies(chartPath string) error {
 	}
 	cmd := exec.Command("helm", "dependency", "update", chartPath)
 	if _, err := cmd.Output(); err != nil {
-		return errors.Errorf("Error updading dependencies for %s", chartPath)
+		return errors.Errorf("error updading dependencies for %s", chartPath)
 	}
 	return nil
 }
@@ -46,7 +46,7 @@ func AddRepoToHelm(url string, auth *api.Auth) error {
 		cmd = exec.Command("helm", "repo", "add", "target", url)
 	}
 	if _, err := cmd.Output(); err != nil {
-		return errors.Annotate(err, "Error adding target repo to helm")
+		return errors.Annotate(err, "error adding target repo to helm")
 	}
 	return nil
 }

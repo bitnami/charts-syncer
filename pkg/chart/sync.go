@@ -50,7 +50,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	// Create temporary working directory
 	tmpDir, err := ioutil.TempDir("", "charts-syncer")
 	if err != nil {
-		return errors.Annotatef(err, "Error creating temporary: %s", tmpDir)
+		return errors.Annotatef(err, "error creating temporary: %s", tmpDir)
 	}
 	defer os.RemoveAll(tmpDir)
 	srcDir := path.Join(tmpDir, "src")
@@ -70,24 +70,24 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
 	if err := sc.DownloadChart(filepath, name, version, sourceRepo, sourceIndex); err != nil {
-		return errors.Annotatef(err, "Error downloading chart %s-%s from source repo", name, version)
+		return errors.Annotatef(err, "error downloading chart %s-%s from source repo", name, version)
 	}
 
 	// Uncompress chart
 	if err := utils.Untar(filepath, destDir); err != nil {
-		return errors.Annotate(err, "Error found in Untar function")
+		return errors.Annotate(err, "error found in Untar function")
 	}
 
 	// If chart has dependencies, check that they are already in the target repo.
 	chartPath := path.Join(destDir, name)
 	if _, err := os.Stat(path.Join(chartPath, RequirementsLockFilename)); err == nil {
 		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV1, syncDeps); err != nil {
-			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
+			return errors.Annotatef(err, "error updating dependencies for chart %s-%s", name, version)
 		}
 	}
 	if _, err := os.Stat(path.Join(chartPath, ChartLockFilename)); err == nil {
 		if err := syncDependencies(chartPath, sourceRepo, target, sourceIndex, targetIndex, APIV2, syncDeps); err != nil {
-			return errors.Annotatef(err, "Error updating dependencies for chart %s-%s", name, version)
+			return errors.Annotatef(err, "error updating dependencies for chart %s-%s", name, version)
 		}
 	}
 
@@ -117,7 +117,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	// Package chart
 	packagedChartPath, err := helmcli.Package(chartPath, name, version, destDir)
 	if err != nil {
-		return errors.Annotate(err, "Error taring chart")
+		return errors.Annotate(err, "error taring chart")
 	}
 
 	// Create client for target repo
@@ -126,7 +126,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
 	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
-		return errors.Annotatef(err, "Error publishing chart %s-%s to target repo", name, version)
+		return errors.Annotatef(err, "error publishing chart %s-%s to target repo", name, version)
 	}
 	// Add just synced chart to our local target index so other charts that may have this as dependency
 	// know it is already synced in the target repository.
