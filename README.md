@@ -107,7 +107,6 @@ target:
 
 In order for this tool to be able to successfully migrate a chart from a source repository to another it must fulfill the following requirements:
 
-- If the chart has dependencies they are specified in a *requirements.yaml* file. Currently, if the dependencies are specified in the Chart.yaml file the tool won't be able to manage them.
 - The images used by the chart must be specified in the following way in the values.yaml file:
 
 ~~~yaml
@@ -133,9 +132,12 @@ In order to migrate a chart from one repository to another and retrieve the imag
 
 These files are updated with the new container registry where the chart should pull the images from.
 
-#### Update *requirements.yaml* and *requirements.lock*
+#### Update dependencies files
 
-If the chart has any dependency, they should be registered in this file. The *requirements.yaml* and *requirements.lock* file will be updated to retrieve the dependencies from the target repository.
+For Helm v2, these files are *requirements.yaml* and *requirements.lock*.
+For Helm v3, these files are *Chart.yaml* and *Chart.lock*
+
+If the chart has any dependency, they should be registered in these files that will be updated to retrieve the dependencies from the target repository.
 
 #### Update *README.md*
 
@@ -196,7 +198,7 @@ index dff53b1..a9d5884 100755
      ## Optionally specify an array of imagePullSecrets.
 ~~~
 
-#### requirements.yaml
+#### requirements.lock (only for Helm v2 charts)
 
 ~~~diff
 diff --git a/requirements.lock b/requirements.lock
@@ -217,6 +219,25 @@ index ae8a2c5..ea23e53 100755
 -generated: "2020-07-06T18:13:45.662082005Z"
 +digest: sha256:fbd22a3fc7b93ce6875a37902a3c8ccbb5dd3db2611ec9860b99e49d9f23196e
 +generated: "2020-07-07T12:57:28.573258+02:00"
+~~~
+
+#### Chart.lock (only for Helm v3 charts)
+
+~~~diff
+diff --git a/Chart.lock b/Chart.lock
+index ae1c198..eeed9a7 100644
+--- a/Chart.lock
++++ b/Chart.lock
+@@ -1,6 +1,6 @@
+ dependencies:
+ - name: zookeeper
+-  repository: https://charts.bitnami.com/bitnami
++  repository: http://127.0.0.1:8080
+   version: 5.21.9
+-digest: sha256:3157eeec51b30e4011b34043df2dfac383a4bd11f76c85d07f54414a21dffc19
+-generated: "2020-09-29T12:51:56.872354+02:00"
++digest: sha256:8aef6388d327cdf9b8f5714aadfe8112b2e2ff53494e86dbd42946d742d33ff0
++generated: "2020-09-30T16:15:20.548388+02:00"
 ~~~
 
 #### README.md
