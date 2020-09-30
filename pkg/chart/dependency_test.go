@@ -35,7 +35,7 @@ func TestSyncDependencies(t *testing.T) {
 	targetIndex := repo.NewIndexFile()
 
 	chartPath := path.Join(testTmpDir, "kafka")
-	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, targetIndex, "v1", false)
+	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, targetIndex, APIV1, false)
 	expectedError := "please sync zookeeper-5.14.3 dependency first"
 	if err != nil && err.Error() != expectedError {
 		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
@@ -63,7 +63,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	}
 
 	chartPath := path.Join(testTmpDir, "kafka")
-	requirementsFile := path.Join(chartPath, "requirements.yaml")
+	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	if err := updateRequirementsFile(chartPath, lock, source.Repo, target); err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	chartPath := path.Join(testTmpDir, "kafka")
-	chartFile := path.Join(chartPath, "Chart.yaml")
+	chartFile := path.Join(chartPath, ChartFilename)
 	err = os.MkdirAll(chartPath, 0755)
 	if err != nil {
 		t.Fatal(err)
@@ -169,7 +169,7 @@ func TestWriteRequirementsFile(t *testing.T) {
 	}
 
 	chartPath := path.Join(testTmpDir, "kafka")
-	requirementsFile := path.Join(chartPath, "requirements.yaml")
+	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
 		t.Fatalf("error reading %s file", requirementsFile)
@@ -232,14 +232,14 @@ func TestLockFilePath(t *testing.T) {
 	}{
 		"api v1 chart": {
 			"/tmp/kafka",
-			"v1",
+			APIV1,
 			"/tmp/kafka/requirements.lock",
 			false,
 			nil,
 		},
 		"api v2 chart": {
 			"/tmp/kafka",
-			"v2",
+			APIV2,
 			"/tmp/kafka/Chart.lock",
 			false,
 			nil,

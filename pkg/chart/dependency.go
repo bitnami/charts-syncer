@@ -82,11 +82,11 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	if !missingDependencies {
 		klog.V(3).Info("Updating Chart.yaml file...")
 		switch apiVersion {
-		case "v1":
+		case APIV1:
 			if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
 				return errors.Trace(err)
 			}
-		case "v2":
+		case APIV2:
 			if err := updateChartMetadataFile(chartPath, lock, sourceRepo, target); err != nil {
 				return errors.Trace(err)
 			}
@@ -103,7 +103,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 // updateChartMetadataFile updates the dependencies in Chart.yaml
 // For helm v3 dependency management
 func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
-	chartFile := path.Join(chartPath, "Chart.yaml")
+	chartFile := path.Join(chartPath, ChartFilename)
 	chart, err := ioutil.ReadFile(chartFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -132,7 +132,7 @@ func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo 
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
 // For helm v2 dependency management
 func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
-	requirementsFile := path.Join(chartPath, "requirements.yaml")
+	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -176,7 +176,7 @@ func writeRequirementsFile(chartPath string, deps *dependencies) error {
 	if err != nil {
 		return err
 	}
-	requirementsFileName := "requirements.yaml"
+	requirementsFileName := RequirementsFilename
 	dest := path.Join(chartPath, requirementsFileName)
 	return ioutil.WriteFile(dest, data, 0644)
 }
@@ -188,7 +188,7 @@ func writeChartMetadataFile(chartPath string, chartMetadata *helmChart.Metadata)
 	if err != nil {
 		return err
 	}
-	chartMetadataFileName := "Chart.yaml"
+	chartMetadataFileName := ChartFilename
 	dest := path.Join(chartPath, chartMetadataFileName)
 	return ioutil.WriteFile(dest, data, 0644)
 }
@@ -196,10 +196,10 @@ func writeChartMetadataFile(chartPath string, chartMetadata *helmChart.Metadata)
 // lockFilePath returns the path to the lock file according to provided Api version
 func lockFilePath(chartPath, apiVersion string) (string, error) {
 	switch apiVersion {
-	case "v1":
-		return path.Join(chartPath, "requirements.lock"), nil
-	case "v2":
-		return path.Join(chartPath, "Chart.lock"), nil
+	case APIV1:
+		return path.Join(chartPath, RequirementsLockFilename), nil
+	case APIV2:
+		return path.Join(chartPath, ChartLockFilename), nil
 	default:
 		return "", errors.Errorf("unrecognised apiVersion %q", apiVersion)
 	}

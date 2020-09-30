@@ -94,7 +94,7 @@ func TestSync(t *testing.T) {
 					t.Fatal(err)
 				}
 				// Read values.yaml
-				values, err := ioutil.ReadFile(path.Join(testTmpDir, "zookeeper", "values.yaml"))
+				values, err := ioutil.ReadFile(path.Join(testTmpDir, "zookeeper", ValuesFilename))
 				if err != nil {
 					t.Fatal(err)
 				}
