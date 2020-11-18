@@ -77,7 +77,7 @@ func (s *Syncer) Sync(charts ...string) error {
 
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
-			return errors.Trace(fmt.Errorf("unable to discover charts to sync"))
+			return fmt.Errorf("unable to discover charts to sync")
 		}
 
 		// TODO(jdrios): This is only valid for backends supporting an index.yaml file.

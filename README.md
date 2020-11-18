@@ -7,28 +7,16 @@ Sync chart packages between chart repositories
 
 ## Usage
 
-#### Sync a specific chart
-
-~~~bash
-$ charts-syncer syncChart --name nginx --version 1.0.0 --config ./charts-syncer.yaml
-~~~
-
-#### Sync all versions for a specific chart
-
-~~~bash
-$ charts-syncer syncChart --name nginx --all-versions --config ./charts-syncer.yaml
-~~~
-
 #### Sync all charts and versions
 
 ~~~bash
-$ charts-syncer sync --config ./charts-syncer.yaml
+$ charts-syncer
 ~~~
 
 #### Sync all charts and versions from specific date
 
 ~~~bash
-$ charts-syncer sync --from-date 2020-05-15 --config ./charts-syncer.yaml
+$ charts-syncer --from-date 2020-05-15
 ~~~
 
  > Date should be in format YYYY-MM-DD
@@ -349,4 +337,3 @@ The recommended way to specify credentials is using environment variables in the
 ~~~
 
 The above environment variables are retrieved from a secret called `charts-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.
-
