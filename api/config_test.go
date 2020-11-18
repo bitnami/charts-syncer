@@ -1,26 +1,28 @@
-package api
+package api_test
 
 import (
 	"testing"
+
+	"github.com/bitnami-labs/charts-syncer/api"
 )
 
-var (
-	config = &Config{
-		Source: &SourceRepo{
-			Repo: &Repo{
+func TestValidate(t *testing.T) {
+	config := &api.Config{
+		Source: &api.SourceRepo{
+			Repo: &api.Repo{
 				Url:  "ht//:fake.source.com",
-				Kind: Kind_CHARTMUSEUM,
-				Auth: &Auth{
+				Kind: api.Kind_CHARTMUSEUM,
+				Auth: &api.Auth{
 					Username: "user",
 					Password: "password",
 				},
 			},
 		},
-		Target: &TargetRepo{
-			Repo: &Repo{
+		Target: &api.TargetRepo{
+			Repo: &api.Repo{
 				Url:  "http://fake.target.com",
-				Kind: Kind_CHARTMUSEUM,
-				Auth: &Auth{
+				Kind: api.Kind_CHARTMUSEUM,
+				Auth: &api.Auth{
 					Username: "user",
 					Password: "password",
 				},
@@ -29,12 +31,13 @@ var (
 			ContainerRepository: "test/repo",
 		},
 	}
-)
 
-func TestValidate(t *testing.T) {
-	expectedError := `"source.repo.url" should be a valid URL: parse "ht//:fake.source.com": invalid URI for request`
-	err := config.Validate()
-	if err != nil && err.Error() != expectedError {
-		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
+	if err := config.Validate(); err == nil {
+		t.Errorf("expected error but got nothing")
+	} else {
+		expectedError := `"source.repo.url" should be a valid URL: parse "ht//:fake.source.com": invalid URI for request`
+		if err.Error() != expectedError {
+			t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
+		}
 	}
 }
