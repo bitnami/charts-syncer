@@ -1,6 +1,6 @@
 module github.com/bitnami-labs/charts-syncer
 
-go 1.13
+go 1.15
 
 require (
 	github.com/bitnami-labs/pbjson v1.1.0

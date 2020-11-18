@@ -1,4 +1,4 @@
-//go:generate protoc -I=. --go_out=. config.proto
+//go:generate prototool generate
 
 // Package api provides APIs for syncing a chart repository
 package api
