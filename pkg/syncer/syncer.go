@@ -63,26 +63,33 @@ func NewSyncer(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) *
 }
 
 // Sync synchronizes source and target chart repos
-func (s *Syncer) Sync() error {
-	// TODO(jdrios): Remove assertion once we support syncing a list of charts
-	if !s.autoDiscovery {
-		return errors.Trace(fmt.Errorf("unable to sync repos without charts auto-discovery"))
-	}
-
+func (s *Syncer) Sync(charts ...string) error {
 	// TODO(jdrios): The code below is too optimistic and it does not take into
 	// account the chart repo backend. For example, index.yaml is specific for
 	// helm-like implementations. OCI does not implement an index.yaml file.
 	// Adapting this logic will require to refactor the `pkg/chart` package, and
 	// probably merging it with this one.
 
+	sourceIndex, err := utils.LoadIndexFromRepo(s.source.Repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
+	}
+
+	if len(charts) == 0 {
+		if !s.autoDiscovery {
+			return errors.Trace(fmt.Errorf("unable to discover charts to sync"))
+		}
+
+		// TODO(jdrios): This is only valid for backends supporting an index.yaml file.
+		for n := range sourceIndex.Entries {
+			charts = append(charts, n)
+		}
+	}
+
 	// Create basic layout for date and parse flag to time type
 	dateThreshold, err := utils.GetDateThreshold(s.fromDate)
 	if err != nil {
 		return errors.Trace(err)
-	}
-	sourceIndex, err := utils.LoadIndexFromRepo(s.source.Repo)
-	if err != nil {
-		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 	targetIndex, err := utils.LoadIndexFromRepo(s.target.Repo)
 	if err != nil {
@@ -100,24 +107,23 @@ func (s *Syncer) Sync() error {
 
 	// Iterate over charts in source index
 	var errs error
-
-	for chartName := range sourceIndex.Entries {
+	for name := range charts {
 		// Iterate over charts versions
-		for i := range sourceIndex.Entries[chartName] {
-			chartVersion := sourceIndex.Entries[chartName][i].Metadata.Version
-			publishingTime := sourceIndex.Entries[chartName][i].Created
+		for i := range sourceIndex.Entries[name] {
+			version := sourceIndex.Entries[name][i].Metadata.Version
+			publishingTime := sourceIndex.Entries[name][i].Created
 			if publishingTime.Before(dateThreshold) {
 				continue
 			}
-			if chartExists, _ := tc.ChartExists(chartName, chartVersion, targetIndex); chartExists {
+			if chartExists, _ := tc.ChartExists(name, version, targetIndex); chartExists {
 				continue
 			}
 			if s.dryRun {
-				klog.Infof("dry-run: Chart %s-%s pending to be synced", chartName, chartVersion)
+				klog.Infof("dry-run: Chart %s-%s pending to be synced", name, version)
 				continue
 			}
-			klog.Infof("Syncing %s-%s", chartName, chartVersion)
-			if err := chart.Sync(chartName, chartVersion, s.source.Repo, s.target, sourceIndex, targetIndex, true); err != nil {
+			klog.Infof("Syncing %s-%s", name, version)
+			if err := chart.Sync(name, version, s.source.Repo, s.target, sourceIndex, targetIndex, true); err != nil {
 				errs = multierror.Append(errs, errors.Trace(err))
 			}
 		}
