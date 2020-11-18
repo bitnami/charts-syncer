@@ -21,3 +21,6 @@ dist
 
 ### Go Patch ###
 /vendor/
+
+### Editors/IDEs ###
+.vscode
