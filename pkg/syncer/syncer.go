@@ -107,7 +107,7 @@ func (s *Syncer) Sync(charts ...string) error {
 
 	// Iterate over charts in source index
 	var errs error
-	for name := range charts {
+	for _, name := range charts {
 		// Iterate over charts versions
 		for i := range sourceIndex.Entries[name] {
 			version := sourceIndex.Entries[name][i].Metadata.Version
