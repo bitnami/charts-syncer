@@ -7,16 +7,16 @@ Sync chart packages between chart repositories
 
 ## Usage
 
-#### Sync all charts and versions
+#### Sync all charts
 
 ~~~bash
-$ charts-syncer
+$ charts-syncer sync
 ~~~
 
-#### Sync all charts and versions from specific date
+#### Sync all charts from specific date
 
 ~~~bash
-$ charts-syncer --from-date 2020-05-15
+$ charts-syncer sync --from-date 2020-05-15
 ~~~
 
  > Date should be in format YYYY-MM-DD
