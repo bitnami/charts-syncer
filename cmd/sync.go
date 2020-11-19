@@ -53,7 +53,7 @@ func newSyncCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "sync",
-		Short:   "Syncronizes two chart repositories",
+		Short:   "Synchronizes two chart repositories",
 		Example: syncExample,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := initConfigFile(); err != nil {

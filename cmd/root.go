@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	rootUsage = `charts-syncer is a tool to syncronize chart repositories from a source repository to a target repository
+	rootUsage = `charts-syncer is a tool to synchronize chart repositories from a source repository to a target repository
 
 Find more information at: https://github.com/bitnami-labs/charts-syncer`
 
@@ -22,7 +22,7 @@ Find more information at: https://github.com/bitnami-labs/charts-syncer`
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "charts-syncer",
-		Short: "tool to syncronize helm chart repositories",
+		Short: "tool to synchronize helm chart repositories",
 		Long:  rootUsage,
 		// Do not show the Usage page on every raised error
 		SilenceUsage: true,
