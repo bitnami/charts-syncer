@@ -7,6 +7,7 @@ option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
 message Config {
     SourceRepo source = 1;
     TargetRepo target = 2;
+    repeated string charts = 3;
 }
 
 // SourceRepo contains the required information of the source chart repository
