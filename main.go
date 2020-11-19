@@ -12,8 +12,6 @@ import (
 func main() {
 	defer klog.Flush()
 
-	command := cmd.New()
-
 	// Klog flags
 	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
 
@@ -21,6 +19,8 @@ func main() {
 	klog.InitFlags(klogFlags)
 	klogFlags.Lookup("alsologtostderr").Value.Set("true")
 	klogFlags.Lookup("v").Value.Set("2")
+
+	command := cmd.New()
 
 	// Register klog flags so they appear on the command's help
 	command.PersistentFlags().AddGoFlagSet(klogFlags)
