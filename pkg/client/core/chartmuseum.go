@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -8,7 +8,7 @@ import (
 	"k8s.io/klog"
 )
 
-// ChartMuseumClient implements ChartRepoAPI for a ChartMuseum implementation.
+// ChartMuseumClient implements Client for a ChartMuseum implementation.
 type ChartMuseumClient struct {
 	repo *api.Repo
 }
@@ -18,8 +18,8 @@ func NewChartMuseumClient(repo *api.Repo) *ChartMuseumClient {
 	return &ChartMuseumClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to ChartsMuseum repository.
-func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) error {
+// Push publishes a packaged chart to ChartsMuseum repository.
+func (c *ChartMuseumClient) Push(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to chartmuseum repo", filepath)
 	apiEndpoint := targetRepo.Url + "/api/charts"
 	if err := pushToChartMuseumLike(apiEndpoint, filepath, targetRepo); err != nil {
@@ -28,8 +28,8 @@ func (c *ChartMuseumClient) PublishChart(filepath string, targetRepo *api.Repo) 
 	return nil
 }
 
-// DownloadChart downloads a packaged chart from ChartsMuseum repository.
-func (c *ChartMuseumClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
+// Fetch downloads a packaged chart from ChartsMuseum repository.
+func (c *ChartMuseumClient) Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from Chartmuseum repo", name, version)
 	apiEndpoint, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
 	if err != nil {
