@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"fmt"
@@ -7,10 +7,10 @@ import (
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
-// ChartRepoAPI defines the methods a repo must implement.
-type ChartRepoAPI interface {
-	DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error
-	PublishChart(filepath string, targetRepo *api.Repo) error
+// Client defines the methods that a chart client should implement.
+type Client interface {
+	Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error
+	Push(filepath string, targetRepo *api.Repo) error
 	ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error)
 }
 
@@ -18,7 +18,7 @@ type ChartRepoAPI interface {
 //
 // The func is exposed as a var to allow tests to temporarily replace its
 // implementation, e.g. to return a fake.
-var NewClient = func(repo *api.Repo) (ChartRepoAPI, error) {
+var NewClient = func(repo *api.Repo) (Client, error) {
 	switch repo.Kind {
 	case api.Kind_HELM:
 		return NewClassicHelmClient(repo), nil

@@ -6,8 +6,8 @@ import (
 	"path"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	helmChart "helm.sh/helm/v3/pkg/chart"
@@ -41,7 +41,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		return errors.Annotatef(err, "error unmarshaling %s file", lockFilePath)
 	}
 
-	tc, err := repo.NewClient(target.Repo)
+	tc, err := core.NewClient(target.Repo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}

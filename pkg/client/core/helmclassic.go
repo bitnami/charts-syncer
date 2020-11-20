@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -8,7 +8,7 @@ import (
 	"k8s.io/klog"
 )
 
-// ClassicHelmClient implements ChartRepoAPI for a Helm classic implementation.
+// ClassicHelmClient implements Client for a Helm classic implementation.
 type ClassicHelmClient struct {
 	repo *api.Repo
 }
@@ -18,14 +18,14 @@ func NewClassicHelmClient(repo *api.Repo) *ClassicHelmClient {
 	return &ClassicHelmClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to classic helm repository.
-func (c *ClassicHelmClient) PublishChart(filepath string, targetRepo *api.Repo) error {
+// Push publishes a packaged chart to classic helm repository.
+func (c *ClassicHelmClient) Push(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to classic helm repo", filepath)
 	return errors.Errorf("publishing to a Helm classic repository is not supported yet")
 }
 
-// DownloadChart downloads a packaged chart from a classic helm repository.
-func (c *ClassicHelmClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
+// Fetch downloads a packaged chart from a classic helm repository.
+func (c *ClassicHelmClient) Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
 	downloadURL, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
 	if err != nil {

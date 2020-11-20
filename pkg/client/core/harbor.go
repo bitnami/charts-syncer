@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"strings"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/klog"
 )
 
-// HarborClient implements ChartRepoAPI for a Harbor implementation.
+// HarborClient implements Client for a Harbor implementation.
 type HarborClient struct {
 	repo *api.Repo
 }
@@ -20,8 +20,8 @@ func NewHarborClient(repo *api.Repo) *HarborClient {
 	return &HarborClient{repo: repo}
 }
 
-// PublishChart publishes a packaged chart to Harbor repository.
-func (c *HarborClient) PublishChart(filepath string, targetRepo *api.Repo) error {
+// Push publishes a packaged chart to Harbor repository.
+func (c *HarborClient) Push(filepath string, targetRepo *api.Repo) error {
 	klog.V(3).Infof("Publishing %s to Harbor repo", filepath)
 	apiEndpoint := strings.Replace(targetRepo.Url, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
 	if err := pushToChartMuseumLike(apiEndpoint, filepath, targetRepo); err != nil {
@@ -30,8 +30,8 @@ func (c *HarborClient) PublishChart(filepath string, targetRepo *api.Repo) error
 	return nil
 }
 
-// DownloadChart downloads a packaged chart from Harbor repository.
-func (c *HarborClient) DownloadChart(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
+// Fetch downloads a packaged chart from Harbor repository.
+func (c *HarborClient) Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
 	apiEndpoint, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
-	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
@@ -82,12 +82,12 @@ func TestSync(t *testing.T) {
 					t.Fatalf("error loading index.yaml: %v", err)
 				}
 				// Create client for target repo
-				tc, err := repo.NewClient(target.Repo)
+				tc, err := core.NewClient(target.Repo)
 				if err != nil {
 					t.Fatal("could not create a client for the source repo", err)
 				}
 				chartPath := path.Join(testTmpDir, "zookeeper-5.11.0.tgz")
-				if err := tc.DownloadChart(chartPath, "zookeeper", "5.11.0", target.Repo, targetIndex); err != nil {
+				if err := tc.Fetch(chartPath, "zookeeper", "5.11.0", target.Repo, targetIndex); err != nil {
 					t.Fatal(err)
 				}
 				if err := utils.Untar(chartPath, testTmpDir); err != nil {
