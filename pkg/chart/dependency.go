@@ -1,7 +1,6 @@
 package chart
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path"
 
@@ -38,12 +37,12 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 	lock := &helmChart.Lock{}
 	err = yaml.Unmarshal(lockContent, lock)
 	if err != nil {
-		return errors.Annotatef(err, "error unmarshaling %s file", lockFilePath)
+		return errors.Annotatef(err, "unmarshaling %q file", lockFilePath)
 	}
 
 	tc, err := core.NewClient(target.Repo)
 	if err != nil {
-		return fmt.Errorf("could not create a client for the source repo: %w", err)
+		return errors.Annotatef(err, "creating a client for the target repo")
 	}
 
 	if err != nil {

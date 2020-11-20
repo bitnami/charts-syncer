@@ -56,7 +56,12 @@ func TestPublishToChartmuseum(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz")
+			reloadChartMuseumIndex = func(c *ChartMuseumClient) error {
+				c.index = repo.NewIndexFile()
+				return nil
+			}
+
+			err = tc.Push("../../../testdata/apache-7.3.15.tgz")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -110,10 +115,15 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
+			reloadChartMuseumIndex = func(c *ChartMuseumClient) error {
+				c.index = repo.NewIndexFile()
+				c.index.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", url+"/charts", "sha256:1234567890")
+				return nil
+			}
 
 			// If testing real docker chartmuseum, we must push the chart before download it
 			if test.Desc == "real service" {
-				sc.Push("../../testdata/apache-7.3.15.tgz")
+				sc.Push("../../../testdata/apache-7.3.15.tgz")
 			}
 
 			// Create temporary working directory
@@ -122,9 +132,6 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 				t.Fatalf("error creating temporary: %s", testTmpDir)
 			}
 			defer os.RemoveAll(testTmpDir)
-
-			sourceIndex := repo.NewIndexFile()
-			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", url+"/charts", "sha256:1234567890")
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
 			err = sc.Fetch(chartPath, "apache", "7.3.15")
@@ -139,13 +146,17 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 }
 
 func TestChartExistsInChartMuseum(t *testing.T) {
-	sourceIndex := repo.NewIndexFile()
-	sourceIndex.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
 	// Create client for source repo
 	sc, err := NewClient(sourceCM.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
+	reloadChartMuseumIndex = func(c *ChartMuseumClient) error {
+		c.index = repo.NewIndexFile()
+		c.index.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
+		return nil
+	}
+
 	chartExists, err := sc.ChartExists("grafana", "1.5.2")
 	if err != nil {
 		t.Fatal(err)

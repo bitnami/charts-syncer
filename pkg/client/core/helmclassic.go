@@ -19,12 +19,20 @@ type ClassicHelmClient struct {
 }
 
 // NewClassicHelmClient creates a new `ClassicHelmClient`.
-func NewClassicHelmClient(repo *api.Repo) (*ClassicHelmClient, error) {
-	c := &ClassicHelmClient{repo: repo}
-	if err := c.reloadIndex(); err != nil {
-		return c, err
+func NewClassicHelmClient(repo *api.Repo) *ClassicHelmClient {
+	return &ClassicHelmClient{repo: repo}
+}
+
+// This allows test to replace the client index for testing.
+var reloadHelmClassicIndex = func(c *ClassicHelmClient) error { return c.reloadIndex() }
+
+func (c *ClassicHelmClient) reloadIndex() error {
+	index, err := utils.LoadIndexFromRepo(c.repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
-	return c, nil
+	c.index = index
+	return nil
 }
 
 // Push publishes a packaged chart to classic helm repository.
@@ -35,6 +43,11 @@ func (c *ClassicHelmClient) Push(filepath string) error {
 
 // Fetch downloads a packaged chart from a classic helm repository.
 func (c *ClassicHelmClient) Fetch(filepath string, name string, version string) error {
+	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
+	if err := reloadHelmClassicIndex(c); err != nil {
+		return errors.Trace(err)
+	}
+
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
 	downloadURL, err := utils.FindChartURL(name, version, c.index, c.repo.GetUrl())
 	if err != nil {
@@ -57,7 +70,7 @@ func (c *ClassicHelmClient) Fetch(filepath string, name string, version string) 
 // ChartExists checks if a chart exists in the repo.
 func (c *ClassicHelmClient) ChartExists(name string, version string) (bool, error) {
 	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
-	if err := c.reloadIndex(); err != nil {
+	if err := reloadHelmClassicIndex(c); err != nil {
 		return false, errors.Trace(err)
 	}
 
@@ -67,13 +80,4 @@ func (c *ClassicHelmClient) ChartExists(name string, version string) (bool, erro
 		return false, errors.Trace(err)
 	}
 	return chartExists, nil
-}
-
-func (c *ClassicHelmClient) reloadIndex() error {
-	index, err := utils.LoadIndexFromRepo(c.repo)
-	if err != nil {
-		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
-	}
-	c.index = index
-	return nil
 }

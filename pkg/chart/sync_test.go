@@ -77,10 +77,6 @@ func TestSync(t *testing.T) {
 					t.Fatalf("error creating temporary: %s", testTmpDir)
 				}
 				defer os.RemoveAll(testTmpDir)
-				targetIndex, err := utils.LoadIndexFromRepo(target.Repo)
-				if err != nil {
-					t.Fatalf("error loading index.yaml: %v", err)
-				}
 				// Create client for target repo
 				tc, err := core.NewClient(target.Repo)
 				if err != nil {

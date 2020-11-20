@@ -8,7 +8,6 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 var (
@@ -44,10 +43,6 @@ func TestDownload(t *testing.T) {
 	sc, err := core.NewClient(source.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
-	}
-	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
-	if err != nil {
-		t.Fatalf("error loading index.yaml: %v", err)
 	}
 	if err := sc.Fetch(chartPath, "nginx", "5.3.1"); err != nil {
 		t.Fatal(err)

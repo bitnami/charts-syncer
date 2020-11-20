@@ -8,10 +8,11 @@ import (
 	"path"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
 )
 
 var (
@@ -57,7 +58,11 @@ func TestPublishToHarbor(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz")
+			reloadHarborIndex = func(c *HarborClient) error {
+				c.index = repo.NewIndexFile()
+				return nil
+			}
+			err = tc.Push("../../../testdata/apache-7.3.15.tgz")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -112,6 +117,11 @@ func TestDownloadFromHarbor(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
+			reloadHarborIndex = func(c *HarborClient) error {
+				c.index = repo.NewIndexFile()
+				c.index.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", newURL+"/charts", "sha256:1234567890")
+				return nil
+			}
 
 			// Create temporary working directory
 			testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
@@ -119,9 +129,6 @@ func TestDownloadFromHarbor(t *testing.T) {
 				t.Fatalf("error creating temporary: %s", testTmpDir)
 			}
 			defer os.RemoveAll(testTmpDir)
-
-			sourceIndex := repo.NewIndexFile()
-			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", newURL+"/charts", "sha256:1234567890")
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
 			err = sc.Fetch(chartPath, "apache", "7.3.15")
@@ -136,12 +143,15 @@ func TestDownloadFromHarbor(t *testing.T) {
 }
 
 func TestChartExistsInHarbor(t *testing.T) {
-	sourceIndex := repo.NewIndexFile()
-	sourceIndex.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
 	// Create client for source repo
 	sc, err := NewClient(sourceHarbor.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
+	}
+	reloadHarborIndex = func(c *HarborClient) error {
+		c.index = repo.NewIndexFile()
+		c.index.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
+		return nil
 	}
 	chartExists, err := sc.ChartExists("grafana", "1.5.2")
 	if err != nil {

@@ -20,12 +20,20 @@ type HarborClient struct {
 }
 
 // NewHarborClient creates a new `HarborClient`.
-func NewHarborClient(repo *api.Repo) (*HarborClient, error) {
-	c := &HarborClient{repo: repo}
-	if err := c.reloadIndex(); err != nil {
-		return c, err
+func NewHarborClient(repo *api.Repo) *HarborClient {
+	return &HarborClient{repo: repo}
+}
+
+// This allows test to replace the client index for testing.
+var reloadHarborIndex = func(c *HarborClient) error { return c.reloadIndex() }
+
+func (c *HarborClient) reloadIndex() error {
+	index, err := utils.LoadIndexFromRepo(c.repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
-	return c, nil
+	c.index = index
+	return nil
 }
 
 // Push publishes a packaged chart to Harbor repository.
@@ -40,6 +48,11 @@ func (c *HarborClient) Push(filepath string) error {
 
 // Fetch downloads a packaged chart from Harbor repository.
 func (c *HarborClient) Fetch(filepath string, name string, version string) error {
+	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
+	if err := reloadHarborIndex(c); err != nil {
+		return errors.Trace(err)
+	}
+
 	klog.V(3).Infof("Downloading %s-%s from Harbor repo", name, version)
 	apiEndpoint, err := utils.FindChartURL(name, version, c.index, c.repo.GetUrl())
 	if err != nil {
@@ -54,7 +67,7 @@ func (c *HarborClient) Fetch(filepath string, name string, version string) error
 // ChartExists checks if a chart exists in the repo.
 func (c *HarborClient) ChartExists(name string, version string) (bool, error) {
 	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
-	if err := c.reloadIndex(); err != nil {
+	if err := reloadHarborIndex(c); err != nil {
 		return false, errors.Trace(err)
 	}
 
@@ -64,13 +77,4 @@ func (c *HarborClient) ChartExists(name string, version string) (bool, error) {
 		return false, errors.Trace(err)
 	}
 	return chartExists, nil
-}
-
-func (c *HarborClient) reloadIndex() error {
-	index, err := utils.LoadIndexFromRepo(c.repo)
-	if err != nil {
-		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
-	}
-	c.index = index
-	return nil
 }

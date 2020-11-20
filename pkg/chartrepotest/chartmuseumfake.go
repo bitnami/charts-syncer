@@ -99,8 +99,7 @@ func (cm *tChartMuseumFake) indexGet(w http.ResponseWriter, r *http.Request) {
 
 func (cm *tChartMuseumFake) chartPackageGet(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
-	// Get chart from testdata folder
-	chartPackageFile := path.Join("../../testdata", chartPackageName)
+	chartPackageFile := path.Join("../../../testdata", chartPackageName)
 	chartPackage, err := ioutil.ReadFile(chartPackageFile)
 	if err != nil {
 		cm.t.Fatal(err)

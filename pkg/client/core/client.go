@@ -30,11 +30,11 @@ type Writer interface {
 var NewClient = func(repo *api.Repo) (Client, error) {
 	switch repo.Kind {
 	case api.Kind_HELM:
-		return NewClassicHelmClient(repo)
+		return NewClassicHelmClient(repo), nil
 	case api.Kind_CHARTMUSEUM:
-		return NewChartMuseumClient(repo)
+		return NewChartMuseumClient(repo), nil
 	case api.Kind_HARBOR:
-		return NewHarborClient(repo)
+		return NewHarborClient(repo), nil
 	default:
 		return nil, fmt.Errorf("unsupported repo kind %q", repo.Kind)
 	}

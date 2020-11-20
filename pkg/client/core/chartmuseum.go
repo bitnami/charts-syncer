@@ -19,12 +19,20 @@ type ChartMuseumClient struct {
 }
 
 // NewChartMuseumClient creates a new `ChartMuseumClient`.
-func NewChartMuseumClient(repo *api.Repo) (*ChartMuseumClient, error) {
-	c := &ChartMuseumClient{repo: repo}
-	if err := c.reloadIndex(); err != nil {
-		return c, err
+func NewChartMuseumClient(repo *api.Repo) *ChartMuseumClient {
+	return &ChartMuseumClient{repo: repo}
+}
+
+// This allows test to replace the client index for testing.
+var reloadChartMuseumIndex = func(c *ChartMuseumClient) error { return c.reloadIndex() }
+
+func (c *ChartMuseumClient) reloadIndex() error {
+	index, err := utils.LoadIndexFromRepo(c.repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
-	return c, nil
+	c.index = index
+	return nil
 }
 
 // Push publishes a packaged chart to ChartsMuseum repository.
@@ -39,6 +47,11 @@ func (c *ChartMuseumClient) Push(filepath string) error {
 
 // Fetch downloads a packaged chart from ChartsMuseum repository.
 func (c *ChartMuseumClient) Fetch(filepath string, name string, version string) error {
+	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
+	if err := reloadChartMuseumIndex(c); err != nil {
+		return errors.Trace(err)
+	}
+
 	klog.V(3).Infof("Downloading %s-%s from Chartmuseum repo", name, version)
 	apiEndpoint, err := utils.FindChartURL(name, version, c.index, c.repo.GetUrl())
 	if err != nil {
@@ -53,7 +66,7 @@ func (c *ChartMuseumClient) Fetch(filepath string, name string, version string) 
 // ChartExists checks if a chart exists in the repo.
 func (c *ChartMuseumClient) ChartExists(name string, version string) (bool, error) {
 	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
-	if err := c.reloadIndex(); err != nil {
+	if err := reloadChartMuseumIndex(c); err != nil {
 		return false, errors.Trace(err)
 	}
 
@@ -63,13 +76,4 @@ func (c *ChartMuseumClient) ChartExists(name string, version string) (bool, erro
 		return false, errors.Trace(err)
 	}
 	return chartExists, nil
-}
-
-func (c *ChartMuseumClient) reloadIndex() error {
-	index, err := utils.LoadIndexFromRepo(c.repo)
-	if err != nil {
-		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
-	}
-	c.index = index
-	return nil
 }

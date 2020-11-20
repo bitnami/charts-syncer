@@ -8,38 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 	"gopkg.in/yaml.v2"
 	helmChart "helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
-
-func TestSyncDependencies(t *testing.T) {
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
-	if err != nil {
-		t.Fatalf("error creating temporary: %s", testTmpDir)
-	}
-	defer os.RemoveAll(testTmpDir)
-
-	sourceChart := "../../testdata/kafka-10.3.3.tgz"
-	if err := utils.Untar(sourceChart, testTmpDir); err != nil {
-		t.Fatal(err)
-	}
-
-	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
-	if err != nil {
-		t.Fatalf("error loading index.yaml: %v", err)
-	}
-	targetIndex := repo.NewIndexFile()
-
-	chartPath := path.Join(testTmpDir, "kafka")
-	err = syncDependencies(chartPath, source.Repo, target, sourceIndex, targetIndex, APIV1, false)
-	expectedError := "please sync zookeeper-5.14.3 dependency first"
-	if err != nil && err.Error() != expectedError {
-		t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
-	}
-}
 
 func TestUpdateRequirementsFile(t *testing.T) {
 	lock := &helmChart.Lock{
