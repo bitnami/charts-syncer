@@ -77,7 +77,6 @@ jobs:
       - <<: *install_wait_for_port
       - <<: *install_helm_cli
       - <<: *add_bitnami_helm
-      - run: ./test/load-images-to-kind.sh
       - run:
           background: true
           command: |
@@ -86,8 +85,6 @@ jobs:
       - attach_workspace:
           at: /tmp/dist
       - run: ./test/run-charts-syncer.sh
-      - run: |
-          helm repo update
-          helm install --wait ghost-test target/ghost --version 10.0.10 --set ghostHost=127.0.0.1 --set service.type=ClusterIP
+      - run: ./test/install-ghost.sh
       - run: ./test/wait-for-ghost-deployment.sh
       - run: ./test/run-verifications.sh

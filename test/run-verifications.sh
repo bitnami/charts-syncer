@@ -7,24 +7,23 @@ set -o pipefail
 # Constants
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
+EXPECTED_REGISTRY='gcr.io/bitnami-containers'
 
-## Check that Ghost deployment is using the expected image
-expectedGhostImage='customer.io/library/ghost:3.20.1-debian-10-r0'
-ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -o  jsonpath='{.items[0].spec.containers[0].image}')
-if [ ${ghostImage} == ${expectedGhostImage} ]; then
-    echo "[PASS] Ghost is using the expected image: ${ghostImage}"
+## Check that Ghost deployment is using the expected registry
+ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].spec.containers[0].image}')
+if [[ "${ghostImage}" =~ "${EXPECTED_REGISTRY}" ]]; then
+    echo "[PASS] Ghost is using the expected registry: ${EXPECTED_REGISTRY}"
 else
-    echo "[FAILED] Ghost is not using the expected image. Got ${ghostImage}, expected: ${expectedGhostImage}"
+    echo "[FAILED] Ghost is not using the expected registry. Got: \"${ghostImage}\", expected: \"${EXPECTED_REGISTRY}\""
     FAILED_TEST=1
 fi
 
-## Check that Mariadb deployment is using the expected image
-expectedMariadbImage='customer.io/library/mariadb:10.3.23-debian-10-r25'
-mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -o  jsonpath='{.items[0].spec.containers[0].image}')
-if [ ${mariadbImage} == ${expectedMariadbImage} ]; then
-    echo "[PASS] Mariadb is using the expected image: ${mariadbImage}"
+## Check that Mariadb deployment is using the expected registry
+mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -ojsonpath='{.items[0].spec.containers[0].image}')
+if [[ "${mariadbImage}" =~ "${EXPECTED_REGISTRY}" ]]; then
+    echo "[PASS] MariaDB is using the expected registry: ${EXPECTED_REGISTRY}"
 else
-    echo "[FAILED] Mariadb is not using the expected image. Got ${mariadbImage}, expected: ${expectedMariadbImage}"
+    echo "[FAILED] MariaDB is not using the expected registry. Got: \"${mariadbImage}\", expected: \"${EXPECTED_REGISTRY}\""
     FAILED_TEST=1
 fi
 

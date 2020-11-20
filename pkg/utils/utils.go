@@ -60,7 +60,7 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (
 // downloadIndex will download the index.yaml file of a chart repository and return
 // the path to the downloaded file.
 func downloadIndex(repo *api.Repo) (string, error) {
-	downloadURL := repo.Url + "/index.yaml"
+	downloadURL := repo.GetUrl() + "/index.yaml"
 
 	// Get the data
 	client := &http.Client{}
@@ -68,9 +68,9 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	if err != nil {
 		return "", errors.Trace(err)
 	}
-	if repo.Auth != nil && repo.Auth.Username != "" && repo.Auth.Password != "" {
+	if repo.GetAuth() != nil && repo.GetAuth().GetUsername() != "" && repo.GetAuth().GetPassword() != "" {
 		klog.V(4).Info("Repo configures basic authentication. Downloading index.yaml...")
-		req.SetBasicAuth(repo.Auth.Username, repo.Auth.Password)
+		req.SetBasicAuth(repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -79,7 +79,7 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	defer res.Body.Close()
 	// Check status code
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return "", errors.Errorf("error downloading index.yaml from %s. Status code is %d", repo.Url, res.StatusCode)
+		return "", errors.Errorf("error downloading index.yaml from %s. Status code is %d", repo.GetUrl(), res.StatusCode)
 	}
 
 	// Create the file

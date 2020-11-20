@@ -15,4 +15,4 @@ gen:
 	go generate github.com/bitnami-labs/charts-syncer/...
 
 build: $(GO_SOURCES)
-	GO111MODULE=on go build -o $(OUTPUT) ./cmd/
+	GO111MODULE=on go build -o $(OUTPUT) ./

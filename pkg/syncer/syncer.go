@@ -70,14 +70,14 @@ func (s *Syncer) Sync(charts ...string) error {
 	// Adapting this logic will require to refactor the `pkg/chart` package, and
 	// probably merging it with this one.
 
-	sourceIndex, err := utils.LoadIndexFromRepo(s.source.Repo)
+	sourceIndex, err := utils.LoadIndexFromRepo(s.source.GetRepo())
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
-			return errors.Trace(fmt.Errorf("unable to discover charts to sync"))
+			return fmt.Errorf("unable to discover charts to sync")
 		}
 
 		// TODO(jdrios): This is only valid for backends supporting an index.yaml file.
@@ -91,16 +91,16 @@ func (s *Syncer) Sync(charts ...string) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	targetIndex, err := utils.LoadIndexFromRepo(s.target.Repo)
+	targetIndex, err := utils.LoadIndexFromRepo(s.target.GetRepo())
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
 	}
 
 	// Add target repo to helm CLI
-	helmcli.AddRepoToHelm(s.target.Repo.Url, s.target.Repo.Auth)
+	helmcli.AddRepoToHelm(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
 
 	// Create client for target repo
-	tc, err := repo.NewClient(s.target.Repo)
+	tc, err := repo.NewClient(s.target.GetRepo())
 	if err != nil {
 		return errors.Trace(fmt.Errorf("could not create a client for the source repo: %w", err))
 	}
@@ -123,7 +123,7 @@ func (s *Syncer) Sync(charts ...string) error {
 				continue
 			}
 			klog.Infof("Syncing %s-%s", name, version)
-			if err := chart.Sync(name, version, s.source.Repo, s.target, sourceIndex, targetIndex, true); err != nil {
+			if err := chart.Sync(name, version, s.source.GetRepo(), s.target, sourceIndex, targetIndex, true); err != nil {
 				errs = multierror.Append(errs, errors.Trace(err))
 			}
 		}
