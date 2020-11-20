@@ -56,7 +56,7 @@ func TestPublishToChartmuseum(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz", targetCM.Repo)
+			err = tc.Push("../../testdata/apache-7.3.15.tgz")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +113,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 
 			// If testing real docker chartmuseum, we must push the chart before download it
 			if test.Desc == "real service" {
-				sc.Push("../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
+				sc.Push("../../testdata/apache-7.3.15.tgz")
 			}
 
 			// Create temporary working directory
@@ -127,7 +127,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", url+"/charts", "sha256:1234567890")
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.Fetch(chartPath, "apache", "7.3.15", sourceCM.Repo, sourceIndex)
+			err = sc.Fetch(chartPath, "apache", "7.3.15")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -146,7 +146,7 @@ func TestChartExistsInChartMuseum(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceIndex)
+	chartExists, err := sc.ChartExists("grafana", "1.5.2")
 	if err != nil {
 		t.Fatal(err)
 	}

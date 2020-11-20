@@ -49,7 +49,7 @@ func TestDownload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error loading index.yaml: %v", err)
 	}
-	if err := sc.Fetch(chartPath, "nginx", "5.3.1", source.Repo, sourceIndex); err != nil {
+	if err := sc.Fetch(chartPath, "nginx", "5.3.1"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(chartPath); err != nil {

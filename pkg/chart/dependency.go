@@ -56,7 +56,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		if depRepository != sourceRepo.Url {
 			continue
 		}
-		if chartExists, _ := tc.ChartExists(depName, depVersion, targetIndex); chartExists {
+		if chartExists, _ := tc.ChartExists(depName, depVersion); chartExists {
 			klog.V(3).Infof("Dependency %s-%s already synced", depName, depVersion)
 			continue
 		}
@@ -69,7 +69,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 		if err := Sync(depName, depVersion, sourceRepo, target, sourceIndex, targetIndex, true); err != nil {
 			return errors.Trace(err)
 		}
-		chartExists, err := tc.ChartExists(depName, depVersion, targetIndex)
+		chartExists, err := tc.ChartExists(depName, depVersion)
 		if err != nil {
 			return errors.Trace(err)
 		}

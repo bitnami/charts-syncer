@@ -29,7 +29,7 @@ func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, 
 	}
 	if sourceIndex.Entries[name] != nil {
 		for i := range sourceIndex.Entries[name] {
-			if chartExists, err := tc.ChartExists(name, sourceIndex.Entries[name][i].Metadata.Version, targetIndex); !chartExists && err == nil {
+			if chartExists, err := tc.ChartExists(name, sourceIndex.Entries[name][i].Metadata.Version); !chartExists && err == nil {
 				if dryRun {
 					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, sourceIndex.Entries[name][i].Metadata.Version)
 				} else {
@@ -69,7 +69,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := sc.Fetch(filepath, name, version, sourceRepo, sourceIndex); err != nil {
+	if err := sc.Fetch(filepath, name, version); err != nil {
 		return errors.Annotatef(err, "error downloading chart %s-%s from source repo", name, version)
 	}
 
@@ -125,7 +125,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := tc.Push(packagedChartPath, target.Repo); err != nil {
+	if err := tc.Push(packagedChartPath); err != nil {
 		return errors.Annotatef(err, "error publishing chart %s-%s to target repo", name, version)
 	}
 	// Add just synced chart to our local target index so other charts that may have this as dependency

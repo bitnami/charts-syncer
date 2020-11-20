@@ -1,37 +1,46 @@
 package core
 
 import (
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"fmt"
+
 	"github.com/juju/errors"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 // ClassicHelmClient implements Client for a Helm classic implementation.
 type ClassicHelmClient struct {
 	repo *api.Repo
+
+	index *helmRepo.IndexFile
 }
 
 // NewClassicHelmClient creates a new `ClassicHelmClient`.
-func NewClassicHelmClient(repo *api.Repo) *ClassicHelmClient {
-	return &ClassicHelmClient{repo: repo}
+func NewClassicHelmClient(repo *api.Repo) (*ClassicHelmClient, error) {
+	c := &ClassicHelmClient{repo: repo}
+	if err := c.reloadIndex(); err != nil {
+		return c, err
+	}
+	return c, nil
 }
 
 // Push publishes a packaged chart to classic helm repository.
-func (c *ClassicHelmClient) Push(filepath string, targetRepo *api.Repo) error {
+func (c *ClassicHelmClient) Push(filepath string) error {
 	klog.V(3).Infof("Publishing %s to classic helm repo", filepath)
 	return errors.Errorf("publishing to a Helm classic repository is not supported yet")
 }
 
 // Fetch downloads a packaged chart from a classic helm repository.
-func (c *ClassicHelmClient) Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error {
+func (c *ClassicHelmClient) Fetch(filepath string, name string, version string) error {
 	klog.V(3).Infof("Downloading %s-%s from classic helm repo", name, version)
-	downloadURL, err := utils.FindChartURL(name, version, index, sourceRepo.Url)
+	downloadURL, err := utils.FindChartURL(name, version, c.index, c.repo.GetUrl())
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if err := download(filepath, downloadURL, sourceRepo); err != nil {
+	if err := download(filepath, downloadURL, c.repo); err != nil {
 		return errors.Trace(err)
 	}
 	// Check contentType
@@ -46,11 +55,25 @@ func (c *ClassicHelmClient) Fetch(filepath string, name string, version string, 
 }
 
 // ChartExists checks if a chart exists in the repo.
-func (c *ClassicHelmClient) ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error) {
+func (c *ClassicHelmClient) ChartExists(name string, version string) (bool, error) {
+	klog.V(3).Infof("Reloading index for %q repo", c.repo.GetUrl())
+	if err := c.reloadIndex(); err != nil {
+		return false, errors.Trace(err)
+	}
+
 	klog.V(3).Infof("Checking if %s-%s chart exists", name, version)
-	chartExists, err := utils.ChartExistInIndex(name, version, index)
+	chartExists, err := utils.ChartExistInIndex(name, version, c.index)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
 	return chartExists, nil
+}
+
+func (c *ClassicHelmClient) reloadIndex() error {
+	index, err := utils.LoadIndexFromRepo(c.repo)
+	if err != nil {
+		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
+	}
+	c.index = index
+	return nil
 }

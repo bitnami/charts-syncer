@@ -87,7 +87,7 @@ func TestSync(t *testing.T) {
 					t.Fatal("could not create a client for the source repo", err)
 				}
 				chartPath := path.Join(testTmpDir, "zookeeper-5.11.0.tgz")
-				if err := tc.Fetch(chartPath, "zookeeper", "5.11.0", target.Repo, targetIndex); err != nil {
+				if err := tc.Fetch(chartPath, "zookeeper", "5.11.0"); err != nil {
 					t.Fatal(err)
 				}
 				if err := utils.Untar(chartPath, testTmpDir); err != nil {

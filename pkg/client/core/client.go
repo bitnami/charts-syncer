@@ -4,14 +4,23 @@ import (
 	"fmt"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
 // Client defines the methods that a chart client should implement.
 type Client interface {
-	Fetch(filepath string, name string, version string, sourceRepo *api.Repo, index *helmRepo.IndexFile) error
-	Push(filepath string, targetRepo *api.Repo) error
-	ChartExists(name string, version string, index *helmRepo.IndexFile) (bool, error)
+	Reader
+	Writer
+}
+
+// Reader defines the methods that a ReadOnly chart client should implement.
+type Reader interface {
+	Fetch(filepath string, name string, version string) error
+	ChartExists(name string, version string) (bool, error)
+}
+
+// Writer defines the methods that a WriteOnly chart client should implement.
+type Writer interface {
+	Push(filepath string) error
 }
 
 // NewClient returns a client implementation for the given repo.
@@ -21,11 +30,11 @@ type Client interface {
 var NewClient = func(repo *api.Repo) (Client, error) {
 	switch repo.Kind {
 	case api.Kind_HELM:
-		return NewClassicHelmClient(repo), nil
+		return NewClassicHelmClient(repo)
 	case api.Kind_CHARTMUSEUM:
-		return NewChartMuseumClient(repo), nil
+		return NewChartMuseumClient(repo)
 	case api.Kind_HARBOR:
-		return NewHarborClient(repo), nil
+		return NewHarborClient(repo)
 	default:
 		return nil, fmt.Errorf("unsupported repo kind %q", repo.Kind)
 	}

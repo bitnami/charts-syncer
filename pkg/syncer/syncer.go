@@ -9,8 +9,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/chart"
-	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
@@ -115,7 +115,7 @@ func (s *Syncer) Sync(charts ...string) error {
 			if publishingTime.Before(dateThreshold) {
 				continue
 			}
-			if chartExists, _ := tc.ChartExists(name, version, targetIndex); chartExists {
+			if chartExists, _ := tc.ChartExists(name, version); chartExists {
 				continue
 			}
 			if s.dryRun {

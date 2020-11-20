@@ -57,7 +57,7 @@ func TestPublishToHarbor(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz", targetHarbor.Repo)
+			err = tc.Push("../../testdata/apache-7.3.15.tgz")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -124,7 +124,7 @@ func TestDownloadFromHarbor(t *testing.T) {
 			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", newURL+"/charts", "sha256:1234567890")
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.Fetch(chartPath, "apache", "7.3.15", sourceHarbor.Repo, sourceIndex)
+			err = sc.Fetch(chartPath, "apache", "7.3.15")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -143,7 +143,7 @@ func TestChartExistsInHarbor(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}
-	chartExists, err := sc.ChartExists("grafana", "1.5.2", sourceIndex)
+	chartExists, err := sc.ChartExists("grafana", "1.5.2")
 	if err != nil {
 		t.Fatal(err)
 	}
