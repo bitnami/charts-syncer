@@ -64,14 +64,12 @@ func newSyncCmd() *cobra.Command {
 			if err := config.Load(&c); err != nil {
 				return errors.Trace(err)
 			}
-			klog.Infof("c: %+v\n", c)
 			if err := c.Validate(); err != nil {
 				return errors.Trace(err)
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			klog.Infof("c: %+v\n", c)
 			s := syncer.NewSyncer(c.GetSource(), c.GetTarget(),
 				// TODO(jdrios): Some backends may not support discovery
 				syncer.WithAutoDiscovery(true),
