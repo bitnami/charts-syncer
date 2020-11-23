@@ -1,18 +1,26 @@
-package core
+package harbor
 
 import (
-	"fmt"
+	"bytes"
+	"io"
+	"mime/multipart"
+	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/juju/errors"
-	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
+
+func readErrorBody(r io.Reader) string {
+	var s strings.Builder
+	_, _ = io.Copy(&s, r)
+	return s.String()
+}
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -42,20 +50,20 @@ func NewRaw(u *url.URL, user string, pass string) *Repo {
 // GetUploadURL returns the URL to upload a chart
 func (r *Repo) GetUploadURL() string {
 	u := *r.url
-	u.Path := strings.Replace(u.Path, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
+	u.Path = strings.Replace(u.Path, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
 	return u.String()
 }
 
-// Upload uploads a chart to the repo.
+// Upload uploads a chart to the repo
 func (r *Repo) Upload(filepath string) error {
-	klog.V(4).Infof("Publishing %q", filepath)
+	klog.V(4).Infof("Uploading %q chart", filepath)
 
 	body := &bytes.Buffer{}
 	mpw := multipart.NewWriter(body)
 
 	w, err := mpw.CreateFormFile("chart", filepath)
 	if err != nil {
-		return errors.Trace(Err)
+		return errors.Trace(err)
 	}
 
 	f, err := os.Open(filepath)
@@ -96,43 +104,28 @@ func (r *Repo) Upload(filepath string) error {
 	// Check status code
 	if res.StatusCode == http.StatusNotFound {
 		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to upload chart, got HTTP Status: %s, Resp: %v", n, v, res.Status, errorBody)
+		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", filepath, res.Status, errorBody)
 	}
 
 	return nil
 }
 
-// Writer implements core.Writer
-type Writer struct {
-	repo *Repo
-}
-
-// Push publishes a packaged chart to classic helm repository.
-func (w *Writer) Push(filepath string) error {
-	return errors.Trace(w.repo.Upload(filepath))
-}
-
-// Reader implements core.Reader
-type Reader struct {
-	repo *Repo
-}
-
 // Fetch downloads a chart from the repo
-func (r *Reader) Fetch(filepath string, name string, version string) error {
-	return errors.Trace(r.repo.helm.Fetch(filepath, name, version))
+func (r *Repo) Fetch(filepath string, name string, version string) error {
+	return r.helm.Fetch(filepath, name, version)
 }
 
 // List lists all chart names in the repo
-func (r *Reader) List(names ...string) ([]string, error) {
-	return errors.Trace(r.repo.helm.List(filepath, name, version))
+func (r *Repo) List() ([]string, error) {
+	return r.helm.List()
 }
 
-// ListVersions lists all versions of a chart
-func (r *Reader) ListVersions(names ...string) ([]string, error) {
-	return errors.Trace(r.repo.helm.ListVersions(filepath, name, version))
+// ListChartVersions lists all versions of a chart
+func (r *Repo) ListChartVersions(name string) ([]string, error) {
+	return r.helm.ListChartVersions(name)
 }
 
 // Has checks if a repo has a specific chart
-func (r *Reader) Has(name string, version string) (bool, error) {
-	return errors.Trace(r.repo.helm.ChartExists(filepath, name, version))
+func (r *Repo) Has(name string, version string) (bool, error) {
+	return r.helm.Has(name, version)
 }

@@ -1,15 +1,25 @@
 package helmclassic
 
 import (
-	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"os"
+	"strings"
 
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/repo"
+	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 )
+
+func readErrorBody(r io.Reader) string {
+	var s strings.Builder
+	_, _ = io.Copy(&s, r)
+	return s.String()
+}
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -23,11 +33,7 @@ type Repo struct {
 
 // This allows test to replace the client index for testing.
 var reloadIndex = func(r *Repo) error {
-	u, err := r.GetIndexURL()
-	if err != nil {
-		return errors.Trace(err)
-	}
-
+	u := r.GetIndexURL()
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return errors.Trace(err)
@@ -48,7 +54,7 @@ var reloadIndex = func(r *Repo) error {
 	// Check status code
 	if res.StatusCode == http.StatusNotFound {
 		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", n, v, res.Status, errorBody)
+		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, errorBody)
 	}
 
 	// Create the index.yaml file to use the helm Go library, which does not
@@ -67,7 +73,7 @@ var reloadIndex = func(r *Repo) error {
 		return errors.Trace(err)
 	}
 
-	index, err := helmRepo.LoadIndexFile(f.Name())
+	index, err := repo.LoadIndexFile(f.Name())
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -104,11 +110,11 @@ func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 func (r *Repo) GetIndexURL() string {
 	u := *r.url
 	u.Path = "/index.yaml"
-	return u.String(), nil
+	return u.String()
 }
 
 // List lists all chart names in a repo
-func (r *Repo) List(n string) ([]string, error) {
+func (r *Repo) List() ([]string, error) {
 	if err := reloadIndex(r); err != nil {
 		return []string{}, errors.Trace(err)
 	}
@@ -121,19 +127,17 @@ func (r *Repo) List(n string) ([]string, error) {
 	return names, nil
 }
 
-// ListVersions lists all versions of a chart
-func (r *Repo) ListVersions(n string) ([]string, error) {
+// ListChartVersions lists all versions of a chart
+func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	if err := reloadIndex(r); err != nil {
 		return []string{}, errors.Trace(err)
 	}
 
-	var charts repo.ChartVersions
-	for name, cv := range r.index.Entries {
-		if name == n {
-			charts = cv
-			break
-		}
+	cv, ok := r.index.Entries[name]
+	if !ok {
+		return []string{}, errors.Errorf("%q has no versions", name)
 	}
+
 	var versions []string
 	for _, chart := range cv {
 		versions = append(versions, chart.Version)
@@ -143,12 +147,12 @@ func (r *Repo) ListVersions(n string) ([]string, error) {
 }
 
 // Fetch fetches a chart
-func (r *Repo) Fetch(n string, v string, f string) error {
+func (r *Repo) Fetch(name string, version string, filename string) error {
 	if err := reloadIndex(r); err != nil {
 		return errors.Trace(err)
 	}
 
-	u, err := r.GetDownloadURL(n, v)
+	u, err := r.GetDownloadURL(name, version)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -166,18 +170,18 @@ func (r *Repo) Fetch(n string, v string, f string) error {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Annotatef(err, "fetching %s:%s chart", n, v)
+		return errors.Annotatef(err, "fetching %s:%s chart", name, version)
 	}
 	defer res.Body.Close()
 
 	// Check status code
 	if res.StatusCode == http.StatusNotFound {
 		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", n, v, res.Status, errorBody)
+		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, errorBody)
 	}
 
 	// Create the file
-	f, err := os.Create(f)
+	f, err := os.Create(filename)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -191,46 +195,9 @@ func (r *Repo) Fetch(n string, v string, f string) error {
 	return nil
 }
 
-func readErrorBody(r io.Reader) string {
-	var s strings.Builder
-	_, _ = io.Copy(&s, r)
-	return s.String()
-}
-
-// Writer implements core.Writer
-type Writer struct {
-	repo *Repo
-}
-
-// Push publishes a chart to the repo
-func (w *Writer) Push(filepath string) error {
-	klog.V(3).Infof("Publishing %s to classic helm repo", filepath)
-	return errors.Errorf("publishing to a Helm classic repository is not supported yet")
-}
-
-// Reader implements core.Reader
-type Reader struct {
-	repo *Repo
-}
-
-// Fetch downloads a chart from the repo
-func (r *Reader) Fetch(filepath string, name string, version string) error {
-	return errors.Trace(r.repo.Fetch(name, version, filepath))
-}
-
-// List lists all chart names in a repo
-func (r *Reader) List(names ...string) ([]string, error) {
-	return errors.Trace(r.repo.List(filepath, name, version))
-}
-
-// ListVersions lists all versions of a chart
-func (r *Reader) ListVersions(names ...string) ([]string, error) {
-	return errors.Trace(r.repo.ListVersions(filepath, name, version))
-}
-
 // Has checks if a repo has a specific chart
-func (r *Reader) Has(name string, version string) (bool, error) {
-	versions, err := r.repo.ListVersions(name)
+func (r *Repo) Has(name string, version string) (bool, error) {
+	versions, err := r.ListChartVersions(name)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
@@ -241,4 +208,10 @@ func (r *Reader) Has(name string, version string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// Upload uploads a chart to the repo
+func (r *Repo) Upload(filepath string) error {
+	klog.V(3).Infof("Publishing %q chart", filepath)
+	return errors.Errorf("upload method is not supported yet")
 }
