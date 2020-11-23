@@ -111,30 +111,3 @@ func TestSync(t *testing.T) {
 		})
 	}
 }
-
-func TestSyncAllVersions(t *testing.T) {
-	for _, test := range chartrepotest.ChartMuseumTests {
-		t.Run(test.Desc, func(t *testing.T) {
-			// Check if the test should be skipped or allowed.
-			test.Skip(t)
-
-			url, cleanup := test.MakeServer(t)
-			defer cleanup()
-
-			// Update target url
-			target.Repo.Url = url
-
-			name := "zookeeper"
-			indexFile := "../../testdata/zookeeper-index.yaml"
-			// Load index.yaml info into index object
-			sourceIndex, err := helmRepo.LoadIndexFile(indexFile)
-			if err != nil {
-				t.Fatal(err)
-			}
-			targetIndex := helmRepo.NewIndexFile()
-			if err := SyncAllVersions(name, source.Repo, target, false, sourceIndex, targetIndex, false); err != nil {
-				t.Error(err)
-			}
-		})
-	}
-}
