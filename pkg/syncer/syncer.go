@@ -14,10 +14,18 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
+// Clients holds the source and target chart repo clients
+type Clients struct {
+	src *core.ClientV2
+	dst *core.ClientV2
+}
+
 // A Syncer can be used to sync a source and target chart repos.
 type Syncer struct {
 	source *api.SourceRepo
 	target *api.TargetRepo
+
+	cli *Clients
 
 	dryRun        bool
 	autoDiscovery bool
@@ -56,6 +64,36 @@ func NewSyncer(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) *
 		source: source,
 		target: target,
 	}
+	for _, o := range opts {
+		o(s)
+	}
+	return s
+}
+
+// New creates a new syncer using ClientV2
+func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Syncer, error) {
+	srcCli, err := core.NewClientV2(source.GetRepo())
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	dstCli, err := core.NewClientV2(target.GetRepo())
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	cli := &Clients{
+		src: srcCli,
+		dst: dstCli,
+	}
+
+	s := &Syncer{
+		source: source,
+		target: target,
+
+		cli: cli,
+	}
+
 	for _, o := range opts {
 		o(s)
 	}
