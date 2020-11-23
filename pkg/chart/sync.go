@@ -17,32 +17,6 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
-// SyncAllVersions will sync all versions of a specific chart.
-func SyncAllVersions(name string, sourceRepo *api.Repo, target *api.TargetRepo, syncDeps bool, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, dryRun bool) error {
-	var errs error
-	// Create client for target repo
-	tc, err := core.NewClient(target.Repo)
-	if err != nil {
-		return fmt.Errorf("could not create a client for the source repo: %w", err)
-	}
-	if sourceIndex.Entries[name] != nil {
-		for i := range sourceIndex.Entries[name] {
-			if chartExists, err := tc.ChartExists(name, sourceIndex.Entries[name][i].Metadata.Version, targetIndex); !chartExists && err == nil {
-				if dryRun {
-					klog.Infof("dry-run: Chart %s-%s pending to be synced", name, sourceIndex.Entries[name][i].Metadata.Version)
-				} else {
-					if err := Sync(name, sourceIndex.Entries[name][i].Metadata.Version, sourceRepo, target, sourceIndex, targetIndex, syncDeps); err != nil {
-						errs = multierror.Append(errs, errors.Trace(err))
-					}
-				}
-			}
-		}
-	} else {
-		return errors.Errorf("Chart %s not found in source repo", name)
-	}
-	return errs
-}
-
 // Sync is the main function. It downloads, transform, package and publish a chart.
 func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, syncDeps bool) error {
 	// Create temporary working directory
