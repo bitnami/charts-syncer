@@ -16,8 +16,8 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src *core.ClientV2
-	dst *core.ClientV2
+	src core.ClientV2
+	dst core.ClientV2
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -97,7 +97,7 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 	for _, o := range opts {
 		o(s)
 	}
-	return s
+	return s, nil
 }
 
 // Sync synchronizes source and target chart repos
