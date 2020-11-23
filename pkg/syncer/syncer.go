@@ -23,10 +23,6 @@ type Syncer struct {
 	dryRun        bool
 	autoDiscovery bool
 	fromDate      string
-
-	// TODO(jdrios): Cache index (and tgz files) in local filesystem to speed
-	// up re-runs
-	index ChartIndex
 }
 
 // Option is an option value used to create a new syncer instance.
