@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"fmt"
@@ -18,14 +18,14 @@ func TestNewClient(t *testing.T) {
 			&api.Repo{
 				Kind: api.Kind_HELM,
 			},
-			"*repo.ClassicHelmClient",
+			"*core.ClassicHelmClient",
 			"",
 		},
 		{
 			&api.Repo{
 				Kind: api.Kind_CHARTMUSEUM,
 			},
-			"*repo.ChartMuseumClient",
+			"*core.ChartMuseumClient",
 			"",
 		},
 		{

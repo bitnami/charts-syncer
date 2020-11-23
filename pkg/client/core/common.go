@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"bytes"

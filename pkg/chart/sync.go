@@ -12,8 +12,8 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/charts-syncer/pkg/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
@@ -37,11 +37,11 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	klog.V(4).Infof("destDir: %s", destDir)
 	klog.V(4).Infof("chartPath: %s", filepath)
 	// Create client for source repo
-	sc, err := repo.NewClient(sourceRepo)
+	sc, err := core.NewClient(sourceRepo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := sc.DownloadChart(filepath, name, version, sourceRepo, sourceIndex); err != nil {
+	if err := sc.Fetch(filepath, name, version, sourceRepo, sourceIndex); err != nil {
 		return errors.Annotatef(err, "error downloading chart %s-%s from source repo", name, version)
 	}
 
@@ -93,11 +93,11 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 	}
 
 	// Create client for target repo
-	tc, err := repo.NewClient(target.Repo)
+	tc, err := core.NewClient(target.Repo)
 	if err != nil {
 		return fmt.Errorf("could not create a client for the source repo: %w", err)
 	}
-	if err := tc.PublishChart(packagedChartPath, target.Repo); err != nil {
+	if err := tc.Push(packagedChartPath, target.Repo); err != nil {
 		return errors.Annotatef(err, "error publishing chart %s-%s to target repo", name, version)
 	}
 	// Add just synced chart to our local target index so other charts that may have this as dependency

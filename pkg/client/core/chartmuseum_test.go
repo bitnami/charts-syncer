@@ -1,4 +1,4 @@
-package repo
+package core
 
 import (
 	"encoding/json"
@@ -15,20 +15,20 @@ import (
 )
 
 var (
-	sourceHarbor = &api.SourceRepo{
+	sourceCM = &api.SourceRepo{
 		Repo: &api.Repo{
-			Url:  "http://fake.source.com/chartrepo/library",
-			Kind: api.Kind_HARBOR,
+			Url:  "http://fake.source.com",
+			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
 			},
 		},
 	}
-	targetHarbor = &api.TargetRepo{
+	targetCM = &api.TargetRepo{
 		Repo: &api.Repo{
-			Url:  "http://fake.target.com/chartrepo/library",
-			Kind: api.Kind_HARBOR,
+			Url:  "http://fake.target.com",
+			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",
 				Password: "password",
@@ -39,8 +39,8 @@ var (
 	}
 )
 
-func TestPublishToHarbor(t *testing.T) {
-	for _, test := range chartrepotest.HarborTests {
+func TestPublishToChartmuseum(t *testing.T) {
+	for _, test := range chartrepotest.ChartMuseumTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)
@@ -48,27 +48,26 @@ func TestPublishToHarbor(t *testing.T) {
 			url, cleanup := test.MakeServer(t)
 			defer cleanup()
 
-			// Update target repo url
-			newURL := url + "/chartrepo/library"
-			targetHarbor.Repo.Url = newURL
+			// Update source repo url
+			targetCM.Repo.Url = url
 
 			// Create client for target repo
-			tc, err := NewClient(targetHarbor.Repo)
+			tc, err := NewClient(targetCM.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.PublishChart("../../testdata/apache-7.3.15.tgz", targetHarbor.Repo)
+			err = tc.Push("../../../testdata/apache-7.3.15.tgz", targetCM.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Check the chart really was added to the service's index.
-			req, err := http.NewRequest("GET", targetHarbor.Repo.Url+"/apache", nil)
+			req, err := http.NewRequest("GET", targetCM.Repo.Url+"/api/charts/apache", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			req.SetBasicAuth(targetHarbor.Repo.Auth.Username, targetHarbor.Repo.Auth.Password)
+			req.SetBasicAuth(targetCM.Repo.Auth.Username, targetCM.Repo.Auth.Password)
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
@@ -94,8 +93,8 @@ func TestPublishToHarbor(t *testing.T) {
 	}
 }
 
-func TestDownloadFromHarbor(t *testing.T) {
-	for _, test := range chartrepotest.HarborTests {
+func TestDownloadFromChartmuseum(t *testing.T) {
+	for _, test := range chartrepotest.ChartMuseumTests {
 		t.Run(test.Desc, func(t *testing.T) {
 			// Check if the test should be skipped or allowed.
 			test.Skip(t)
@@ -104,13 +103,17 @@ func TestDownloadFromHarbor(t *testing.T) {
 			defer cleanup()
 
 			// Update source repo url
-			newURL := url + "/chartrepo/library"
-			sourceHarbor.Repo.Url = newURL
+			sourceCM.Repo.Url = url
 
 			// Create client for source repo
-			sc, err := NewClient(sourceHarbor.Repo)
+			sc, err := NewClient(sourceCM.Repo)
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
+			}
+
+			// If testing real docker chartmuseum, we must push the chart before download it
+			if test.Desc == "real service" {
+				sc.Push("../../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
 			}
 
 			// Create temporary working directory
@@ -121,10 +124,10 @@ func TestDownloadFromHarbor(t *testing.T) {
 			defer os.RemoveAll(testTmpDir)
 
 			sourceIndex := repo.NewIndexFile()
-			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", newURL+"/charts", "sha256:1234567890")
+			sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", url+"/charts", "sha256:1234567890")
 
 			chartPath := path.Join(testTmpDir, "apache-7.3.15.tgz")
-			err = sc.DownloadChart(chartPath, "apache", "7.3.15", sourceHarbor.Repo, sourceIndex)
+			err = sc.Fetch(chartPath, "apache", "7.3.15", sourceCM.Repo, sourceIndex)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -135,11 +138,11 @@ func TestDownloadFromHarbor(t *testing.T) {
 	}
 }
 
-func TestChartExistsInHarbor(t *testing.T) {
+func TestChartExistsInChartMuseum(t *testing.T) {
 	sourceIndex := repo.NewIndexFile()
 	sourceIndex.Add(&chart.Metadata{Name: "grafana", Version: "1.5.2"}, "grafana-1.5.2.tgz", "https://fake-url.com/charts", "sha256:1234567890")
 	// Create client for source repo
-	sc, err := NewClient(sourceHarbor.Repo)
+	sc, err := NewClient(sourceCM.Repo)
 	if err != nil {
 		t.Fatal("could not create a client for the source repo", err)
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/chart"
 	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/charts-syncer/pkg/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
@@ -100,7 +100,7 @@ func (s *Syncer) Sync(charts ...string) error {
 	helmcli.AddRepoToHelm(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
 
 	// Create client for target repo
-	tc, err := repo.NewClient(s.target.GetRepo())
+	tc, err := core.NewClient(s.target.GetRepo())
 	if err != nil {
 		return errors.Trace(fmt.Errorf("could not create a client for the source repo: %w", err))
 	}
