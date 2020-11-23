@@ -19,6 +19,9 @@ import (
 
 const (
 	timeLayoutISO = "2006-01-02"
+
+	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
+	UnixEpoch = time.Unix(0, 0)
 )
 
 // LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
@@ -127,7 +130,7 @@ func GetFileContentType(filepath string) (string, error) {
 // GetDateThreshold will parse a string date agains a fixed layout and return a time.Date value
 func GetDateThreshold(date string) (time.Time, error) {
 	if date == "" {
-		return time.Unix(0, 0), nil
+		return UnixEpoch, nil
 	}
 	dateThreshold, err := time.Parse(timeLayoutISO, date)
 	if err != nil {

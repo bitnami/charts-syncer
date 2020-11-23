@@ -9,8 +9,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/chart"
-	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
@@ -86,11 +86,16 @@ func (s *Syncer) Sync(charts ...string) error {
 		}
 	}
 
-	// Create basic layout for date and parse flag to time type
-	dateThreshold, err := utils.GetDateThreshold(s.fromDate)
-	if err != nil {
-		return errors.Trace(err)
+	publishingThreshold := utils.UnixEpoch
+	if s.fromDate != "" {
+		// Create basic layout for date and parse flag to time type
+		t, err := utils.GetDateThreshold(s.fromDate)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		publishingThreshold = t
 	}
+
 	targetIndex, err := utils.LoadIndexFromRepo(s.target.GetRepo())
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error loading index.yaml: %w", err))
@@ -111,10 +116,11 @@ func (s *Syncer) Sync(charts ...string) error {
 		// Iterate over charts versions
 		for i := range sourceIndex.Entries[name] {
 			version := sourceIndex.Entries[name][i].Metadata.Version
-			publishingTime := sourceIndex.Entries[name][i].Created
-			if publishingTime.Before(dateThreshold) {
+
+			if sourceIndex.Entries[name][i].Created.Before(publishingThreshold) {
 				continue
 			}
+
 			if chartExists, _ := tc.ChartExists(name, version, targetIndex); chartExists {
 				continue
 			}
