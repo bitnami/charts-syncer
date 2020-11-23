@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/juju/errors"
+
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 // Reader defines the methods that a ReadOnly chart client should implement.
