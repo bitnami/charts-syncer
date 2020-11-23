@@ -223,7 +223,7 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 		return nil, errors.Trace(err)
 	}
 
-	cv, err := r.index.Get(name, vesrion)
+	cv, err := r.index.Get(name, version)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

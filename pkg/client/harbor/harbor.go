@@ -14,6 +14,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
 func readErrorBody(r io.Reader) string {
