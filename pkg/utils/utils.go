@@ -19,7 +19,9 @@ import (
 
 const (
 	timeLayoutISO = "2006-01-02"
+)
 
+var (
 	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
 	UnixEpoch = time.Unix(0, 0)
 )
