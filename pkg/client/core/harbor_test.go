@@ -57,7 +57,7 @@ func TestPublishToHarbor(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz", targetHarbor.Repo)
+			err = tc.Push("../../../testdata/apache-7.3.15.tgz", targetHarbor.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}

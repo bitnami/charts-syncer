@@ -75,7 +75,7 @@ func TestPublishToHelmClassic(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not create a client for the target repo", err)
 	}
-	chartPath := "../../testdata/apache-7.3.15.tgz"
+	chartPath := "../../../testdata/apache-7.3.15.tgz"
 	err = tc.Push(chartPath, targetHelm.Repo)
 	expectedErrorMsg := "publishing to a Helm classic repository is not supported yet"
 	if err.Error() != expectedErrorMsg {

@@ -56,7 +56,7 @@ func TestPublishToChartmuseum(t *testing.T) {
 			if err != nil {
 				t.Fatal("could not create a client for the target repo", err)
 			}
-			err = tc.Push("../../testdata/apache-7.3.15.tgz", targetCM.Repo)
+			err = tc.Push("../../../testdata/apache-7.3.15.tgz", targetCM.Repo)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +113,7 @@ func TestDownloadFromChartmuseum(t *testing.T) {
 
 			// If testing real docker chartmuseum, we must push the chart before download it
 			if test.Desc == "real service" {
-				sc.Push("../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
+				sc.Push("../../../testdata/apache-7.3.15.tgz", sourceCM.Repo)
 			}
 
 			// Create temporary working directory
