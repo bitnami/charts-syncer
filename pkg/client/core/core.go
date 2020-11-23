@@ -7,6 +7,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
@@ -16,6 +17,7 @@ type Reader interface {
 	List() ([]string, error)
 	ListChartVersions(name string) ([]string, error)
 	Has(name string, version string) (bool, error)
+	GetChartDetails(name string, version string) (*types.ChartDetails, error)
 }
 
 // Writer defines the methods that a WriteOnly chart client should implement.

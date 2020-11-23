@@ -129,3 +129,8 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 func (r *Repo) Has(name string, version string) (bool, error) {
 	return r.helm.Has(name, version)
 }
+
+// GetChartDetails returns the details of a chart
+func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
+	return r.helm.GetChartDetails(name, version)
+}

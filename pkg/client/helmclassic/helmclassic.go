@@ -13,6 +13,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
 func readErrorBody(r io.Reader) string {
@@ -214,4 +215,21 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 func (r *Repo) Upload(filepath string) error {
 	klog.V(3).Infof("Publishing %q chart", filepath)
 	return errors.Errorf("upload method is not supported yet")
+}
+
+// GetChartDetails returns the details of a chart
+func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
+	if err := reloadIndex(r); err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	cv, err := r.index.Get(name, vesrion)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	return &types.ChartDetails{
+		PublishedAt: cv.Created,
+		Digest:      cv.Digest,
+	}, nil
 }
