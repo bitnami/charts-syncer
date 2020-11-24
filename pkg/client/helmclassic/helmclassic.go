@@ -131,7 +131,7 @@ func (r *Repo) List() ([]string, error) {
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	cv, ok := r.index.Entries[name]
 	if !ok {
-		return []string{}, errors.Errorf("%q has no versions", name)
+		return []string{}, nil
 	}
 
 	var versions []string

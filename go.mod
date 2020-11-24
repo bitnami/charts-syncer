@@ -9,6 +9,7 @@ require (
 	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0
+	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
