@@ -28,6 +28,7 @@ func newSyncPendingCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sync-pending",
 		Short:   "[EXPERIMENTAL] Synchronizes two chart repositories using an experimental feature",
+		Hidden:  true,
 		Example: syncPendingExample,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := initConfigFile(); err != nil {
