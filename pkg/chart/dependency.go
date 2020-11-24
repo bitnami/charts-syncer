@@ -3,17 +3,20 @@ package chart
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	helmChart "helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 // dependencies is the list of dependencies of a chart
@@ -97,7 +100,7 @@ func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.Target
 			return errors.Trace(err)
 		}
 	}
-	return errs
+	return errors.Trace(errs)
 }
 
 // updateChartMetadataFile updates the dependencies in Chart.yaml
@@ -203,4 +206,49 @@ func lockFilePath(chartPath, apiVersion string) (string, error) {
 	default:
 		return "", errors.Errorf("unrecognised apiVersion %q", apiVersion)
 	}
+}
+
+// GetChartDependencies returns the chart dependencies from a chart in tgz format.
+func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency, error) {
+	// Create temporary working directory
+	chartPath, err := ioutil.TempDir("", "charts-syncer")
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	defer os.RemoveAll(chartPath)
+
+	// Uncompress chart
+	if err := utils.Untar(filepath, chartPath); err != nil {
+		return nil, errors.Annotatef(err, "uncompressing %q", filepath)
+	}
+	// Untar uncompress the chart in a subfolder
+	chartPath = path.Join(chartPath, name)
+
+	var apiVersion string
+	if _, err := os.Stat(path.Join(chartPath, RequirementsLockFilename)); err == nil {
+		apiVersion = APIV1
+	}
+	if _, err := os.Stat(path.Join(chartPath, ChartLockFilename)); err == nil {
+		apiVersion = APIV2
+	}
+
+	// If the API version is not set, there is not a lock file. Hence, this
+	// chart has no dependencies.
+	if apiVersion == "" {
+		return nil, nil
+	}
+
+	lockFilePath, err := lockFilePath(chartPath, apiVersion)
+	if err != nil {
+		return nil, errors.Annotatef(err, "defining dependencies file for %q", name)
+	}
+	lockContent, err := ioutil.ReadFile(lockFilePath)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	lock := &helmChart.Lock{}
+	if err = yaml.Unmarshal(lockContent, lock); err != nil {
+		return nil, errors.Annotatef(err, "unmarshaling %q file", lockFilePath)
+	}
+	return lock.Dependencies, nil
 }
