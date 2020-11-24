@@ -39,13 +39,16 @@ func New(repo *api.Repo) (*Repo, error) {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()), nil
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string) *Repo {
-	helm := helmclassic.NewRaw(u, user, pass)
-	return &Repo{url: u, username: user, password: pass, helm: helm}
+func NewRaw(u *url.URL, user string, pass string) (*Repo, error) {
+	helm, err := helmclassic.NewRaw(u, user, pass)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return &Repo{url: u, username: user, password: pass, helm: helm}, nil
 }
 
 // GetUploadURL returns the URL to upload a chart
@@ -57,8 +60,6 @@ func (r *Repo) GetUploadURL() string {
 
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(filepath string) error {
-	klog.V(4).Infof("Uploading %q chart", filepath)
-
 	body := &bytes.Buffer{}
 	mpw := multipart.NewWriter(body)
 
@@ -90,7 +91,6 @@ func (r *Repo) Upload(filepath string) error {
 	}
 	req.Header.Add("content-type", contentType)
 	if r.username != "" && r.password != "" {
-		klog.V(4).Infof("Using basic authentication %s:****", r.username)
 		req.SetBasicAuth(r.username, r.password)
 	}
 
@@ -134,4 +134,9 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 // GetChartDetails returns the details of a chart
 func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
 	return r.helm.GetChartDetails(name, version)
+}
+
+// Reload reloads the index
+func (r *Repo) Reload() error {
+	return r.helm.Reload()
 }

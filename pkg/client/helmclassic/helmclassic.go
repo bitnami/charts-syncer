@@ -40,7 +40,6 @@ var reloadIndex = func(r *Repo) error {
 		return errors.Trace(err)
 	}
 	if r.username != "" && r.password != "" {
-		klog.V(4).Infof("Using basic authentication %s:****", r.username)
 		req.SetBasicAuth(r.username, r.password)
 	}
 
@@ -90,19 +89,23 @@ func New(repo *api.Repo) (*Repo, error) {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()), nil
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string) *Repo {
-	return &Repo{url: u, username: user, password: pass}
+func NewRaw(u *url.URL, user string, pass string) (*Repo, error) {
+	r := &Repo{url: u, username: user, password: pass}
+	if err := r.Reload(); err != nil {
+		return nil, errors.Trace(err)
+	}
+	return r, nil
 }
 
 // GetDownloadURL returns the URL to download a chart
 func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 	chart, err := r.index.Get(n, v)
 	if err != nil {
-		return "", errors.Trace(err)
+		return "", errors.Trace(errors.Annotatef(err, "getting %q from index file", n))
 	}
 	return chart.URLs[0], nil
 }
@@ -110,16 +113,12 @@ func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 // GetIndexURL returns the URL to download the index.yaml
 func (r *Repo) GetIndexURL() string {
 	u := *r.url
-	u.Path = "/index.yaml"
+	u.Path = u.Path + "/index.yaml"
 	return u.String()
 }
 
 // List lists all chart names in a repo
 func (r *Repo) List() ([]string, error) {
-	if err := reloadIndex(r); err != nil {
-		return []string{}, errors.Trace(err)
-	}
-
 	var names []string
 	for name := range r.index.Entries {
 		names = append(names, name)
@@ -130,10 +129,6 @@ func (r *Repo) List() ([]string, error) {
 
 // ListChartVersions lists all versions of a chart
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
-	if err := reloadIndex(r); err != nil {
-		return []string{}, errors.Trace(err)
-	}
-
 	cv, ok := r.index.Entries[name]
 	if !ok {
 		return []string{}, errors.Errorf("%q has no versions", name)
@@ -148,11 +143,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 }
 
 // Fetch fetches a chart
-func (r *Repo) Fetch(name string, version string, filename string) error {
-	if err := reloadIndex(r); err != nil {
-		return errors.Trace(err)
-	}
-
+func (r *Repo) Fetch(filename string, name string, version string) error {
 	u, err := r.GetDownloadURL(name, version)
 	if err != nil {
 		return errors.Trace(err)
@@ -163,7 +154,6 @@ func (r *Repo) Fetch(name string, version string, filename string) error {
 		return errors.Trace(err)
 	}
 	if r.username != "" && r.password != "" {
-		klog.V(4).Infof("Using basic authentication %s:****", r.username)
 		req.SetBasicAuth(r.username, r.password)
 	}
 
@@ -213,16 +203,11 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(filepath string) error {
-	klog.V(3).Infof("Publishing %q chart", filepath)
 	return errors.Errorf("upload method is not supported yet")
 }
 
 // GetChartDetails returns the details of a chart
 func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
-	if err := reloadIndex(r); err != nil {
-		return nil, errors.Trace(err)
-	}
-
 	cv, err := r.index.Get(name, version)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -232,4 +217,9 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 		PublishedAt: cv.Created,
 		Digest:      cv.Digest,
 	}, nil
+}
+
+// Reload reloads the index
+func (r *Repo) Reload() error {
+	return errors.Trace(reloadIndex(r))
 }

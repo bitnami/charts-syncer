@@ -100,8 +100,6 @@ func downloadIndex(repo *api.Repo) (string, error) {
 
 // Untar will uncompress a tarball.
 func Untar(filepath, destDir string) error {
-	// Uncompress tarball
-	klog.V(3).Info("Extracting source chart...")
 	cmd := exec.Command("tar", "xzf", filepath, "--directory", destDir)
 	_, err := cmd.Output()
 	if err != nil {
