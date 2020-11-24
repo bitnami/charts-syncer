@@ -88,3 +88,36 @@ func (s *Syncer) Sync(charts ...string) error {
 
 	return errors.Trace(errs)
 }
+
+// SyncPendingCharts syncs the charts not found in the target
+//
+// It uses topological sort to sync dependencies first.
+func (s *Syncer) SyncPendingCharts(names ...string) error {
+	if err := s.loadChartsIndex(names...); err != nil {
+		return errors.Trace(err)
+	}
+	charts, err := s.topologicalSortCharts()
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	var errs error
+	for _, chart := range charts {
+		id := fmt.Sprintf("%s-%s", chart.Name, chart.Version)
+		// // 1. Process tgz file
+		klog.Infof("Processing %q chart...", id)
+		// // 2. Upload to target
+		if s.dryRun {
+			klog.Infof("dry-run: Uploading %q chart", id)
+			continue
+		}
+		// klog.Infof("Uploading %q chart...", id)
+		// if err := s.cli.dst.Upload(chart.TgzPath); err != nil {
+		// 	klog.Errorf("unable to upload %q chart: %+v", id, err)
+		// 	errs = multierror.Append(errs, errors.Trace(err))
+		// 	continue
+		// }
+	}
+
+	return errors.Trace(errs)
+}

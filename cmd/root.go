@@ -34,6 +34,7 @@ func newRootCmd() *cobra.Command {
 	// Add subcommands
 	cmd.AddCommand(
 		newSyncCmd(),
+		newSyncPendingCmd(),
 	)
 
 	// Workaround to disable help subcommand
