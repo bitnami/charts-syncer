@@ -1,7 +1,6 @@
 package syncer
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"path"
 	"sort"
@@ -211,10 +210,4 @@ func (s *Syncer) topologicalSortCharts() ([]*Chart, error) {
 		charts[i] = s.getIndex().Get(id)
 	}
 	return charts, nil
-}
-
-func encodeSha1(s string) string {
-	h := sha1.New()
-	h.Write([]byte(s))
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
