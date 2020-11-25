@@ -107,3 +107,62 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 
 	return errors.Trace(err)
 }
+
+// ChangeReferences changes the references of a chart tgz file from the source
+// repo to the target repo and returns a new tgz file.
+func ChangeReferences(outDir string, filepath string, name string, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo) (string, error) {
+	tmpDir, err := ioutil.TempDir("", "charts-syncer")
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	if err := utils.Untar(filepath, tmpDir); err != nil {
+		return "", errors.Trace(err)
+	}
+	chartPath := path.Join(tmpDir, name)
+
+	// Update values*.yaml
+	for _, f := range []string{
+		path.Join(chartPath, ValuesFilename),
+		path.Join(chartPath, ValuesProductionFilename),
+	} {
+		if ok, err := utils.FileExists(f); err != nil {
+			return "", errors.Trace(err)
+		} else if ok {
+			klog.V(5).Infof("Processing %q file...", f)
+			if err := updateValuesFile(f, tgtRepo); err != nil {
+				return "", errors.Trace(err)
+			}
+		}
+	}
+
+	// Update README.md
+	readmeFile := path.Join(chartPath, ReadmeFilename)
+	if ok, err := utils.FileExists(readmeFile); err != nil {
+		return "", errors.Trace(err)
+	} else if ok {
+		klog.V(5).Infof("Processing %q file...", readmeFile)
+		if err := updateReadmeFile(
+			readmeFile,
+			srcRepo.GetRepo().GetUrl(),
+			tgtRepo.GetRepo().GetUrl(),
+			name,
+			tgtRepo.GetRepoName(),
+		); err != nil {
+			return "", errors.Trace(err)
+		}
+	}
+
+	// Package chart again
+	//
+	// TODO(jdrios): This relies on the helm client to package the repo. It
+	// does not take into account that the targe repo could be out of sync yet
+	// (for example, if we uploaded a dependency of the chart being packaged a
+	// few seconds ago).
+	newTgz, err := helmcli.Package(chartPath, name, version, outDir)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	return newTgz, nil
+}

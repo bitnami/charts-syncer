@@ -2,6 +2,8 @@ package syncer
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
@@ -93,30 +95,60 @@ func (s *Syncer) Sync(charts ...string) error {
 //
 // It uses topological sort to sync dependencies first.
 func (s *Syncer) SyncPendingCharts(names ...string) error {
+	var errs error
+
+	// There might be problems loading all the charts due to missing dependencies,
+	// invalid/wrong charts in the repository, etc. Therefore, let's warn about
+	// them instead of blocking the whole sync.
 	if err := s.loadCharts(names...); err != nil {
-		return errors.Trace(err)
+		klog.Warningf("There were some problems loading the information of the requested charts: %v", err)
+		errs = multierror.Append(errs, errors.Trace(err))
 	}
+	// NOTE: We are not checking `errs` in purpose. See the comment above.
+
 	charts, err := s.topologicalSortCharts()
 	if err != nil {
 		return errors.Trace(err)
 	}
 
-	var errs error
-	for _, chart := range charts {
-		id := fmt.Sprintf("%s-%s", chart.Name, chart.Version)
-		// // 1. Process tgz file
-		klog.Infof("Processing %q chart...", id)
-		// // 2. Upload to target
+	if len(charts) > 1 {
+		klog.Infof("There are %d charts out of sync!", len(charts))
+	} else if len(charts) == 1 {
+		klog.Infof("There is %d chart out of sync!", len(charts))
+	} else {
+		klog.Info("There are no charts out of sync!")
+		return nil
+	}
+
+	for _, ch := range charts {
+		id := fmt.Sprintf("%s-%s", ch.Name, ch.Version)
+		klog.Infof("Syncing %q chart...", id)
+
+		klog.V(3).Infof("Processing %q chart...", id)
+		outDir, err := ioutil.TempDir("", "charts-syncer")
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer os.RemoveAll(outDir)
+
+		tgz, err := chart.ChangeReferences(outDir, ch.TgzPath, ch.Name, ch.Version, s.source, s.target)
+		if err != nil {
+			klog.Errorf("unable to process %q chart: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
+		}
+
 		if s.dryRun {
 			klog.Infof("dry-run: Uploading %q chart", id)
 			continue
 		}
-		// klog.Infof("Uploading %q chart...", id)
-		// if err := s.cli.dst.Upload(chart.TgzPath); err != nil {
-		// 	klog.Errorf("unable to upload %q chart: %+v", id, err)
-		// 	errs = multierror.Append(errs, errors.Trace(err))
-		// 	continue
-		// }
+
+		klog.V(3).Infof("Uploading %q chart...", id)
+		if err := s.cli.dst.Upload(tgz); err != nil {
+			klog.Errorf("unable to upload %q chart: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
+		}
 	}
 
 	return errors.Trace(errs)
