@@ -14,6 +14,7 @@ import (
 
 var (
 	syncFromDate string
+	syncWorkdir  string
 )
 
 var (
@@ -70,18 +71,23 @@ func newSyncCmd() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			s := syncer.NewSyncer(c.GetSource(), c.GetTarget(),
+			s, err := syncer.New(c.GetSource(), c.GetTarget(),
 				// TODO(jdrios): Some backends may not support discovery
 				syncer.WithAutoDiscovery(true),
 				syncer.WithDryRun(rootDryRun),
 				syncer.WithFromDate(syncFromDate),
+				syncer.WithWorkdir(syncWorkdir),
 			)
+			if err != nil {
+				return errors.Trace(err)
+			}
 
-			return errors.Trace(s.Sync(c.GetCharts()...))
+			return errors.Trace(s.SyncPendingCharts(c.GetCharts()...))
 		},
 	}
 
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
+	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory.")
 
 	return cmd
 }
