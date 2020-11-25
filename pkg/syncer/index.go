@@ -53,8 +53,8 @@ func (i ChartIndex) Get(id string) *Chart {
 	return nil
 }
 
-// loadChartsIndex loads the charts map into the index from the source repo
-func (s *Syncer) loadChartsIndex(charts ...string) error {
+// loadCharts loads the charts map into the index from the source repo
+func (s *Syncer) loadCharts(charts ...string) error {
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
 			return errors.Errorf("unable to discover charts to sync")
