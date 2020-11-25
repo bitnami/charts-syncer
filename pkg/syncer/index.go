@@ -149,7 +149,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 
 	tgz := path.Join(s.srcWorkdir, fmt.Sprintf("%s-%s.tgz", name, version))
 
-	// Fetch chart iff it does not exists in the workdir already
+	// Fetch chart iff it does not exist in the workdir already
 	if ok, err := utils.FileExists(tgz); err != nil {
 		return errors.Trace(err)
 	} else if !ok {
