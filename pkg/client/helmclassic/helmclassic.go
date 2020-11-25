@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/repo"
@@ -14,13 +13,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
-
-func readErrorBody(r io.Reader) string {
-	var s strings.Builder
-	_, _ = io.Copy(&s, r)
-	return s.String()
-}
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -43,7 +37,8 @@ var reloadIndex = func(r *Repo) error {
 		req.SetBasicAuth(r.username, r.password)
 	}
 
-	klog.V(4).Infof("GET %q", u)
+	reqID := utils.EncodeSha1(u + "index.yaml")
+	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -51,11 +46,11 @@ var reloadIndex = func(r *Repo) error {
 	}
 	defer res.Body.Close()
 
-	// Check status code
-	if res.StatusCode == http.StatusNotFound {
-		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, errorBody)
+	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
+		bodyStr := utils.HTTPResponseBody(res)
+		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
 	}
+	klog.V(4).Infof("[%s] Got HTTP Status: %s", reqID, res.Status)
 
 	// Create the index.yaml file to use the helm Go library, which does not
 	// expose a Loader from bytes.
@@ -75,7 +70,7 @@ var reloadIndex = func(r *Repo) error {
 
 	index, err := repo.LoadIndexFile(f.Name())
 	if err != nil {
-		return errors.Trace(err)
+		return errors.Annotate(err, "loading index.yaml file")
 	}
 
 	r.index = index
@@ -157,7 +152,8 @@ func (r *Repo) Fetch(filename string, name string, version string) error {
 		req.SetBasicAuth(r.username, r.password)
 	}
 
-	klog.V(4).Infof("GET %q", u)
+	reqID := utils.EncodeSha1(u + filename)
+	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -165,11 +161,11 @@ func (r *Repo) Fetch(filename string, name string, version string) error {
 	}
 	defer res.Body.Close()
 
-	// Check status code
-	if res.StatusCode == http.StatusNotFound {
-		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, errorBody)
+	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
+		bodyStr := utils.HTTPResponseBody(res)
+		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
 	}
+	klog.V(4).Infof("[%s] Got HTTP Status: %s", reqID, res.Status)
 
 	// Create the file
 	f, err := os.Create(filename)

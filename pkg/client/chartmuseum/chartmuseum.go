@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/juju/errors"
 	"k8s.io/klog"
@@ -15,13 +14,8 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
-
-func readErrorBody(r io.Reader) string {
-	var s strings.Builder
-	_, _ = io.Copy(&s, r)
-	return s.String()
-}
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -94,7 +88,8 @@ func (r *Repo) Upload(filepath string) error {
 		req.SetBasicAuth(r.username, r.password)
 	}
 
-	klog.V(4).Infof("POST %q", u)
+	reqID := utils.EncodeSha1(u + filepath)
+	klog.V(4).Infof("[%s] POST %q", reqID, u)
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -102,11 +97,11 @@ func (r *Repo) Upload(filepath string) error {
 	}
 	defer res.Body.Close()
 
-	// Check status code
-	if res.StatusCode == http.StatusNotFound {
-		errorBody := readErrorBody(res.Body)
-		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", filepath, res.Status, errorBody)
+	bodyStr := utils.HTTPResponseBody(res)
+	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
+		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", filepath, res.Status, bodyStr)
 	}
+	klog.V(4).Infof("[%s] Got HTTP Status: %s, Resp: %v", reqID, res.Status, bodyStr)
 
 	return nil
 }

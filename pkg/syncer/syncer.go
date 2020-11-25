@@ -9,6 +9,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/utils"
 )
 
 // Clients holds the source and target chart repo clients
@@ -120,7 +121,7 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 	// In order to store charts tgz files in an isolated folder for each chart
 	// repo we are computing a workdir using the hash of the source repo URL
 	// and the pre-configured workdir.
-	s.srcWorkdir = path.Join(s.workdir, encodeSha1(source.GetRepo().GetUrl()))
+	s.srcWorkdir = path.Join(s.workdir, utils.EncodeSha1(source.GetRepo().GetUrl()))
 	if err := os.MkdirAll(s.srcWorkdir, 0755); err != nil {
 		return nil, errors.Trace(err)
 	}

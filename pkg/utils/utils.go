@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -179,4 +181,18 @@ func FileExists(f string) (bool, error) {
 		return false, errors.Trace(err)
 	}
 	return true, nil
+}
+
+// HTTPResponseBody returns the body of an HTTP response
+func HTTPResponseBody(res *http.Response) string {
+	var s strings.Builder
+	_, _ = io.Copy(&s, res.Body)
+	return s.String()
+}
+
+// EncodeSha1 returns a SHA1 representation of the provided string
+func EncodeSha1(s string) string {
+	h := sha1.New()
+	h.Write([]byte(s))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
