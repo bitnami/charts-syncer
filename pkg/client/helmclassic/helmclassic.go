@@ -217,5 +217,5 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 
 // Reload reloads the index
 func (r *Repo) Reload() error {
-	return errors.Trace(reloadIndex(r))
+	return errors.Annotatef(reloadIndex(r), "reloading %q chart repo", r.url)
 }
