@@ -54,7 +54,7 @@ func newSyncPendingCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&syncPendingFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
-	cmd.Flags().StringVar(&syncPendingWorkdir, "workdir", syncer.DefaultWorkdir(), fmt.Sprintf("Working directory. Default: %q", syncer.DefaultWorkdir()))
+	cmd.Flags().StringVar(&syncPendingWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory.")
 
 	return cmd
 }
