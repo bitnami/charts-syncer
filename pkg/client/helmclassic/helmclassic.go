@@ -163,7 +163,7 @@ func (r *Repo) Fetch(filename string, name string, version string) error {
 
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
 		bodyStr := utils.HTTPResponseBody(res)
-		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
 	}
 	klog.V(4).Infof("[%s] Got HTTP Status: %s", reqID, res.Status)
 
