@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/juju/errors"
 	"github.com/spf13/cobra"
 
@@ -11,6 +13,7 @@ import (
 
 var (
 	syncPendingFromDate string
+	syncPendingWorkdir  string
 )
 
 func newSyncPendingCmd() *cobra.Command {
@@ -40,6 +43,7 @@ func newSyncPendingCmd() *cobra.Command {
 				syncer.WithAutoDiscovery(true),
 				syncer.WithDryRun(rootDryRun),
 				syncer.WithFromDate(syncPendingFromDate),
+				syncer.WithWorkdir(syncPendingWorkdir),
 			)
 			if err != nil {
 				return errors.Trace(err)
@@ -50,6 +54,7 @@ func newSyncPendingCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&syncPendingFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
+	cmd.Flags().StringVar(&syncPendingWorkdir, "workdir", syncer.DefaultWorkdir(), fmt.Sprintf("Working directory. Default: %q", syncer.DefaultWorkdir()))
 
 	return cmd
 }

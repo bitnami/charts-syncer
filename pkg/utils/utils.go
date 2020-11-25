@@ -169,3 +169,14 @@ func isValidURL(text string) bool {
 	}
 	return true
 }
+
+// FileExists will test if a file exists
+func FileExists(f string) (bool, error) {
+	if _, err := os.Stat(f); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, errors.Trace(err)
+	}
+	return true, nil
+}

@@ -1,7 +1,11 @@
 package syncer
 
 import (
+	"os"
+	"path"
+
 	"github.com/juju/errors"
+	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
@@ -24,9 +28,13 @@ type Syncer struct {
 	autoDiscovery bool
 	fromDate      string
 
-	// TODO(jdrios): Cache index (and tgz files) in local filesystem to speed
+	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
 	index ChartIndex
+
+	// Storage directory for required artifacts
+	workdir    string
+	srcWorkdir string
 }
 
 // Option is an option value used to create a new syncer instance.
@@ -52,6 +60,13 @@ func WithAutoDiscovery(enable bool) Option {
 func WithFromDate(date string) Option {
 	return func(s *Syncer) {
 		s.fromDate = date
+	}
+}
+
+// WithWorkdir configures the syncer to store artifacts in a specific directory.
+func WithWorkdir(dir string) Option {
+	return func(s *Syncer) {
+		s.workdir = dir
 	}
 }
 
@@ -94,5 +109,21 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 	for _, o := range opts {
 		o(s)
 	}
+
+	// If a workdir wasn't specified, let's use a directory relative to the
+	// current directory
+	if s.workdir == "" {
+		s.workdir = "./workdir"
+	}
+	klog.V(3).Infof("Using workdir: %q", s.workdir)
+
+	// In order to store charts tgz files in an isolated folder for each chart
+	// repo we are computing a workdir using the hash of the source repo URL
+	// and the pre-configured workdir.
+	s.srcWorkdir = path.Join(s.workdir, encodeSha1(source.GetRepo().GetUrl()))
+	if err := os.MkdirAll(s.srcWorkdir, 0755); err != nil {
+		return nil, errors.Trace(err)
+	}
+
 	return s, nil
 }

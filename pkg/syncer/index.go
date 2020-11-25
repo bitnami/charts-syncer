@@ -1,9 +1,8 @@
 package syncer
 
 import (
+	"crypto/sha1"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"sort"
 
@@ -148,16 +147,15 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return nil
 	}
 
-	// Create temporary working directory
-	workdir, err := ioutil.TempDir("", "charts-syncer")
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer os.RemoveAll(workdir)
+	tgz := path.Join(s.srcWorkdir, fmt.Sprintf("%s-%s.tgz", name, version))
 
-	tgz := path.Join(workdir, fmt.Sprintf("%s-%s.tgz", name, version))
-	if err := s.cli.src.Fetch(tgz, name, version); err != nil {
+	// Fetch chart iff it does not exists in the workdir already
+	if ok, err := utils.FileExists(tgz); err != nil {
 		return errors.Trace(err)
+	} else if !ok {
+		if err := s.cli.src.Fetch(tgz, name, version); err != nil {
+			return errors.Trace(err)
+		}
 	}
 
 	ch := &Chart{
@@ -213,4 +211,10 @@ func (s *Syncer) topologicalSortCharts() ([]*Chart, error) {
 		charts[i] = s.getIndex().Get(id)
 	}
 	return charts, nil
+}
+
+func encodeSha1(s string) string {
+	h := sha1.New()
+	h.Write([]byte(s))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
