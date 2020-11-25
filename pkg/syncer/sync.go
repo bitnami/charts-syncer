@@ -93,7 +93,7 @@ func (s *Syncer) Sync(charts ...string) error {
 //
 // It uses topological sort to sync dependencies first.
 func (s *Syncer) SyncPendingCharts(names ...string) error {
-	if err := s.loadChartsIndex(names...); err != nil {
+	if err := s.loadCharts(names...); err != nil {
 		return errors.Trace(err)
 	}
 	charts, err := s.topologicalSortCharts()
