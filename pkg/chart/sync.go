@@ -110,7 +110,7 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 
 // ChangeReferences changes the references of a chart tgz file from the source
 // repo to the target repo and returns a new tgz file.
-func ChangeReferences(outDir string, filepath string, name string, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo) (string, error) {
+func ChangeReferences(outDir, filepath, name, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo, hasDeps bool) (string, error) {
 	tmpDir, err := ioutil.TempDir("", "charts-syncer")
 	if err != nil {
 		return "", errors.Trace(err)
@@ -153,16 +153,55 @@ func ChangeReferences(outDir string, filepath string, name string, version strin
 		}
 	}
 
+	if hasDeps {
+		if err := ChangeDependenciesFile(chartPath, name, srcRepo, tgtRepo); err != nil {
+			return "", errors.Trace(err)
+		}
+	}
+
 	// Package chart again
 	//
 	// TODO(jdrios): This relies on the helm client to package the repo. It
 	// does not take into account that the target repo could be out of sync yet
 	// (for example, if we uploaded a dependency of the chart being packaged a
 	// few seconds ago).
+	if err := helmcli.UpdateDependencies(chartPath); err != nil {
+		return "", errors.Trace(err)
+	}
 	newTgz, err := helmcli.Package(chartPath, name, version, outDir)
 	if err != nil {
 		return "", errors.Trace(err)
 	}
 
 	return newTgz, nil
+}
+
+// ChangeDependenciesFile changes the references of the dependencies file to
+// set a fixed version instead of a regex version. This forces helm to resolve
+// the dependency versions that are set in the source chart, instead of any newer
+// version present in the target repo.
+func ChangeDependenciesFile(chartPath string, name string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo) error {
+	apiVersion, err := GetLockAPIVersion(chartPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	if apiVersion == "" {
+		return nil
+	}
+
+	lock, err := GetChartLock(chartPath, name)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	switch apiVersion {
+	case APIV1:
+		klog.V(5).Infof("Processing %s/%s dependencies file...", chartPath, RequirementsFilename)
+		return errors.Trace(updateRequirementsFile(chartPath, lock, srcRepo.GetRepo(), tgtRepo))
+	case APIV2:
+		klog.V(5).Infof("Updating %s/%s dependencies file...", chartPath, ChartFilename)
+		return errors.Trace(updateChartMetadataFile(chartPath, lock, srcRepo.GetRepo(), tgtRepo))
+	}
+	return nil
 }
