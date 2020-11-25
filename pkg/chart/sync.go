@@ -156,7 +156,7 @@ func ChangeReferences(outDir string, filepath string, name string, version strin
 	// Package chart again
 	//
 	// TODO(jdrios): This relies on the helm client to package the repo. It
-	// does not take into account that the targe repo could be out of sync yet
+	// does not take into account that the target repo could be out of sync yet
 	// (for example, if we uploaded a dependency of the chart being packaged a
 	// few seconds ago).
 	newTgz, err := helmcli.Package(chartPath, name, version, outDir)
