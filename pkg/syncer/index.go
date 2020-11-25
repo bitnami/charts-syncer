@@ -145,6 +145,14 @@ func (s *Syncer) loadChart(name string, version string) error {
 		klog.V(4).Infof("Skipping %q chart: Already indexed", id)
 		return nil
 	}
+	// In the same way, dependencies may already exist in the target chart
+	// repository.
+	if ok, err := s.cli.dst.Has(name, version); err != nil {
+		return errors.Errorf("unable to explore target repo to check %q chart: %v", id, err)
+	} else if ok {
+		klog.V(4).Infof("Skipping %q chart: Already synced", id)
+		return nil
+	}
 
 	tgz := path.Join(s.srcWorkdir, fmt.Sprintf("%s-%s.tgz", name, version))
 
@@ -177,11 +185,13 @@ func (s *Syncer) loadChart(name string, version string) error {
 	for _, dep := range deps {
 		depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
 		if err := s.loadChart(dep.Name, dep.Version); err != nil {
-			klog.Errorf("unable to load %q dependency chart: %v", depID, err)
-			errs = multierror.Append(errs, errors.Trace(err))
+			errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
 			continue
 		}
 		ch.Dependencies = append(ch.Dependencies, depID)
+	}
+	if errs != nil {
+		return errors.Trace(errs)
 	}
 
 	klog.V(4).Infof("Indexing %q chart", id)

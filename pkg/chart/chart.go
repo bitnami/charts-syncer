@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
-	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 )
@@ -66,7 +65,6 @@ func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo)
 
 // updateReadmeFile performs some substitutions to a given README.md file.
 func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName string) error {
-	klog.V(3).Infof("Updating README file")
 	readme, err := ioutil.ReadFile(readmeFile)
 	if err != nil {
 		return errors.Trace(err)
@@ -83,7 +81,6 @@ func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName stri
 	}
 	submatch := regex.FindStringSubmatch(string(readme))
 	if len(submatch) > 0 {
-		klog.V(4).Infof("Updating bitnami/ references")
 		replaceText := fmt.Sprintf("%s%s/%s%s", submatch[1], repoName, chartName, submatch[3])
 		newContent = regex.ReplaceAllString(newContent, replaceText)
 	}

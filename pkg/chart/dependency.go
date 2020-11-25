@@ -208,32 +208,14 @@ func lockFilePath(chartPath, apiVersion string) (string, error) {
 	}
 }
 
-// GetChartDependencies returns the chart dependencies from a chart in tgz format.
-func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency, error) {
-	// Create temporary working directory
-	chartPath, err := ioutil.TempDir("", "charts-syncer")
+// GetChartLock returns the chart.Lock from an uncompressed chart
+func GetChartLock(chartPath string, name string) (*helmChart.Lock, error) {
+	// If the API version is not set, there is not a lock file. Hence, this
+	// chart has no dependencies.
+	apiVersion, err := GetLockAPIVersion(chartPath)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	defer os.RemoveAll(chartPath)
-
-	// Uncompress chart
-	if err := utils.Untar(filepath, chartPath); err != nil {
-		return nil, errors.Annotatef(err, "uncompressing %q", filepath)
-	}
-	// Untar uncompress the chart in a subfolder
-	chartPath = path.Join(chartPath, name)
-
-	var apiVersion string
-	if _, err := os.Stat(path.Join(chartPath, RequirementsLockFilename)); err == nil {
-		apiVersion = APIV1
-	}
-	if _, err := os.Stat(path.Join(chartPath, ChartLockFilename)); err == nil {
-		apiVersion = APIV2
-	}
-
-	// If the API version is not set, there is not a lock file. Hence, this
-	// chart has no dependencies.
 	if apiVersion == "" {
 		return nil, nil
 	}
@@ -250,5 +232,50 @@ func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency
 	if err = yaml.Unmarshal(lockContent, lock); err != nil {
 		return nil, errors.Annotatef(err, "unmarshaling %q file", lockFilePath)
 	}
+	return lock, nil
+}
+
+// GetChartDependencies returns the chart chart.Dependencies from a chart in tgz format.
+func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency, error) {
+	// Create temporary working directory
+	chartPath, err := ioutil.TempDir("", "charts-syncer")
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	defer os.RemoveAll(chartPath)
+
+	// Uncompress chart
+	if err := utils.Untar(filepath, chartPath); err != nil {
+		return nil, errors.Annotatef(err, "uncompressing %q", filepath)
+	}
+	// Untar uncompress the chart in a subfolder
+	chartPath = path.Join(chartPath, name)
+
+	lock, err := GetChartLock(chartPath, name)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	// No dependencies found
+	if lock == nil {
+		return nil, nil
+	}
+
 	return lock.Dependencies, nil
+}
+
+// GetLockAPIVersion returns the apiVersion field of a chart's lock file
+func GetLockAPIVersion(chartPath string) (string, error) {
+	if ok, err := utils.FileExists(path.Join(chartPath, RequirementsLockFilename)); err != nil {
+		return "", errors.Trace(err)
+	} else if ok {
+		return APIV1, nil
+	}
+	if ok, err := utils.FileExists(path.Join(chartPath, ChartLockFilename)); err != nil {
+		return "", errors.Trace(err)
+	} else if ok {
+		return APIV2, nil
+	}
+
+	return "", nil
 }
