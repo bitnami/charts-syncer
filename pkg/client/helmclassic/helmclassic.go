@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/repo"
