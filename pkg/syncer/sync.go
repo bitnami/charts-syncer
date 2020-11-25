@@ -120,6 +120,19 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		return nil
 	}
 
+	// Add target repo to helm CLI
+	//
+	// This is required to use helm CLI for certain operation such us
+	// `helm dependency update`.
+	//
+	// TODO(jdrios): Check if we can remove the helm CLI requirement.
+	repoName := fmt.Sprintf("charts-syncer-%s", s.target.GetRepoName())
+	cleanup, err := helmcli.AddRepoToHelm(repoName, s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer cleanup()
+
 	for _, ch := range charts {
 		id := fmt.Sprintf("%s-%s", ch.Name, ch.Version)
 		klog.Infof("Syncing %q chart...", id)
@@ -131,25 +144,12 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		}
 		defer os.RemoveAll(outDir)
 
-		// Add target repo to helm CLI
-		//
-		// This is required to use helm CLI for certain operation such us
-		// `helm dependency update`.
-		//
-		// TODO(jdrios): Check if we can remove the helm CLI requirement.
-		repoName := fmt.Sprintf("charts-syncer-%s", s.target.GetRepoName())
-		helmcli.AddRepoToHelm(repoName, s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
-
 		hasDeps := len(ch.Dependencies) > 0
 		tgz, err := chart.ChangeReferences(outDir, ch.TgzPath, ch.Name, ch.Version, s.source, s.target, hasDeps)
 		if err != nil {
 			klog.Errorf("unable to process %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
-		}
-
-		if err := helmcli.DeleteHelmRepo(repoName); err != nil {
-			return errors.Trace(err)
 		}
 
 		if s.dryRun {

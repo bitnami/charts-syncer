@@ -36,7 +36,8 @@ func UpdateDependencies(chartPath string) error {
 }
 
 // AddRepoToHelm uses helm cli to add a repo to the helm CLI.
-func AddRepoToHelm(name string, url string, auth *api.Auth) error {
+func AddRepoToHelm(name string, url string, auth *api.Auth) (func() error, error) {
+	cleanup := func() error { return nil }
 	var cmd *exec.Cmd
 	if auth != nil && auth.Username != "" && auth.Password != "" {
 		klog.V(3).Info("Adding target repository to helm cli with basic authentication")
@@ -46,9 +47,11 @@ func AddRepoToHelm(name string, url string, auth *api.Auth) error {
 		cmd = exec.Command("helm", "repo", "add", name, url)
 	}
 	if _, err := cmd.Output(); err != nil {
-		return errors.Annotate(err, "error adding target repo to helm")
+		return cleanup, errors.Annotate(err, "error adding target repo to helm")
 	}
-	return nil
+	return func() error {
+		return DeleteHelmRepo(name)
+	}, nil
 }
 
 // DeleteHelmRepo uses helm cli to delete a repo from the helm CLI.
