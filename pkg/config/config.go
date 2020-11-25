@@ -25,9 +25,9 @@ func Load(config *api.Config) error {
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
 	}
-	if config.Target.RepoName == "" {
-		klog.Warning("'target.repoName' property is empty. Using 'myrepo' default value")
-		config.Target.RepoName = defaultRepoName
+	if config.GetTarget().GetRepoName() == "" {
+		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
+		config.GetTarget().RepoName = defaultRepoName
 	}
 	if err := config.Source.Repo.SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
 		return err
