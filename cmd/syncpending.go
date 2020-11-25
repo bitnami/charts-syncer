@@ -13,23 +13,13 @@ var (
 	syncPendingFromDate string
 )
 
-var (
-	syncPendingExample = `
-  # Synchronizes all charts defined in the configuration file
-  charts-syncer sync
-
-  # Synchronizes all charts defined in the configuration file from May 1st, 2020
-  charts-syncer sync --from-date 2020-05-01`
-)
-
 func newSyncPendingCmd() *cobra.Command {
 	var c api.Config
 
 	cmd := &cobra.Command{
-		Use:     "sync-pending",
-		Short:   "[EXPERIMENTAL] Synchronizes two chart repositories using an experimental feature",
-		Hidden:  true,
-		Example: syncPendingExample,
+		Use:    "sync-pending",
+		Short:  "[EXPERIMENTAL] Synchronizes two chart repositories using an experimental feature",
+		Hidden: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := initConfigFile(); err != nil {
 				return errors.Trace(err)
