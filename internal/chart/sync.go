@@ -109,13 +109,8 @@ func Sync(name string, version string, sourceRepo *api.Repo, target *api.TargetR
 }
 
 // ChangeReferences changes the references of a chart tgz file from the source
-// repo to the target repo and returns a new tgz file.
-func ChangeReferences(outDir, filepath, name, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo, hasDeps bool) (string, error) {
-	tmpDir, err := ioutil.TempDir("", "charts-syncer")
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	defer os.RemoveAll(tmpDir)
+// repo to the target repo
+func ChangeReferences(tmpDir, filepath, name, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo) (string, error) {
 	if err := utils.Untar(filepath, tmpDir); err != nil {
 		return "", errors.Trace(err)
 	}
@@ -153,27 +148,7 @@ func ChangeReferences(outDir, filepath, name, version string, srcRepo *api.Sourc
 		}
 	}
 
-	if hasDeps {
-		if err := ChangeDependenciesFile(chartPath, name, srcRepo, tgtRepo); err != nil {
-			return "", errors.Trace(err)
-		}
-	}
-
-	// Package chart again
-	//
-	// TODO(jdrios): This relies on the helm client to package the repo. It
-	// does not take into account that the target repo could be out of sync yet
-	// (for example, if we uploaded a dependency of the chart being packaged a
-	// few seconds ago).
-	if err := helmcli.UpdateDependencies(chartPath); err != nil {
-		return "", errors.Trace(err)
-	}
-	newTgz, err := helmcli.Package(chartPath, name, version, outDir)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-
-	return newTgz, nil
+	return chartPath, nil
 }
 
 // ChangeDependenciesFile changes the references of the dependencies file to

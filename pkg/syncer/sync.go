@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"k8s.io/klog"
 
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
@@ -126,12 +128,23 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	// `helm dependency update`.
 	//
 	// TODO(jdrios): Check if we can remove the helm CLI requirement.
-	repoName := fmt.Sprintf("charts-syncer-%s", s.target.GetRepoName())
-	cleanup, err := helmcli.AddRepoToHelm(repoName, s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
-	if err != nil {
-		return errors.Trace(err)
+	switch s.target.GetRepo().GetKind() {
+	case api.Kind_HELM, api.Kind_CHARTMUSEUM, api.Kind_HARBOR:
+		repoName := fmt.Sprintf("charts-syncer-%s", s.target.GetRepoName())
+		cleanup, err := helmcli.AddRepoToHelm(repoName, s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer cleanup()
+	case api.Kind_OCI:
+		cleanup, err := helmcli.OciLogin(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer cleanup()
+	default:
+		return errors.Errorf("unsupported repo kind %q", s.target.GetRepo().GetKind())
 	}
-	defer cleanup()
 
 	for _, ch := range charts {
 		id := fmt.Sprintf("%s-%s", ch.Name, ch.Version)
@@ -145,11 +158,45 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		defer os.RemoveAll(outDir)
 
 		hasDeps := len(ch.Dependencies) > 0
-		tgz, err := chart.ChangeReferences(outDir, ch.TgzPath, ch.Name, ch.Version, s.source, s.target, hasDeps)
+
+		workDir, err := ioutil.TempDir("", "charts-syncer")
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer os.RemoveAll(workDir)
+		chartPath, err := chart.ChangeReferences(workDir, ch.TgzPath, ch.Name, ch.Version, s.source, s.target)
 		if err != nil {
 			klog.Errorf("unable to process %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
+		}
+
+		// Update deps
+		if hasDeps {
+			if err := chart.ChangeDependenciesFile(chartPath, ch.Name, s.source, s.target); err != nil {
+				return errors.Trace(err)
+			}
+			switch s.target.GetRepo().GetKind() {
+			case api.Kind_OCI:
+				if err := s.buildDependenciesFromOci(chartPath, ch.Name); err != nil {
+					return errors.Trace(err)
+				}
+			default:
+				if err := helmcli.UpdateDependencies(chartPath); err != nil {
+					return errors.Trace(err)
+				}
+			}
+		}
+
+		// Package chart again
+		//
+		// TODO(jdrios): This relies on the helm client to package the repo. It
+		// does not take into account that the target repo could be out of sync yet
+		// (for example, if we uploaded a dependency of the chart being packaged a
+		// few seconds ago).
+		tgz, err := helmcli.Package(chartPath, ch.Name, ch.Version, outDir)
+		if err != nil {
+			return errors.Trace(err)
 		}
 
 		if s.dryRun {
@@ -166,4 +213,29 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	}
 
 	return errors.Trace(errs)
+}
+
+func (s *Syncer) buildDependenciesFromOci(chartPath, name string) error {
+	// Build deps manually for OCI as helm does not support it yet
+	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
+		return errors.Trace(err)
+	}
+	// Re-create empty charts folder
+	err := os.Mkdir(path.Join(chartPath, "charts"), 0755)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	lock, err := chart.GetChartLock(chartPath, name)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	// Dependencies found
+	if lock != nil {
+		for _, dep := range lock.Dependencies {
+			depTgz := path.Join(chartPath, "charts", fmt.Sprintf("%s-%s.tgz", dep.Name, dep.Version))
+			s.cli.dst.Fetch(depTgz, dep.Name, dep.Version)
+		}
+	}
+
+	return nil
 }
