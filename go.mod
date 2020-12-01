@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/golang/protobuf v1.4.2
+	github.com/google/go-cmp v0.4.0
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
