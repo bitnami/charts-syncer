@@ -8,6 +8,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
@@ -58,6 +59,8 @@ var NewClientV2 = func(repo *api.Repo) (ClientV2, error) {
 		return chartmuseum.New(repo)
 	case api.Kind_HARBOR:
 		return harbor.New(repo)
+	case api.Kind_OCI:
+		return oci.New(repo)
 	default:
 		return nil, errors.Errorf("unsupported repo kind %q", repo.Kind)
 	}

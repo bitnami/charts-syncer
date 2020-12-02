@@ -198,7 +198,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(filepath string, _, _ string) error {
+func (r *Repo) Upload(_, _, _ string) error {
 	return errors.Errorf("upload method is not supported yet")
 }
 
