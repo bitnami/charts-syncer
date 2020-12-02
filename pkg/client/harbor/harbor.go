@@ -13,9 +13,9 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Repo allows to operate a chart repository.
@@ -54,7 +54,7 @@ func (r *Repo) GetUploadURL() string {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(filepath string) error {
+func (r *Repo) Upload(filepath string, _, _ string) error {
 	body := &bytes.Buffer{}
 	mpw := multipart.NewWriter(body)
 
