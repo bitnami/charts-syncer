@@ -48,6 +48,9 @@ target:
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
+charts:
+  - redis
+  - mariadb
 ~~~
 
 > Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
@@ -82,6 +85,8 @@ Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you
 | OCI         | HARBOR      | :white_check_mark: |
 | OCI         | OCI         | :white_check_mark: |
 
+> The list of charts in the config file is optional except for OCI repositories used as source.
+> The rest of chart repositories kinds already support autodiscovery.
 
 ### Harbor example
 
@@ -112,6 +117,8 @@ target:
 
 `subpath` in the previous url is optional in case your charts are not stored directly under your projects.
 It is worth to mention that you can use Harbor robot accounts using OCI registries as source or target.
+
+Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
 
 ## Requirements
 
