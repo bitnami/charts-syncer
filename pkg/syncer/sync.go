@@ -10,9 +10,9 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 )
 
 // Sync synchronizes source and target chart repos
@@ -158,7 +158,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		}
 
 		klog.V(3).Infof("Uploading %q chart...", id)
-		if err := s.cli.dst.Upload(tgz); err != nil {
+		if err := s.cli.dst.Upload(tgz, ch.Name, ch.Version); err != nil {
 			klog.Errorf("unable to upload %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue

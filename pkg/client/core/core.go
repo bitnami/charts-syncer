@@ -4,11 +4,11 @@ import (
 	"github.com/juju/errors"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Reader defines the methods that a ReadOnly chart client should implement.
@@ -25,7 +25,7 @@ type Reader interface {
 
 // Writer defines the methods that a WriteOnly chart client should implement.
 type Writer interface {
-	Upload(filepath string) error
+	Upload(filepath string, name string, version string) error
 }
 
 // ValidateChartTgz validates if a chart is a valid tgz file

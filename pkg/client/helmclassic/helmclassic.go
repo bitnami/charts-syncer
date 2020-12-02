@@ -12,8 +12,8 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
 // Repo allows to operate a chart repository.
@@ -198,7 +198,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(filepath string) error {
+func (r *Repo) Upload(filepath string, _, _ string) error {
 	return errors.Errorf("upload method is not supported yet")
 }
 
