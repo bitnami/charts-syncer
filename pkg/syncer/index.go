@@ -26,6 +26,17 @@ type Chart struct {
 // ChartIndex is a map linking a chart reference with its Chart
 type ChartIndex map[string]*Chart
 
+// func (i ChartIndex) Equal(ii ChartIndex) bool {
+// 	var missing []string
+// 	for ni, ich := range i {
+// 		if iich, ok := ii[ni]; !ok {
+// 			return false
+// 		}
+// 		missing = append(missing, ni)
+
+// 	}
+// }
+
 // getIndex returns the chart index
 func (s *Syncer) getIndex() ChartIndex {
 	if s.index == nil {
