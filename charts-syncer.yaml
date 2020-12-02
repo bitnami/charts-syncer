@@ -38,3 +38,9 @@ target:
       # password is the password used to authenticate against the target chart repo
       # `TARGET_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
+# charts is an OPTIONAL list to specify a subset of charts to be synchronized
+# It is mandatory iff the source repo is OCI as autodiscovery is not supported
+# for that kind of repositories
+charts:
+  - redis
+  - etcd

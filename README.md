@@ -48,6 +48,9 @@ target:
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
+charts:
+  - redis
+  - mariadb
 ~~~
 
 > Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
@@ -61,20 +64,29 @@ Credentials can be provided using config file or the following environment varia
 - `TARGET_AUTH_USERNAME`
 - `TARGET_AUTH_PASSWORD`
 
-Current available Kinds are `HELM`, `CHARTMUSEUM` and `HARBOR`. Below you can find the compatibility matrix betweeen source and targets repositories.
+Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix betweeen source and targets repositories.
 
 | Source Repo | Target Repo | Supported          |
 |-------------|-------------|--------------------|
 | HELM        | HELM        | :x:                |
 | HELM        | CHARTMUSEUM | :white_check_mark: |
 | HELM        | HARBOR      | :white_check_mark: |
+| HELM        | OCI         | :white_check_mark: |
 | CHARTMUSEUM | HELM        | :x:                |
 | CHARTMUSEUM | CHARTMUSEUM | :white_check_mark: |
 | CHARTMUSEUM | HARBOR      | :white_check_mark: |
+| CHARTMUSEUM | OCI         | :white_check_mark: |
 | HARBOR      | HELM        | :x:                |
 | HARBOR      | CHARTMUSEUM | :white_check_mark: |
 | HARBOR      | HARBOR      | :white_check_mark: |
+| HARBOR      | OCI         | :white_check_mark: |
+| OCI         | HELM        | :x:                |
+| OCI         | CHARTMUSEUM | :white_check_mark: |
+| OCI         | HARBOR      | :white_check_mark: |
+| OCI         | OCI         | :white_check_mark: |
 
+> The list of charts in the config file is optional except for OCI repositories used as source.
+> The rest of chart repositories kinds already support autodiscovery.
 
 ### Harbor example
 
@@ -90,6 +102,23 @@ target:
    kind: HARBOR
    url: https://my.harbor.com/chartrepo/my-project
 ~~~
+
+### OCI example
+
+Since Harbor 2.0.0, there are two ways of storing charts. The legacy one uses chartmuseum under the hood and it correspond to the HARBOR kind of this project.
+The new one however uses OCI to store helm charts as OCI artifacts. In case you are using Harbor with OCI backend you can use the following example:
+
+~~~yaml
+target:
+ repo:
+   kind: OCI
+   url: https://my.harbor.com/my-project/subpath
+~~~
+
+`subpath` in the previous url is optional in case your charts are not stored directly under your projects.
+It is worth to mention that you can use Harbor robot accounts using OCI registries as source or target.
+
+Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
 
 ## Requirements
 
