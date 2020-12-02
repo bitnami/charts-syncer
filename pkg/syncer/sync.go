@@ -9,10 +9,10 @@ import (
 	"github.com/mkmik/multierror"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/chart"
+	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Sync synchronizes source and target chart repos

@@ -8,7 +8,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/config"
+	"github.com/bitnami-labs/charts-syncer/internal/config"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 

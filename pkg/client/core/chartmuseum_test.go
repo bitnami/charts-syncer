@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
+	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
 )

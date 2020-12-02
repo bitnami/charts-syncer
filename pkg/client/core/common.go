@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"k8s.io/klog"
 )

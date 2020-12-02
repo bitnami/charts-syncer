@@ -13,8 +13,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/helmcli"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Sync is the main function. It downloads, transform, package and publish a chart.

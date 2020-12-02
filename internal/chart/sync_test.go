@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/chartrepotest"
+	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 

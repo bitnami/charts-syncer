@@ -8,7 +8,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Reader defines the methods that a ReadOnly chart client should implement.

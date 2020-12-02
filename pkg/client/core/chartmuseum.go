@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/utils"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
