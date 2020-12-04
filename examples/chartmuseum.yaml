@@ -1,0 +1,37 @@
+#
+# Example config file to sync a well-known chart repo to a local chartmuseum
+#
+
+# We are syncing etcd, harbor, nginx and redis for simplicity
+charts:
+- etcd
+- harbor
+- nginx
+- redis
+
+# The bitnami chart repo is a well-known chart repository that we can use
+# as source.
+source:
+  repo:
+    kind: HELM
+    url: https://charts.bitnami.com/bitnami
+
+target:
+  # The bitnami charts use docker as default container registry. Let's switch
+  # to one of their mirrors to ensure the container references reallocation works.
+  #
+  # NOTE: This does not reallocate container artifacts, actually, but their
+  #       references in the chart.
+  containerRegistry: gcr.io
+  containerRepository: bitnami-containers
+  # Chartmuseum running via:
+  #
+  # chartmuseum --basic-auth-user admin --basic-auth-pass admin \
+  #             --storage local --storage-local-rootdir /tmp/chartstorage
+  repo:
+    kind: CHARTMUSEUM
+    url: http://localhost:8080
+    auth:
+      username: admin
+      password: admin
+
