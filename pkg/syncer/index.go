@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"fmt"
-	"path"
 	"sort"
 
 	"github.com/juju/errors"
@@ -106,7 +105,7 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			id := fmt.Sprintf("%s-%s", name, version)
 			klog.V(5).Infof("Details for %q chart: %+v", id, details)
 			if details.PublishedAt.Before(publishingThreshold) {
-				klog.V(4).Infof("Skipping %q chart: Published before %q", id, publishingThreshold.String())
+				klog.V(5).Infof("Skipping %q chart: Published before %q", id, publishingThreshold.String())
 				continue
 			}
 
@@ -115,12 +114,12 @@ func (s *Syncer) loadCharts(charts ...string) error {
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
 			} else if ok {
-				klog.V(4).Infof("Skipping %q chart: Already synced", id)
+				klog.V(5).Infof("Skipping %q chart: Already synced", id)
 				continue
 			}
 
 			if ch := s.getIndex().Get(id); ch != nil {
-				klog.V(4).Infof("Skipping %q chart: Already indexed", id)
+				klog.V(5).Infof("Skipping %q chart: Already indexed", id)
 				continue
 			}
 
@@ -153,7 +152,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 	// If we run charts-syncer for `wordpress` and `magento`, this check will
 	// avoid re-indexing `mariadb` twice.
 	if ch := s.getIndex().Get(id); ch != nil {
-		klog.V(4).Infof("Skipping %q chart: Already indexed", id)
+		klog.V(5).Infof("Skipping %q chart: Already indexed", id)
 		return nil
 	}
 	// In the same way, dependencies may already exist in the target chart
@@ -161,19 +160,13 @@ func (s *Syncer) loadChart(name string, version string) error {
 	if ok, err := s.cli.dst.Has(name, version); err != nil {
 		return errors.Errorf("unable to explore target repo to check %q chart: %v", id, err)
 	} else if ok {
-		klog.V(4).Infof("Skipping %q chart: Already synced", id)
+		klog.V(5).Infof("Skipping %q chart: Already synced", id)
 		return nil
 	}
 
-	tgz := path.Join(s.srcWorkdir, fmt.Sprintf("%s-%s.tgz", name, version))
-
-	// Fetch chart iff it does not exist in the workdir already
-	if ok, err := utils.FileExists(tgz); err != nil {
+	tgz, err := s.cli.src.Fetch(name, version)
+	if err != nil {
 		return errors.Trace(err)
-	} else if !ok {
-		if err := s.cli.src.Fetch(tgz, name, version); err != nil {
-			return errors.Trace(err)
-		}
 	}
 
 	ch := &Chart{

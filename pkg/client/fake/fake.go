@@ -41,19 +41,8 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 }
 
 // Fetch fetches a chart
-func (r *Repo) Fetch(filename string, name string, version string) error {
-	chFile := path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version))
-
-	input, err := ioutil.ReadFile(chFile)
-	if err != nil {
-		return errors.Annotatef(err, "reading %q", chFile)
-	}
-
-	if err := ioutil.WriteFile(filename, input, 0644); err != nil {
-		return errors.Annotatef(err, "creating %q", filename)
-	}
-
-	return nil
+func (r *Repo) Fetch(name string, version string) (string, error) {
+	return path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version)), nil
 }
 
 // Has checks if a repo has a specific chart

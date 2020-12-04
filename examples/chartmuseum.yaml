@@ -2,7 +2,7 @@
 # Example config file to sync a well-known chart repo to a local chartmuseum
 #
 
-# We are syncing etcd, harbor, nginx and redis for simplicity
+# We are not syncing all charts, for simplicity
 charts:
 - etcd
 - harbor

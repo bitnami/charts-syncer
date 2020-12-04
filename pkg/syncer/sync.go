@@ -229,13 +229,26 @@ func (s *Syncer) buildDependenciesFromOci(chartPath, name string) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
+
 	// Dependencies found
+	var errs error
 	if lock != nil {
 		for _, dep := range lock.Dependencies {
-			depTgz := path.Join(chartPath, "charts", fmt.Sprintf("%s-%s.tgz", dep.Name, dep.Version))
-			s.cli.dst.Fetch(depTgz, dep.Name, dep.Version)
+			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
+
+			depTgz, err := s.cli.dst.Fetch(dep.Name, dep.Version)
+			if err != nil {
+				klog.Errorf("unable to update %q chart dependency: %+v", depID, err)
+				errs = multierror.Append(errs, errors.Annotatef(err, "updating %q chart dependency", depID))
+				continue
+			}
+			if err := utils.CopyFile(depTgz, path.Join(chartPath, "charts", fmt.Sprintf("%s.tgz", depID))); err != nil {
+				klog.Errorf("unable to update %q chart dependency: %+v", depID, err)
+				errs = multierror.Append(errs, errors.Annotatef(err, "updating %q chart dependency", depID))
+				continue
+			}
 		}
 	}
 
-	return nil
+	return errors.Trace(err)
 }
