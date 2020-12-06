@@ -272,17 +272,16 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(file, name, version string) error {
 	// Cache chart first
-	//
-	// The cache will fail storing the same file twice, so we will realize
-	// if we are trying to upload the same chart twice at this point.
-	f, err := os.Open(file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer f.Close()
+	if cf := filepath.Base(file); !r.cache.Has(cf) {
+		f, err := os.Open(file)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer f.Close()
 
-	if err := r.cache.Store(f, filepath.Base(file)); err != nil {
-		return errors.Trace(err)
+		if err := r.cache.Store(f, cf); err != nil {
+			return errors.Trace(err)
+		}
 	}
 
 	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)

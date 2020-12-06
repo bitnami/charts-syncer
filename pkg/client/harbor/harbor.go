@@ -75,11 +75,13 @@ func (r *Repo) Upload(file, _, _ string) error {
 		return errors.Trace(err)
 	}
 
-	// Write file to the multipart and cache writers at the same time.
-	//
-	// The cache will fail storing the same file twice, so we will realize
-	// if we are trying to upload the same chart twice at this point.
-	w := io.MultiWriter(cw, r.cache.Writer(filepath.Base(file)))
+	var w io.Writer = cw
+	if cf := filepath.Base(file); !r.cache.Has(cf) {
+		// Write file to the multipart and cache writers at the same time.
+		cachew := r.cache.Writer(cf)
+		w = io.MultiWriter(cw, cachew)
+	}
+
 	_, err = io.Copy(w, f)
 	if err != nil {
 		return errors.Trace(err)
