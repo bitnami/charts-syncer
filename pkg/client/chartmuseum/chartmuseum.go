@@ -21,8 +21,6 @@ import (
 
 // Repo allows to operate a chart repository.
 type Repo struct {
-	*types.ClientOpts
-
 	url      *url.URL
 	username string
 	password string
