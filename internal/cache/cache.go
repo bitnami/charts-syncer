@@ -66,10 +66,10 @@ func (c *Cache) Read(w io.Writer, filename string) error {
 	}
 	data, err := ioutil.ReadFile(c.Path(filename))
 	if err != nil {
-		return errors.Annotatef(err, "reading %q from the cache")
+		return errors.Annotatef(err, "reading %q from the cache", filename)
 	}
 	if _, err := w.Write(data); err != nil {
-		return errors.Annotatef(err, "reading %q from the cache")
+		return errors.Annotatef(err, "reading %q from the cache", filename)
 	}
 	klog.V(4).Infof("cache hit { op:read, id:%s, filename:%s }", c.id, filename)
 	return nil
