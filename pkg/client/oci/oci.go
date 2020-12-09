@@ -244,7 +244,11 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	}
 	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
 
-	w := r.cache.Writer(remoteFilename)
+	w, err := r.cache.Writer(remoteFilename)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	defer w.Close()
 	if _, err := io.Copy(w, res.Body); err != nil {
 		return "", errors.Trace(err)
 	}
@@ -269,17 +273,20 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(file, name, version string) error {
-	// Cache chart first
-	if cf := filepath.Base(file); !r.cache.Has(cf) {
-		f, err := os.Open(file)
-		if err != nil {
-			return errors.Trace(err)
-		}
-		defer f.Close()
+	// Invalidate cache to avoid inconsistency between an old cache result and
+	// the chart repo
+	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
+		return errors.Trace(err)
+	}
 
-		if err := r.cache.Store(f, cf); err != nil {
-			return errors.Trace(err)
-		}
+	f, err := os.Open(file)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer f.Close()
+
+	if err := r.cache.Store(f, filepath.Base(file)); err != nil {
+		return errors.Trace(err)
 	}
 
 	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)

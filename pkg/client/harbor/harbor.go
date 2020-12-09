@@ -73,13 +73,20 @@ func (r *Repo) Upload(file, _, _ string) error {
 		return errors.Trace(err)
 	}
 
-	var w io.Writer = cw
-	if cf := filepath.Base(file); !r.cache.Has(cf) {
-		// Write file to the multipart and cache writers at the same time.
-		cachew := r.cache.Writer(cf)
-		w = io.MultiWriter(cw, cachew)
+	// Invalidate cache to avoid inconsistency between an old cache result and
+	// the chart repo
+	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
+		return errors.Trace(err)
 	}
 
+	// Write file to the multipart and cache writers at the same time.
+	cachew, err := r.cache.Writer(filepath.Base(file))
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer cachew.Close()
+
+	w := io.MultiWriter(cw, cachew)
 	_, err = io.Copy(w, f)
 	if err != nil {
 		return errors.Trace(err)

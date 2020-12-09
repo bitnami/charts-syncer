@@ -178,7 +178,11 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	}
 	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
 
-	w := r.cache.Writer(remoteFilename)
+	w, err := r.cache.Writer(remoteFilename)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	defer w.Close()
 	if _, err := io.Copy(w, res.Body); err != nil {
 		return "", errors.Trace(err)
 	}

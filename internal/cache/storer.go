@@ -2,12 +2,14 @@ package cache
 
 import (
 	"io"
+	"os"
 )
 
 // Storer defines the methods that a Cache should implement to write.
 type Storer interface {
 	Store(r io.Reader, filename string) error
-	Writer(filename string) *Writer
+	Writer(filename string) (*os.File, error)
+	Invalidate(filename string) error
 }
 
 // Fetcher defines the methods that a Cache should implement to read.

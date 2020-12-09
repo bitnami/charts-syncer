@@ -98,41 +98,24 @@ func (c *Cache) Store(r io.Reader, filename string) error {
 	return nil
 }
 
-// Writer implements io.Writer
-type Writer struct {
-	filename string
-	n        int
+// Writer returns a io.Writer that writes to a cache file named by filename
+func (c *Cache) Writer(filename string) (*os.File, error) {
+	if c.Has(filename) {
+		return nil, errors.AlreadyExistsf("cache { id:%s, filename:%s }", c.id, filename)
+	}
 
-	cache *Cache
+	klog.V(4).Infof("cache hit { op:write, id:%s, filename:%s }", c.id, filename)
+	return os.Create(c.Path(filename))
 }
 
-// Writer returns a Writer that writes to a cache file named by f
-func (c *Cache) Writer(f string) *Writer {
-	return &Writer{filename: f, cache: c}
-}
-
-// Write implements io.Writer
-func (w *Writer) Write(data []byte) (int, error) {
-	// Write will be invoked to write chunks. Therefore, we can check for the
-	// file existence only if we haven't written any byte yet.
-	if w.n == 0 {
-		if w.cache.Has(w.filename) {
-			return 0, errors.AlreadyExistsf("cache { id:%s, filename:%s }", w.cache.id, w.filename)
-		}
+// Invalidate invalidates a cache file named by filename
+func (c *Cache) Invalidate(filename string) error {
+	if !c.Has(filename) {
+		return nil
 	}
-	klog.V(4).Infof("cache hit { op:write, id:%s, filename:%s, bytes:%d }", w.cache.id, w.filename, len(data))
-
-	f, err := os.OpenFile(w.cache.Path(w.filename), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return 0, errors.Annotatef(err, "storing %q in the cache", w.filename)
+	if err := os.Remove(c.Path(filename)); err != nil {
+		return errors.Annotatef(err, "invalidating %q in the cache", filename)
 	}
-	defer f.Close()
-
-	n, err := f.Write(data)
-	if err != nil {
-		return n, errors.Annotatef(err, "storing %q in the cache", w.filename)
-	}
-	w.n = w.n + n
-
-	return n, nil
+	klog.V(4).Infof("cache hit { op:invalidate, id:%s, filename:%s }", c.id, filename)
+	return nil
 }
