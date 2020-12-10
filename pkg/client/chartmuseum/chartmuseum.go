@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
@@ -24,25 +26,28 @@ type Repo struct {
 	password string
 
 	helm *helmclassic.Repo
+
+	cache cache.Cacher
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string) (*Repo, error) {
-	helm, err := helmclassic.NewRaw(u, user, pass)
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error) {
+	helm, err := helmclassic.NewRaw(u, user, pass, c)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	return &Repo{url: u, username: user, password: pass, helm: helm}, nil
+
+	return &Repo{url: u, username: user, password: pass, helm: helm, cache: c}, nil
 }
 
 // GetUploadURL returns the URL to upload a chart
@@ -53,21 +58,34 @@ func (r *Repo) GetUploadURL() string {
 }
 
 // Upload uploads a chart to the repo.
-func (r *Repo) Upload(filepath, _, _ string) error {
-	body := &bytes.Buffer{}
-	mpw := multipart.NewWriter(body)
-
-	w, err := mpw.CreateFormFile("chart", filepath)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	f, err := os.Open(filepath)
+func (r *Repo) Upload(file, _, _ string) error {
+	f, err := os.Open(file)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	defer f.Close()
 
+	body := &bytes.Buffer{}
+	mpw := multipart.NewWriter(body)
+	cw, err := mpw.CreateFormFile("chart", file)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	// Invalidate cache to avoid inconsistency between an old cache result and
+	// the chart repo
+	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
+		return errors.Trace(err)
+	}
+
+	// Write file to the multipart and cache writers at the same time.
+	cachew, err := r.cache.Writer(filepath.Base(file))
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer cachew.Close()
+
+	w := io.MultiWriter(cw, cachew)
 	_, err = io.Copy(w, f)
 	if err != nil {
 		return errors.Trace(err)
@@ -88,27 +106,27 @@ func (r *Repo) Upload(filepath, _, _ string) error {
 		req.SetBasicAuth(r.username, r.password)
 	}
 
-	reqID := utils.EncodeSha1(u + filepath)
+	reqID := utils.EncodeSha1(u + file)
 	klog.V(4).Infof("[%s] POST %q", reqID, u)
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Annotatef(err, "uploading %q chart", filepath)
+		return errors.Annotatef(err, "uploading %q chart", file)
 	}
 	defer res.Body.Close()
 
 	bodyStr := utils.HTTPResponseBody(res)
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
-		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", filepath, res.Status, bodyStr)
+		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", file, res.Status, bodyStr)
 	}
-	klog.V(4).Infof("[%s] Got HTTP Status: %s, Resp: %v", reqID, res.Status, bodyStr)
+	klog.V(4).Infof("[%s] HTTP Status: %s, Resp: %v", reqID, res.Status, bodyStr)
 
 	return nil
 }
 
 // Fetch downloads a chart from the repo
-func (r *Repo) Fetch(filepath string, name string, version string) error {
-	return r.helm.Fetch(filepath, name, version)
+func (r *Repo) Fetch(name string, version string) (string, error) {
+	return r.helm.Fetch(name, version)
 }
 
 // List lists all chart names in the repo

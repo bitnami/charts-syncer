@@ -19,12 +19,6 @@ func NewFake(t *testing.T, entries map[string][]string) *Syncer {
 	}
 	t.Cleanup(func() { os.RemoveAll(srcTmp) })
 
-	srcWdTmp, err := ioutil.TempDir("", "charts-syncer-tests-src-fake-workdir")
-	if err != nil {
-		t.Fatalf("error creating temporary workdir: %v", err)
-	}
-	t.Cleanup(func() { os.RemoveAll(srcWdTmp) })
-
 	dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-dst-fake")
 	if err != nil {
 		t.Fatalf("error creating temporary folder: %v", err)
@@ -57,6 +51,5 @@ func NewFake(t *testing.T, entries map[string][]string) *Syncer {
 			src: fake.New(srcTmp, entries),
 			dst: fake.New(dstTmp, nil),
 		},
-		srcWorkdir: srcWdTmp,
 	}
 }

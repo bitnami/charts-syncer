@@ -2,14 +2,13 @@ package syncer
 
 import (
 	"os"
-	"path"
 
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
 // Clients holds the source and target chart repo clients
@@ -34,8 +33,7 @@ type Syncer struct {
 	index ChartIndex
 
 	// Storage directory for required artifacts
-	workdir    string
-	srcWorkdir string
+	workdir string
 }
 
 // Option is an option value used to create a new syncer instance.
@@ -85,26 +83,9 @@ func NewSyncer(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) *
 
 // New creates a new syncer using ClientV2
 func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Syncer, error) {
-	srcCli, err := core.NewClientV2(source.GetRepo())
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-
-	dstCli, err := core.NewClientV2(target.GetRepo())
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-
-	cli := &Clients{
-		src: srcCli,
-		dst: dstCli,
-	}
-
 	s := &Syncer{
 		source: source,
 		target: target,
-
-		cli: cli,
 	}
 
 	for _, o := range opts {
@@ -118,12 +99,23 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 	}
 	klog.V(3).Infof("Using workdir: %q", s.workdir)
 
-	// In order to store charts tgz files in an isolated folder for each chart
-	// repo we are computing a workdir using the hash of the source repo URL
-	// and the pre-configured workdir.
-	s.srcWorkdir = path.Join(s.workdir, utils.EncodeSha1(source.GetRepo().GetUrl()))
-	if err := os.MkdirAll(s.srcWorkdir, 0755); err != nil {
+	if err := os.MkdirAll(s.workdir, 0755); err != nil {
 		return nil, errors.Trace(err)
+	}
+
+	srcCli, err := core.NewClientV2(source.GetRepo(), types.WithCache(s.workdir))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	dstCli, err := core.NewClientV2(target.GetRepo(), types.WithCache(s.workdir))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	s.cli = &Clients{
+		src: srcCli,
+		dst: dstCli,
 	}
 
 	return s, nil

@@ -1,6 +1,7 @@
 package helmclassic
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
@@ -24,6 +26,8 @@ type Repo struct {
 
 	// NOTE: We need a lock for index to allow concurrency
 	index *repo.IndexFile
+
+	cache cache.Cacher
 }
 
 // This allows test to replace the client index for testing.
@@ -50,7 +54,7 @@ var reloadIndex = func(r *Repo) error {
 		bodyStr := utils.HTTPResponseBody(res)
 		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
 	}
-	klog.V(4).Infof("[%s] Got HTTP Status: %s", reqID, res.Status)
+	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
 
 	// Create the index.yaml file to use the helm Go library, which does not
 	// expose a Loader from bytes.
@@ -78,21 +82,23 @@ var reloadIndex = func(r *Repo) error {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string) (*Repo, error) {
-	r := &Repo{url: u, username: user, password: pass}
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error) {
+	r := &Repo{url: u, username: user, password: pass, cache: c}
+
 	if err := r.Reload(); err != nil {
 		return nil, errors.Trace(err)
 	}
+
 	return r, nil
 }
 
@@ -138,48 +144,49 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 }
 
 // Fetch fetches a chart
-func (r *Repo) Fetch(filename string, name string, version string) error {
+func (r *Repo) Fetch(name string, version string) (string, error) {
 	u, err := r.GetDownloadURL(name, version)
 	if err != nil {
-		return errors.Trace(err)
+		return "", errors.Trace(err)
+	}
+
+	remoteFilename := fmt.Sprintf("%s-%s.tgz", name, version)
+	if r.cache.Has(remoteFilename) {
+		return r.cache.Path(remoteFilename), nil
 	}
 
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		return errors.Trace(err)
+		return "", errors.Trace(err)
 	}
 	if r.username != "" && r.password != "" {
 		req.SetBasicAuth(r.username, r.password)
 	}
 
-	reqID := utils.EncodeSha1(u + filename)
+	reqID := utils.EncodeSha1(u + remoteFilename)
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Annotatef(err, "fetching %s:%s chart", name, version)
+		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)
 	}
 	defer res.Body.Close()
 
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
 		bodyStr := utils.HTTPResponseBody(res)
-		return errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
+		return "", errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
 	}
-	klog.V(4).Infof("[%s] Got HTTP Status: %s", reqID, res.Status)
+	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
 
-	// Create the file
-	f, err := os.Create(filename)
+	w, err := r.cache.Writer(remoteFilename)
 	if err != nil {
-		return errors.Trace(err)
+		return "", errors.Trace(err)
 	}
-	defer f.Close()
-
-	// Write the body to file
-	if _, err = io.Copy(f, res.Body); err != nil {
-		return errors.Trace(err)
+	defer w.Close()
+	if _, err := io.Copy(w, res.Body); err != nil {
+		return "", errors.Trace(err)
 	}
-
-	return nil
+	return r.cache.Path(remoteFilename), nil
 }
 
 // Has checks if a repo has a specific chart

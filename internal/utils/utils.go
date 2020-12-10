@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -181,6 +182,30 @@ func FileExists(f string) (bool, error) {
 		return false, errors.Trace(err)
 	}
 	return true, nil
+}
+
+// CopyFile copies a file from srcPath to destPath, ensuring the destPath directory exists.
+func CopyFile(destPath string, srcPath string) error {
+	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		return errors.Trace(err)
+	}
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer src.Close()
+
+	dest, err := os.Create(destPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer dest.Close()
+
+	if _, err := io.Copy(dest, src); err != nil {
+		return errors.Trace(err)
+	}
+
+	return nil
 }
 
 // HTTPResponseBody returns the body of an HTTP response
