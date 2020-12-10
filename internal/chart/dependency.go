@@ -9,192 +9,12 @@ import (
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	helmChart "helm.sh/helm/v3/pkg/chart"
-	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 )
-
-// dependencies is the list of dependencies of a chart
-type dependencies struct {
-	Dependencies []*helmChart.Dependency `json:"dependencies"`
-}
-
-// syncDependencies takes care of updating dependencies to correct version and sync to target repo if necesary.
-func syncDependencies(chartPath string, sourceRepo *api.Repo, target *api.TargetRepo, sourceIndex *helmRepo.IndexFile, targetIndex *helmRepo.IndexFile, apiVersion string, syncDeps bool) error {
-	klog.V(3).Info("Chart has dependencies...")
-	var errs error
-	var missingDependencies = false
-
-	lockFilePath, err := lockFilePath(chartPath, apiVersion)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	lockContent, err := ioutil.ReadFile(lockFilePath)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	lock := &helmChart.Lock{}
-	err = yaml.Unmarshal(lockContent, lock)
-	if err != nil {
-		return errors.Annotatef(err, "error unmarshaling %s file", lockFilePath)
-	}
-
-	tc, err := core.NewClient(target.Repo)
-	if err != nil {
-		return fmt.Errorf("could not create a client for the source repo: %w", err)
-	}
-
-	if err != nil {
-		return errors.Trace(err)
-	}
-	for _, lockDep := range lock.Dependencies {
-		depName := lockDep.Name
-		depVersion := lockDep.Version
-		depRepository := lockDep.Repository
-		if depRepository != sourceRepo.Url {
-			continue
-		}
-		if chartExists, _ := tc.ChartExists(depName, depVersion, targetIndex); chartExists {
-			klog.V(3).Infof("Dependency %s-%s already synced", depName, depVersion)
-			continue
-		}
-		if !syncDeps {
-			missingDependencies = true
-			errs = multierror.Append(errs, errors.Errorf("please sync %s-%s dependency first", depName, depVersion))
-			continue
-		}
-		klog.Infof("Dependency %s-%s not synced yet. Syncing now", depName, depVersion)
-		if err := Sync(depName, depVersion, sourceRepo, target, sourceIndex, targetIndex, true); err != nil {
-			return errors.Trace(err)
-		}
-		chartExists, err := tc.ChartExists(depName, depVersion, targetIndex)
-		if err != nil {
-			return errors.Trace(err)
-		}
-		if !chartExists {
-			return errors.Errorf("dependency %s-%s not available yet", depName, depVersion)
-		}
-		klog.Infof("Dependency %s-%s synced", depName, depVersion)
-	}
-
-	if !missingDependencies {
-		klog.V(3).Info("Updating dependencies file...")
-		switch apiVersion {
-		case APIV1:
-			if err := updateRequirementsFile(chartPath, lock, sourceRepo, target); err != nil {
-				return errors.Trace(err)
-			}
-		case APIV2:
-			if err := updateChartMetadataFile(chartPath, lock, sourceRepo, target); err != nil {
-				return errors.Trace(err)
-			}
-		default:
-			return errors.Errorf("unrecognised apiVersion %s", apiVersion)
-		}
-		if err := helmcli.UpdateDependencies(chartPath); err != nil {
-			return errors.Trace(err)
-		}
-	}
-	return errors.Trace(errs)
-}
-
-// updateChartMetadataFile updates the dependencies in Chart.yaml
-// For helm v3 dependency management
-func updateChartMetadataFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
-	chartFile := path.Join(chartPath, ChartFilename)
-	chart, err := ioutil.ReadFile(chartFile)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	chartMetadata := &helmChart.Metadata{}
-	err = yaml.Unmarshal(chart, chartMetadata)
-	if err != nil {
-		return errors.Annotatef(err, "error unmarshaling %s file", chartFile)
-	}
-	for _, dep := range chartMetadata.Dependencies {
-		// Specify the exact dependencies versions used in the original Chart.lock file
-		// so when running helm dep up we get the same versions resolved.
-		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
-		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
-		// the repository.
-		// For example, old charts pointing to helm/charts repo
-		if dep.Repository == sourceRepo.Url {
-			dep.Repository = target.Repo.Url
-		}
-	}
-	// Write updated requirements yamls file
-	writeChartMetadataFile(chartPath, chartMetadata)
-	return nil
-}
-
-// updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
-// For helm v2 dependency management
-func updateRequirementsFile(chartPath string, lock *helmChart.Lock, sourceRepo *api.Repo, target *api.TargetRepo) error {
-	requirementsFile := path.Join(chartPath, RequirementsFilename)
-	requirements, err := ioutil.ReadFile(requirementsFile)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	deps := &dependencies{}
-	err = yaml.Unmarshal(requirements, deps)
-	if err != nil {
-		return errors.Annotatef(err, "error unmarshaling %s file", requirementsFile)
-	}
-	for _, dep := range deps.Dependencies {
-		// Specify the exact dependencies versions used in the original requirements.lock file
-		// so when running helm dep up we get the same versions resolved.
-		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
-		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
-		// the repository.
-		// For example, old charts pointing to helm/charts repo
-		if dep.Repository == sourceRepo.Url {
-			dep.Repository = target.Repo.Url
-		}
-	}
-	// Write updated requirements yamls file
-	writeRequirementsFile(chartPath, deps)
-	return nil
-}
-
-// findDepByName returns the dependency that matches a provided name from a list of dependencies.
-func findDepByName(dependencies []*helmChart.Dependency, name string) *helmChart.Dependency {
-	for _, dep := range dependencies {
-		if dep.Name == name {
-			return dep
-		}
-	}
-	return nil
-}
-
-// writeRequirementsFile writes a requirements.yaml file to disk.
-// For helm v2 dependency management
-func writeRequirementsFile(chartPath string, deps *dependencies) error {
-	data, err := yaml.Marshal(deps)
-	if err != nil {
-		return err
-	}
-	requirementsFileName := RequirementsFilename
-	dest := path.Join(chartPath, requirementsFileName)
-	return ioutil.WriteFile(dest, data, 0644)
-}
-
-// writeChartMetadataFile writes a Chart.yaml file to disk.
-// For helm v3 dependency management
-func writeChartMetadataFile(chartPath string, chartMetadata *helmChart.Metadata) error {
-	data, err := yaml.Marshal(chartMetadata)
-	if err != nil {
-		return err
-	}
-	chartMetadataFileName := ChartFilename
-	dest := path.Join(chartPath, chartMetadataFileName)
-	return ioutil.WriteFile(dest, data, 0644)
-}
 
 // lockFilePath returns the path to the lock file according to provided Api version
 func lockFilePath(chartPath, apiVersion string) (string, error) {
@@ -209,7 +29,7 @@ func lockFilePath(chartPath, apiVersion string) (string, error) {
 }
 
 // GetChartLock returns the chart.Lock from an uncompressed chart
-func GetChartLock(chartPath string, name string) (*helmChart.Lock, error) {
+func GetChartLock(chartPath string) (*helmChart.Lock, error) {
 	// If the API version is not set, there is not a lock file. Hence, this
 	// chart has no dependencies.
 	apiVersion, err := GetLockAPIVersion(chartPath)
@@ -222,7 +42,7 @@ func GetChartLock(chartPath string, name string) (*helmChart.Lock, error) {
 
 	lockFilePath, err := lockFilePath(chartPath, apiVersion)
 	if err != nil {
-		return nil, errors.Annotatef(err, "defining dependencies file for %q", name)
+		return nil, errors.Trace(err)
 	}
 	lockContent, err := ioutil.ReadFile(lockFilePath)
 	if err != nil {
@@ -251,7 +71,7 @@ func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency
 	// Untar uncompress the chart in a subfolder
 	chartPath = path.Join(chartPath, name)
 
-	lock, err := GetChartLock(chartPath, name)
+	lock, err := GetChartLock(chartPath)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -278,4 +98,46 @@ func GetLockAPIVersion(chartPath string) (string, error) {
 	}
 
 	return "", nil
+}
+
+// BuildDependencies updates a local charts directory
+//
+// If reads the Chart.lock file to download the versions from the remote
+// chart repository (it assumes all charts are stored in a single repo).
+func BuildDependencies(chartPath string, r core.Reader) error {
+	// Build deps manually for OCI as helm does not support it yet
+	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
+		return errors.Trace(err)
+	}
+	// Re-create empty charts folder
+	err := os.Mkdir(path.Join(chartPath, "charts"), 0755)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	lock, err := GetChartLock(chartPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	var errs error
+	if lock != nil {
+		for _, dep := range lock.Dependencies {
+			id := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
+			klog.V(4).Infof("Building %q chart dependency", id)
+
+			depTgz, err := r.Fetch(dep.Name, dep.Version)
+			if err != nil {
+				errs = multierror.Append(errs, errors.Annotatef(err, "fetching %q chart", id))
+				continue
+			}
+
+			depFile := path.Join(chartPath, "charts", fmt.Sprintf("%s.tgz", id))
+			if err := utils.CopyFile(depFile, depTgz); err != nil {
+				errs = multierror.Append(errs, errors.Annotatef(err, "copying %q chart to %q", id, depFile))
+				continue
+			}
+		}
+	}
+
+	return errs
 }

@@ -205,14 +205,14 @@ func (r *Repo) GetDownloadURL(name string, version string) (string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	u, err := r.GetDownloadURL(name, version)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-
 	remoteFilename := fmt.Sprintf("%s-%s.tgz", name, version)
 	if r.cache.Has(remoteFilename) {
 		return r.cache.Path(remoteFilename), nil
+	}
+
+	u, err := r.GetDownloadURL(name, version)
+	if err != nil {
+		return "", errors.Trace(err)
 	}
 
 	req, err := http.NewRequest("GET", u, nil)

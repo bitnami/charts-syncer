@@ -106,7 +106,7 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error)
 func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 	chart, err := r.index.Get(n, v)
 	if err != nil {
-		return "", errors.Trace(errors.Annotatef(err, "getting %q from index file", n))
+		return "", errors.Annotatef(err, "getting %s-%s from index file", n, v)
 	}
 	return chart.URLs[0], nil
 }
@@ -145,14 +145,14 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	u, err := r.GetDownloadURL(name, version)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-
 	remoteFilename := fmt.Sprintf("%s-%s.tgz", name, version)
 	if r.cache.Has(remoteFilename) {
 		return r.cache.Path(remoteFilename), nil
+	}
+
+	u, err := r.GetDownloadURL(name, version)
+	if err != nil {
+		return "", errors.Trace(err)
 	}
 
 	req, err := http.NewRequest("GET", u, nil)
