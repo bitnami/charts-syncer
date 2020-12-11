@@ -16,11 +16,11 @@ dockers:
       - charts-syncer
     dockerfile: Dockerfile
     image_templates:
-      - "gcr.io/bitnami-images/charts-syncer:{{ .Version }}"
-      - "gcr.io/bitnami-images/charts-syncer:latest"
+      - "gcr.io/bitnami-labs/charts-syncer:{{ .Tag }}"
+      - "gcr.io/bitnami-labs/charts-syncer:latest"
     build_flag_templates:
       - "--build-arg"
-      - "IMAGE_VERSION={{ .Version }}"
+      - "IMAGE_VERSION={{ .Tag }}"
 archives:
   - replacements:
       386: i386
