@@ -9,16 +9,18 @@ builds:
     main: ./main.go
     binary: charts-syncer
 dockers:
-  dockerfile: Dockerfile
-  binaries:
-    - charts-syncer
-  images_templates:
-    - "gcr.io/bitnami-images/charts-syncer:{{ .Version }}"
-    - "gcr.io/bitnami-images/charts-syncer:lastest"
-  build_flag_templates:
-  - "--build-arg"
-  - "IMAGE_VERSION={{ .Version }}"
-  skip_push: true
+  -
+    builds:
+      - release
+    binaries:
+      - charts-syncer
+    dockerfile: Dockerfile
+    image_templates:
+      - "gcr.io/bitnami-images/charts-syncer:{{ .Version }}"
+      - "gcr.io/bitnami-images/charts-syncer:latest"
+    build_flag_templates:
+      - "--build-arg"
+      - "IMAGE_VERSION={{ .Version }}"
 archives:
   - replacements:
       386: i386
