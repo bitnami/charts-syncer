@@ -8,6 +8,19 @@ builds:
       - GO111MODULE=on
     main: ./main.go
     binary: charts-syncer
+dockers:
+  -
+    builds:
+      - release
+    binaries:
+      - charts-syncer
+    dockerfile: Dockerfile
+    image_templates:
+      - "gcr.io/bitnami-labs/charts-syncer:{{ .Tag }}"
+      - "gcr.io/bitnami-labs/charts-syncer:latest"
+    build_flag_templates:
+      - "--build-arg"
+      - "IMAGE_VERSION={{ .Tag }}"
 archives:
   - replacements:
       386: i386
