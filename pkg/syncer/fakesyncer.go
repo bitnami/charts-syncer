@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/fake"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/local"
 )
 
 // NewFake returns a fake Syncer
@@ -44,12 +44,21 @@ func NewFake(t *testing.T, entries map[string][]string) *Syncer {
 		}
 	}
 
+	srcCli, err := local.New(srcTmp)
+	if err != nil {
+		t.Fatalf("error creating source client: %v", err)
+	}
+	dstCli, err := local.New(dstTmp)
+	if err != nil {
+		t.Fatalf("error creating target client: %v", err)
+	}
+
 	return &Syncer{
 		source: &api.SourceRepo{},
 		target: &api.TargetRepo{},
 		cli: &Clients{
-			src: fake.New(srcTmp, entries),
-			dst: fake.New(dstTmp, nil),
+			src: srcCli,
+			dst: dstCli,
 		},
 	}
 }

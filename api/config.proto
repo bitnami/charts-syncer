@@ -28,6 +28,8 @@ message Repo {
     string url = 1;
     Kind kind = 2;
     Auth auth = 3;
+    // The path where the repo stores charts. Useful for LOCAL kind only
+    string path = 4;
 }
 
 // Auth contains credentials to login to a chart repository
@@ -42,4 +44,5 @@ enum Kind {
     CHARTMUSEUM = 2;
     HARBOR = 3;
     OCI = 4;
+    LOCAL = 5;
 }

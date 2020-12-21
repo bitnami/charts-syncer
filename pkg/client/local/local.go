@@ -1,14 +1,22 @@
-package fake
+package local
 
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
+	"regexp"
+	"sort"
 
 	"github.com/juju/errors"
 
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+)
+
+var (
+	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.tgz")
 )
 
 // Repo allows to operate a chart repository.
@@ -18,8 +26,29 @@ type Repo struct {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(dir string, entries map[string][]string) *Repo {
-	return &Repo{dir: dir, entries: entries}
+func New(dir string) (*Repo, error) {
+	d, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	if err := os.MkdirAll(d, 0755); err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	// Populate entries from directory
+	entries := make(map[string][]string)
+	matches, err := filepath.Glob(filepath.Join(d, "*.tgz"))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	for _, m := range matches {
+		filename := filepath.Base(m)
+		s := versionRe.FindStringSubmatch(filename)
+		entries[s[1]] = append(entries[s[1]], s[2])
+		sort.Strings(entries[s[0]])
+	}
+
+	return &Repo{dir: d, entries: entries}, nil
 }
 
 // List lists all chart names in a repo
@@ -62,6 +91,14 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(filepath string, name string, version string) error {
+	if _, ok := r.entries[name]; ok {
+		for _, v := range r.entries[name] {
+			if v == version {
+				return errors.AlreadyExistsf("%s-%s", name, version)
+			}
+		}
+	}
+
 	input, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return errors.Annotatef(err, "reading %q", filepath)
@@ -71,6 +108,9 @@ func (r *Repo) Upload(filepath string, name string, version string) error {
 	if err := ioutil.WriteFile(out, input, 0644); err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}
+
+	r.entries[name] = append(r.entries[name], version)
+	sort.Strings(r.entries[name])
 
 	return nil
 }
