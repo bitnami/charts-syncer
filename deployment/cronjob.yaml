@@ -12,7 +12,7 @@ spec:
           containers:
           - name: c3styncer
             imagePullPolicy: Always
-            image: IMAGE_NAME:TAG
+            image: gcr.io/bitnami-labs/charts-syncer:TAG
             args: ["sync", "--config", "/charts-syncer.yaml", "-v", "4"]
             # env:
             #   - name: SOURCE_AUTH_USERNAME

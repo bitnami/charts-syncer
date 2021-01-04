@@ -5,6 +5,27 @@
 
 Sync chart packages between chart repositories
 
+# Table of Contents
+
+- [Usage](#usage)
+    + [Sync all charts](#sync-all-charts)
+    + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
+- [Configuration](#configuration)
+  * [Harbor example](#harbor-example)
+  * [OCI example](#oci-example)
+- [Requirements](#requirements)
+- [Changes performed in a chart](#changes-performed-in-a-chart)
+    + [Update *values.yaml* and *values-production.yaml* (if exists)](#update--valuesyaml--and--values-productionyaml---if-exists-)
+    + [Update dependencies files](#update-dependencies-files)
+    + [Update *README.md*](#update--readmemd-)
+    + [values.yaml](#valuesyaml)
+    + [requirements.lock (only for Helm v2 charts)](#requirementslock--only-for-helm-v2-charts-)
+    + [Chart.lock (only for Helm v3 charts)](#chartlock--only-for-helm-v3-charts-)
+    + [README.md](#readmemd)
+- [How to build](#how-to-build)
+- [Deploy to Kubernetes](#deploy-to-kubernetes)
+  * [Manage credentials](#manage-credentials)
+
 ## Usage
 
 #### Sync all charts
@@ -64,7 +85,7 @@ Credentials can be provided using config file or the following environment varia
 - `TARGET_AUTH_USERNAME`
 - `TARGET_AUTH_PASSWORD`
 
-Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix betweeen source and targets repositories.
+Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix between source and targets repositories.
 
 | Source Repo | Target Repo | Supported          |
 |-------------|-------------|--------------------|
@@ -105,7 +126,7 @@ target:
 
 ### OCI example
 
-Since Harbor 2.0.0, there are two ways of storing charts. The legacy one uses chartmuseum under the hood and it correspond to the HARBOR kind of this project.
+Since Harbor 2.0.0, there are two ways of storing charts. The legacy one uses chartmuseum under the hood and it corresponds to the HARBOR kind of this project.
 The new one however uses OCI to store helm charts as OCI artifacts. In case you are using Harbor with OCI backend you can use the following example:
 
 ~~~yaml
@@ -116,7 +137,7 @@ target:
 ~~~
 
 `subpath` in the previous url is optional in case your charts are not stored directly under your projects.
-It is worth to mention that you can use Harbor robot accounts using OCI registries as source or target.
+It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
 Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
 
@@ -139,7 +160,7 @@ The important thing is that the image name is specified with `registry`, `reposi
 
 The values of the parameteres `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. The `tag` remains unchanged.
 
-> :warning: Be aware that this tool expect the images to be already present in the target container registry.
+> :warning: Be aware that this tool expects the images to be already present in the target container registry.
 
 ## Changes performed in a chart
 
@@ -158,7 +179,7 @@ If the chart has any dependency, they should be registered in these files that w
 
 #### Update *README.md*
 
-README files for bitnami charts includes a TL;DR; section with instructions to add the helm repository to the helm cli and a simple command to deploy the chart.
+README files for bitnami charts include a TL;DR; section with instructions to add the helm repository to the helm CLI and a simple command to deploy the chart.
 
 As the chart repository URL and chart repository name should have changed, the instructions in the README should be updated too.
 
@@ -314,16 +335,9 @@ A simple way of having both chart repositories synced is to run the tool periodi
 
 In order to ease and accelerate the deployment, basic Kubernetes templates have been added to the `/deployment` folder. Follow the next steps to use them:
 
-1. Build a docker image containing the tool and push it to a docker registry so later on it can be consumed from Kubernetes.
+1. Edit `deployment/cronjob.yaml` and replace the `TAG` placeholder by a valid tag. For example, `v0.6.2`
 
-    ~~~bash
-    $ docker build -t IMAGE_NAME:TAG .
-    $ docker push IMAGE_NAME:TAG
-    ~~~
-
-1. Edit `deployment/cronjob.yaml` and replace the `IMAGE_NAME:TAG` placeholder by the real image name and tag.
-
-1. Edit the frequenty of execution by editing the `schedule` property. By default it will be run each 30 minutes.
+1. Edit the frequency of execution by editing the `schedule` property. By default, it will be run each 30 minutes.
 
 1. Edit the configuration file from `deployment/configmap.yaml` and specify your source and target chart repositories.
 
