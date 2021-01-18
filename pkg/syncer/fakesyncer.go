@@ -11,19 +11,42 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/local"
 )
 
+// FakeSyncerOpts allows to configure a Fake syncer.
+type FakeSyncerOpts struct {
+	Destination string
+}
+
+// FakeSyncerOption is an option value used to create a new fake syncer instance.
+type FakeSyncerOption func(*FakeSyncerOpts)
+
+// WithFakeSyncerDestination configures a destination directory
+func WithFakeSyncerDestination(dir string) FakeSyncerOption {
+	return func(s *FakeSyncerOpts) {
+		s.Destination = dir
+	}
+}
+
 // NewFake returns a fake Syncer
-func NewFake(t *testing.T, entries map[string][]string) *Syncer {
+func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
+	sopts := &FakeSyncerOpts{}
+	for _, o := range opts {
+		o(sopts)
+	}
+
 	srcTmp, err := ioutil.TempDir("", "charts-syncer-tests-src-fake")
 	if err != nil {
 		t.Fatalf("error creating temporary folder: %v", err)
 	}
 	t.Cleanup(func() { os.RemoveAll(srcTmp) })
 
-	dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-dst-fake")
-	if err != nil {
-		t.Fatalf("error creating temporary folder: %v", err)
+	if sopts.Destination == "" {
+		dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-dst-fake")
+		if err != nil {
+			t.Fatalf("error creating temporary folder: %v", err)
+		}
+		t.Cleanup(func() { os.RemoveAll(dstTmp) })
+		sopts.Destination = dstTmp
 	}
-	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 
 	// Copy all testdata tgz files to the source temporary folder
 	// We are not adding charts in the entries only to avoid specifying
@@ -48,7 +71,7 @@ func NewFake(t *testing.T, entries map[string][]string) *Syncer {
 	if err != nil {
 		t.Fatalf("error creating source client: %v", err)
 	}
-	dstCli, err := local.New(dstTmp)
+	dstCli, err := local.New(sopts.Destination)
 	if err != nil {
 		t.Fatalf("error creating target client: %v", err)
 	}
