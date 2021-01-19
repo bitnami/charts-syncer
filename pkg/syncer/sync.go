@@ -13,7 +13,6 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
@@ -53,7 +52,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	//
 	// TODO(jdrios): Check if we can remove the helm CLI requirement.
 	if s.target.GetRepo().GetKind() == api.Kind_OCI {
-		cleanup, err := helmcli.OciLogin(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
+		cleanup, err := s.helmCli.OciLogin(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
 		if err != nil {
 			return errors.Trace(err)
 		}

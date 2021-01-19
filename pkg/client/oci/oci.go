@@ -18,7 +18,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
+	"github.com/bitnami-labs/charts-syncer/internal/helm"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -39,6 +39,7 @@ type Repo struct {
 	url      *url.URL
 	username string
 	password string
+	helmCli  *helm.Cli
 
 	cache cache.Cacher
 }
@@ -290,10 +291,10 @@ func (r *Repo) Upload(file, name, version string) error {
 	}
 
 	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
-	if err := helmcli.SaveOciChart(file, chartRef); err != nil {
+	if err := r.helmCli.SaveOciChart(file, chartRef); err != nil {
 		return errors.Trace(err)
 	}
-	if err := helmcli.PushToOCI(chartRef); err != nil {
+	if err := r.helmCli.PushToOCI(chartRef); err != nil {
 		return errors.Trace(err)
 	}
 

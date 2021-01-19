@@ -7,6 +7,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/helm"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
@@ -23,6 +24,8 @@ type Syncer struct {
 	target *api.TargetRepo
 
 	cli *Clients
+
+	helmCli *helm.Cli
 
 	dryRun        bool
 	autoDiscovery bool
