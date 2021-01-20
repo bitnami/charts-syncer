@@ -13,12 +13,16 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/containerd/containerd/remotes"
+	"github.com/containerd/containerd/remotes/docker"
+	"github.com/deislabs/oras/pkg/content"
+	"github.com/deislabs/oras/pkg/oras"
 	"github.com/juju/errors"
+	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -47,14 +51,6 @@ type Repo struct {
 type Tags struct {
 	Name string
 	Tags []string
-}
-
-// KnownMediaTypes returns a list of layer mediaTypes that the Helm client knows about
-func KnownMediaTypes() []string {
-	return []string{
-		HelmChartConfigMediaType,
-		HelmChartContentLayerMediaType,
-	}
 }
 
 // New creates a Repo object from an api.Repo object.
@@ -272,7 +268,9 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(file, name, version string) error {
+func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
+	name := metadata.Name
+	version := metadata.Version
 	// Invalidate cache to avoid inconsistency between an old cache result and
 	// the chart repo
 	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
@@ -289,14 +287,36 @@ func (r *Repo) Upload(file, name, version string) error {
 		return errors.Trace(err)
 	}
 
-	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
-	if err := helmcli.SaveOciChart(file, chartRef); err != nil {
-		return errors.Trace(err)
+	memoryStore := content.NewMemoryStore()
+	var resolver = r.newDockerResolver()
+
+	// Preparing layers
+	var layers []ocispec.Descriptor
+	fileName := filepath.Base(file)
+	fileMediaType := HelmChartContentLayerMediaType
+	fileBuffer, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
 	}
-	if err := helmcli.PushToOCI(chartRef); err != nil {
-		return errors.Trace(err)
+	layers = append(layers, memoryStore.Add(fileName, fileMediaType, fileBuffer))
+	fmt.Printf("Layers are: %v\n", layers)
+
+	// Preparing Oras config
+	configBytes, err := json.Marshal(metadata)
+	if err != nil {
+		return err
+	}
+	orasConfig := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
+	fmt.Printf("Oras config is: %v\n", orasConfig)
+
+	// Perform push
+	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
+	desc, err := oras.Push(context.Background(), resolver, chartRef, memoryStore, layers, oras.WithConfig(orasConfig), oras.WithNameValidation(nil))
+	if err != nil {
+		return err
 	}
 
+	fmt.Printf("Pushed to %s with digest %v\n", chartRef, desc)
 	return nil
 }
 
@@ -318,4 +338,24 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 // Reload reloads the index
 func (r *Repo) Reload() error {
 	return errors.Errorf("reload method is not supported yet")
+}
+
+func (r *Repo) newDockerResolver() remotes.Resolver {
+	resolverOptions := docker.ResolverOptions{
+		Hosts: func(s string) ([]docker.RegistryHost, error) {
+			return []docker.RegistryHost{
+				{
+					Authorizer: docker.NewDockerAuthorizer(
+						docker.WithAuthCreds(func(s string) (string, string, error) {
+							return r.username, r.password, nil
+						})),
+					Host:         r.url.Host,
+					Scheme:       r.url.Scheme,
+					Path:         "/v2",
+					Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
+				},
+			}, nil
+		},
+	}
+	return docker.NewResolver(resolverOptions)
 }

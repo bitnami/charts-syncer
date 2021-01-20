@@ -13,6 +13,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"helm.sh/helm/v3/pkg/chart"
 )
 
 var (
@@ -90,7 +91,9 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(filepath string, name string, version string) error {
+func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
+	name := metadata.Name
+	version := metadata.Version
 	if _, ok := r.entries[name]; ok {
 		for _, v := range r.entries[name] {
 			if v == version {
