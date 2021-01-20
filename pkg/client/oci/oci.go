@@ -25,6 +25,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	orascontext "github.com/deislabs/oras/pkg/context"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
@@ -299,7 +300,6 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 		return err
 	}
 	layers = append(layers, memoryStore.Add(fileName, fileMediaType, fileBuffer))
-	fmt.Printf("Layers are: %v\n", layers)
 
 	// Preparing Oras config
 	configBytes, err := json.Marshal(metadata)
@@ -307,16 +307,13 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 		return err
 	}
 	orasConfig := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
-	fmt.Printf("Oras config is: %v\n", orasConfig)
 
 	// Perform push
 	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
-	desc, err := oras.Push(context.Background(), resolver, chartRef, memoryStore, layers, oras.WithConfig(orasConfig), oras.WithNameValidation(nil))
+	_, err = oras.Push(orascontext.Background(), resolver, chartRef, memoryStore, layers, oras.WithConfig(orasConfig), oras.WithNameValidation(nil))
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("Pushed to %s with digest %v\n", chartRef, desc)
 	return nil
 }
 
