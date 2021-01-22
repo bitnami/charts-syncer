@@ -8,12 +8,12 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
+	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
+	helmchart "helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/helmcli"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
@@ -44,20 +44,6 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	} else {
 		klog.Info("There are no charts out of sync!")
 		return nil
-	}
-
-	// Add target repo to helm CLI
-	//
-	// This is required to use helm CLI for certain operation such us
-	// `helm dependency update`.
-	//
-	// TODO(jdrios): Check if we can remove the helm CLI requirement.
-	if s.target.GetRepo().GetKind() == api.Kind_OCI {
-		cleanup, err := helmcli.OciLogin(s.target.GetRepo().GetUrl(), s.target.GetRepo().GetAuth())
-		if err != nil {
-			return errors.Trace(err)
-		}
-		defer cleanup()
 	}
 
 	for _, ch := range charts {
@@ -106,6 +92,21 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 			}
 		}
 
+		// Read final chart metadata
+		configFilePath := fmt.Sprintf("%s/Chart.yaml", chartPath)
+		chartConfig, err := ioutil.ReadFile(configFilePath)
+		if err != nil {
+			klog.Errorf("unable to read %q metadata: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
+		}
+		metadata := &helmchart.Metadata{}
+		if err = yaml.Unmarshal(chartConfig, metadata); err != nil {
+			klog.Errorf("unable to decode %q metadata: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
+		}
+
 		// Package chart again
 		klog.V(3).Infof("Packaging %q", id)
 		pkgCli := helm.NewPackage()
@@ -123,7 +124,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		}
 
 		klog.V(3).Infof("Uploading %q chart...", id)
-		if err := s.cli.dst.Upload(tgz, ch.Name, ch.Version); err != nil {
+		if err := s.cli.dst.Upload(tgz, metadata); err != nil {
 			klog.Errorf("unable to upload %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue

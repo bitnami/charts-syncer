@@ -16,6 +16,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"helm.sh/helm/v3/pkg/chart"
 )
 
 // Repo allows to operate a chart repository.
@@ -205,7 +206,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(_, _, _ string) error {
+func (r *Repo) Upload(_ string, _ *chart.Metadata) error {
 	return errors.Errorf("upload method is not supported yet")
 }
 

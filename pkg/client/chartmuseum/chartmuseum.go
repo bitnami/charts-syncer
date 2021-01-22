@@ -17,6 +17,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"helm.sh/helm/v3/pkg/chart"
 )
 
 // Repo allows to operate a chart repository.
@@ -58,7 +59,7 @@ func (r *Repo) GetUploadURL() string {
 }
 
 // Upload uploads a chart to the repo.
-func (r *Repo) Upload(file, _, _ string) error {
+func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return errors.Trace(err)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
-	helmChart "helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 
@@ -29,7 +29,7 @@ func lockFilePath(chartPath, apiVersion string) (string, error) {
 }
 
 // GetChartLock returns the chart.Lock from an uncompressed chart
-func GetChartLock(chartPath string) (*helmChart.Lock, error) {
+func GetChartLock(chartPath string) (*chart.Lock, error) {
 	// If the API version is not set, there is not a lock file. Hence, this
 	// chart has no dependencies.
 	apiVersion, err := GetLockAPIVersion(chartPath)
@@ -48,7 +48,7 @@ func GetChartLock(chartPath string) (*helmChart.Lock, error) {
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	lock := &helmChart.Lock{}
+	lock := &chart.Lock{}
 	if err = yaml.Unmarshal(lockContent, lock); err != nil {
 		return nil, errors.Annotatef(err, "unmarshaling %q file", lockFilePath)
 	}
@@ -56,7 +56,7 @@ func GetChartLock(chartPath string) (*helmChart.Lock, error) {
 }
 
 // GetChartDependencies returns the chart chart.Dependencies from a chart in tgz format.
-func GetChartDependencies(filepath string, name string) ([]*helmChart.Dependency, error) {
+func GetChartDependencies(filepath string, name string) ([]*chart.Dependency, error) {
 	// Create temporary working directory
 	chartPath, err := ioutil.TempDir("", "charts-syncer")
 	if err != nil {
