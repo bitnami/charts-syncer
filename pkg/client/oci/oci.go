@@ -289,7 +289,7 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	}
 
 	memoryStore := content.NewMemoryStore()
-	var resolver = r.newDockerResolver()
+	resolver := r.newDockerResolver()
 
 	// Preparing layers
 	var layers []ocispec.Descriptor

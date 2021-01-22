@@ -96,11 +96,15 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		configFilePath := fmt.Sprintf("%s/Chart.yaml", chartPath)
 		chartConfig, err := ioutil.ReadFile(configFilePath)
 		if err != nil {
-			return err
+			klog.Errorf("unable to read %q metadata: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
 		}
 		metadata := &helmchart.Metadata{}
 		if err = yaml.Unmarshal(chartConfig, metadata); err != nil {
-			return err
+			klog.Errorf("unable to decode %q metadata: %+v", id, err)
+			errs = multierror.Append(errs, errors.Trace(err))
+			continue
 		}
 
 		// Package chart again
