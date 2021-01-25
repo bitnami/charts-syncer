@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"crypto/sha1"
 	"fmt"
 	"io"
@@ -8,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -101,14 +102,66 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	return out.Name(), errors.Trace(err)
 }
 
-// Untar will uncompress a tarball.
-func Untar(filepath, destDir string) error {
-	cmd := exec.Command("tar", "xzf", filepath, "--directory", destDir)
-	_, err := cmd.Output()
-	if err != nil {
-		return errors.Annotatef(err, "error untaring chart package %s", filepath)
+// Untar extracts compressed archives
+//
+// Based on Extract function from helm plugin installer. https://github.com/helm/helm/blob/master/pkg/plugin/installer/http_installer.go
+func Untar(tarball, targetDir string) error {
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return err
 	}
-	return errors.Trace(err)
+
+	f, err := os.Open(tarball)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	gzipReader, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+	tarReader := tar.NewReader(gzipReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		path := filepath.Join(targetDir, header.Name)
+		targetFolder := filepath.Join(targetDir, filepath.Dir(header.Name))
+		// For some reason the for loop only iterates over files and not folders, so the switch below for folders is
+		// never executed and so we are creating the target folder at this point.
+		if _, err := os.Stat(targetFolder); err != nil {
+			if err := os.MkdirAll(targetFolder, 0755); err != nil {
+				return err
+			}
+		}
+		switch header.Typeflag {
+		// Related to previous comment. It seems this block of code is never executed.
+		case tar.TypeDir:
+			if err := os.Mkdir(path, 0755); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				outFile.Close()
+				return err
+			}
+			outFile.Close()
+		// We don't want to process these extension header files.
+		case tar.TypeXGlobalHeader, tar.TypeXHeader:
+			continue
+		default:
+			return errors.Errorf("unknown type: %b in %s", header.Typeflag, header.Name)
+		}
+	}
+	return nil
 }
 
 // GetFileContentType returns the content type of a file.
