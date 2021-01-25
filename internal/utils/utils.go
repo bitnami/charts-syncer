@@ -103,8 +103,6 @@ func downloadIndex(repo *api.Repo) (string, error) {
 }
 
 // Untar extracts compressed archives
-//
-// Based on Extract function from helm plugin installer. https://github.com/helm/helm/blob/master/pkg/plugin/installer/http_installer.go
 func Untar(tarball, targetDir string) error {
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return err
