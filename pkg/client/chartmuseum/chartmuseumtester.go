@@ -153,7 +153,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 
 }
 
-// ChartPackageGet returns a packaged helm chart
+// GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
 	// Get chart from testdata folder
@@ -166,7 +166,7 @@ func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, ch
 
 }
 
-// ChartsPost push a packaged chart
+// PostChart push a packaged chart
 func (rt *RepoTester) PostChart(w http.ResponseWriter, r *http.Request) {
 	if rt.ChartsPostError != nil {
 		w.WriteHeader(rt.ChartsPostError.status)
