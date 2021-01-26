@@ -14,7 +14,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 
@@ -66,7 +66,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 	}
 }
 
-func TestSyncPendingCharts(t *testing.T) {
+func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	testCases := []struct {
 		desc       string
 		sourceRepo *api.SourceRepo
@@ -112,11 +112,16 @@ func TestSyncPendingCharts(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// Create source and dest servers
-			chartRepoTest := chartmuseum.ChartMuseumTests[0]
-			sUrl, sCleanup := chartRepoTest.MakeServer(t, false, dstIndex)
+			// Create source and target testers
+			sTester, sCleanup, err := core.NewClientV2Tester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			if err != nil {
+				t.Fatal(err)
+			}
+			tTester, tCleanup, err := core.NewClientV2Tester(t, tc.targetRepo.GetRepo(), true, "")
+			if err != nil {
+				t.Fatal(err)
+			}
 			defer sCleanup()
-			tUrl, tCleanup := chartRepoTest.MakeServer(t, true, "")
 			defer tCleanup()
 
 			// Replace URL with source url
@@ -124,15 +129,15 @@ func TestSyncPendingCharts(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			newContents := strings.Replace(string(read), "https://fake.chart.repo.com/testing", fmt.Sprintf("%s%s", sUrl, "/charts"), -1)
+			newContents := strings.Replace(string(read), "https://fake.chart.repo.com/testing", fmt.Sprintf("%s%s", sTester.GetURL(), "/charts"), -1)
 			if err = ioutil.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
 				t.Fatal(err)
 			}
 
 			// Update source repo url
-			tc.sourceRepo.Repo.Url = sUrl
+			tc.sourceRepo.Repo.Url = sTester.GetURL()
 			// Update target repo url
-			tc.targetRepo.Repo.Url = tUrl
+			tc.targetRepo.Repo.Url = tTester.GetURL()
 
 			// Create new syncer
 			s, err := syncer.New(tc.sourceRepo, tc.targetRepo)
@@ -145,7 +150,7 @@ func TestSyncPendingCharts(t *testing.T) {
 			}
 
 			// Check the chart really was added to the service's index.
-			req, err := http.NewRequest("GET", tUrl+"/api/charts/etcd", nil)
+			req, err := http.NewRequest("GET", tTester.GetURL()+"/api/charts/etcd", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -162,7 +167,7 @@ func TestSyncPendingCharts(t *testing.T) {
 			if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
 				t.Fatal(err)
 			}
-			if got, want := len(charts), 2; got != want {
+			if got, want := len(charts), 1; got != want {
 				t.Fatalf("got: %q, want: %q", got, want)
 			}
 			if got, want := charts[0].Name, "etcd"; got != want {
