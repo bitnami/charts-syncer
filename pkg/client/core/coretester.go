@@ -13,10 +13,10 @@ import (
 // ClientV2Tester defines the methods that a fake tester should implement
 type ClientV2Tester interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
-	ChartGet(w http.ResponseWriter, r *http.Request, chart string)
+	GetChart(w http.ResponseWriter, r *http.Request, chart string)
 	GetIndex(w http.ResponseWriter, r *http.Request, emptyIndex bool, indexFile string)
-	ChartPackageGet(w http.ResponseWriter, r *http.Request, chartPackageName string)
-	ChartsPost(w http.ResponseWriter, r *http.Request)
+	GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string)
+	PostChart(w http.ResponseWriter, r *http.Request)
 	GetURL() string
 }
 
