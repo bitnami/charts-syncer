@@ -192,6 +192,7 @@ func (rt *RepoTester) PostChart(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	w.Write([]byte(`{}`))
+
 }
 
 func chartMetadataFromTGZ(r io.Reader) (*Metadata, error) {
