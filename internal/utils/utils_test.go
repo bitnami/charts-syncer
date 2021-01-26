@@ -70,8 +70,26 @@ func TestUntar(t *testing.T) {
 	if err := Untar(filepath, testTmpDir); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(path.Join(testTmpDir, "apache/Chart.yaml")); err != nil {
-		t.Error("error untaring chart package")
+	tarFiles := []string{
+		"apache/Chart.yaml",
+		"apache/values.yaml",
+		"apache/templates/NOTES.txt",
+		"apache/templates/_helpers.tpl",
+		"apache/templates/configmap-vhosts.yaml",
+		"apache/templates/configmap.yaml",
+		"apache/templates/deployment.yaml",
+		"apache/templates/ingress.yaml",
+		"apache/templates/svc.yaml",
+		"apache/.helmignore",
+		"apache/README.md",
+		"apache/files/README.md",
+		"apache/files/vhosts/README.md",
+		"apache/values.schema.json",
+	}
+	for _, f := range tarFiles {
+		if _, err := os.Stat(path.Join(testTmpDir, f)); err != nil {
+			t.Errorf("error untaring chart package. %q not found", f)
+		}
 	}
 }
 
