@@ -114,22 +114,22 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 
 			// Create source and target testers
 			sTester, sCleanup, err := core.NewClientV2Tester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			defer sCleanup()
 			if err != nil {
 				t.Fatal(err)
 			}
 			tTester, tCleanup, err := core.NewClientV2Tester(t, tc.targetRepo.GetRepo(), true, "")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer sCleanup()
 			defer tCleanup()
-
-			// Replace URL with source url
-			read, err := ioutil.ReadFile(dstIndex)
 			if err != nil {
 				t.Fatal(err)
 			}
-			newContents := strings.Replace(string(read), "https://fake.chart.repo.com/testing", fmt.Sprintf("%s%s", sTester.GetURL(), "/charts"), -1)
+
+			// Replace placeholder URL with source url
+			index, err := ioutil.ReadFile(dstIndex)
+			if err != nil {
+				t.Fatal(err)
+			}
+			newContents := strings.Replace(string(index), "TEST_PLACEHOLDER", fmt.Sprintf("%s%s", sTester.GetURL(), "/charts"), -1)
 			if err = ioutil.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
 				t.Fatal(err)
 			}

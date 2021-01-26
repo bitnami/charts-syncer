@@ -22,7 +22,7 @@ entries:
     sources:
     - https://github.com/bitnami/charts
     urls:
-    - https://fake.chart.repo.com/testing/common-0.2.1.tgz
+    - TEST_PLACEHOLDER/common-0.2.1.tgz
     version: 0.2.1
   etcd:
   - apiVersion: v1
@@ -47,5 +47,5 @@ entries:
     sources:
     - https://github.com/bitnami/bitnami-docker-etcd
     urls:
-    - https://fake.chart.repo.com/testing/etcd-4.8.0.tgz
+    - TEST_PLACEHOLDER/etcd-4.8.0.tgz
     version: 4.8.0

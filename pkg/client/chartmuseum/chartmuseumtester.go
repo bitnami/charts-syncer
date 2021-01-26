@@ -64,7 +64,7 @@ type RepoTester struct {
 	ChartsPostError *httpError
 }
 
-//NewTester start a fake HTTP server to handle requests and return a RepoTester object with useful info for testing
+// NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
 func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) (*RepoTester, func(), error) {
 	tester := &RepoTester{
 		t:          t,
@@ -99,11 +99,11 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Handle recognized requests.
 	if base, chart := path.Split(r.URL.Path); base == "/api/charts/" && r.Method == "GET" {
-		rt.ChartGet(w, r, chart)
+		rt.GetChart(w, r, chart)
 		return
 	}
 	if r.URL.Path == "/api/charts" && r.Method == "POST" {
-		rt.ChartsPost(w, r)
+		rt.PostChart(w, r)
 		return
 	}
 	if r.URL.Path == "/index.yaml" && r.Method == "GET" {
@@ -112,7 +112,7 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if cmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		chartPackage := strings.Split(r.URL.Path, "/")[2]
-		rt.ChartPackageGet(w, r, chartPackage)
+		rt.GetChartPackage(w, r, chartPackage)
 		return
 	}
 
@@ -120,8 +120,8 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// ChartGet returns the chart info from the index
-func (rt *RepoTester) ChartGet(w http.ResponseWriter, r *http.Request, chart string) {
+// GetChart returns the chart info from the index
+func (rt *RepoTester) GetChart(w http.ResponseWriter, r *http.Request, chart string) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(rt.index[chart]); err != nil {
 		rt.t.Fatal(err)
@@ -154,7 +154,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 }
 
 // ChartPackageGet returns a packaged helm chart
-func (rt *RepoTester) ChartPackageGet(w http.ResponseWriter, r *http.Request, chartPackageName string) {
+func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
 	// Get chart from testdata folder
 	chartPackageFile := path.Join("../../testdata/charts", chartPackageName)
@@ -167,7 +167,7 @@ func (rt *RepoTester) ChartPackageGet(w http.ResponseWriter, r *http.Request, ch
 }
 
 // ChartsPost push a packaged chart
-func (rt *RepoTester) ChartsPost(w http.ResponseWriter, r *http.Request) {
+func (rt *RepoTester) PostChart(w http.ResponseWriter, r *http.Request) {
 	if rt.ChartsPostError != nil {
 		w.WriteHeader(rt.ChartsPostError.status)
 		w.Write([]byte(rt.ChartsPostError.body))
