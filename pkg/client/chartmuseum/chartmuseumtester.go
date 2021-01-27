@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -138,12 +139,14 @@ func (rt *RepoTester) GetURL() string {
 func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyIndex bool, indexFile string) {
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(200)
+	_, filename, _, _ := runtime.Caller(1)
+	testdataPath := path.Join(path.Dir(filename), "../../../testdata")
 	// Get index from testdata folder
 	if indexFile == "" {
-		indexFile = "../../testdata/index.yaml"
+		indexFile = filepath.Join(testdataPath, "index.yaml")
 	}
 	if emptyIndex {
-		indexFile = "../../testdata/empty-index.yaml"
+		indexFile = filepath.Join(testdataPath, "empty-index.yaml")
 	}
 	index, err := ioutil.ReadFile(indexFile)
 	if err != nil {
@@ -156,8 +159,10 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 // GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
+	_, filename, _, _ := runtime.Caller(1)
+	testdataPath := path.Join(path.Dir(filename), "../../../testdata")
 	// Get chart from testdata folder
-	chartPackageFile := path.Join("../../testdata/charts", chartPackageName)
+	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
 	chartPackage, err := ioutil.ReadFile(chartPackageFile)
 	if err != nil {
 		rt.t.Fatal(err)
