@@ -27,7 +27,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*Repo, error) {
+func prepareTest(t *testing.T) *Repo {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -42,11 +42,7 @@ func prepareTest(t *testing.T) (*Repo, error) {
 	}
 
 	// Create tester
-	tester, cleanup, err := NewTester(t, cmRepo, false, dstIndex)
-	t.Cleanup(func() { cleanup() })
-	if err != nil {
-		t.Fatal(err)
-	}
+	tester := NewTester(t, cmRepo, false, dstIndex)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
@@ -69,20 +65,18 @@ func prepareTest(t *testing.T) (*Repo, error) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create chartmuseum client
 	client, err := New(cmRepo, cache)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return client, nil
+	return client
 }
 
 func TestFetch(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	chartPath, err := c.Fetch("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -93,10 +87,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	has, err := c.Has("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -107,10 +98,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	want := []string{"common", "etcd", "nginx"}
 	got, err := c.List()
 	if err != nil {
@@ -124,10 +112,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	want := []string{"4.8.0", "4.7.4", "4.7.3", "4.7.2", "4.7.1", "4.7.0"}
 	got, err := c.ListChartVersions("etcd")
 	if err != nil {
@@ -141,10 +126,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	want := types.ChartDetails{
 		PublishedAt: time.Now().Time,
 		Digest:      "d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867",
@@ -159,10 +141,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	if err := c.Reload(); err != nil {
 		t.Fatal(err)
 	}
@@ -180,10 +159,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestGetDownloadURL(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	want := fmt.Sprintf("%s%s", cmRepo.Url, "/charts/etcd-4.8.0.tgz")
 	got, err := c.GetDownloadURL("etcd", "4.8.0")
 	if err != nil {
@@ -195,10 +171,7 @@ func TestGetDownloadURL(t *testing.T) {
 }
 
 func TestGetIndexURL(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	want := fmt.Sprintf("%s%s", cmRepo.Url, "/index.yaml")
 	got := c.GetIndexURL()
 	if got != want {
@@ -207,12 +180,9 @@ func TestGetIndexURL(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t)
 	expectedError := "upload method is not supported yet"
-	err = c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
+	err := c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
 	if err.Error() != expectedError {
 		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
 	}

@@ -18,14 +18,13 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/juju/errors"
 	"gopkg.in/yaml.v2"
 )
 
 var (
-	cmRegex         = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	username string = "user"
-	password string = "password"
+	helmRegex        = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+	username  string = "user"
+	password  string = "password"
 )
 
 // Metadata in Chart.yaml files
@@ -66,7 +65,8 @@ type RepoTester struct {
 }
 
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
-func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) (*RepoTester, func(), error) {
+func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) *RepoTester {
+	t.Helper()
 	tester := &RepoTester{
 		t:          t,
 		username:   username,
@@ -78,10 +78,11 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 	s := httptest.NewServer(tester)
 	u, err := url.Parse(s.URL)
 	if err != nil {
-		return nil, s.Close, errors.Trace(err)
+		t.Fatal(err)
 	}
+	t.Cleanup(func() { s.Close() })
 	tester.url = u
-	return tester, s.Close, nil
+	return tester
 }
 
 // ServeHTTP implements the the http Handler type
@@ -111,7 +112,7 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rt.GetIndex(w, r, rt.emptyIndex, rt.indexFile)
 		return
 	}
-	if cmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+	if helmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		chartPackage := strings.Split(r.URL.Path, "/")[2]
 		rt.GetChartPackage(w, r, chartPackage)
 		return
