@@ -119,6 +119,8 @@ func TestList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	sort.Strings(want)
+	sort.Strings(got)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected list of charts. got: %v, want: %v", got, want)
 	}
@@ -134,6 +136,8 @@ func TestListChartVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	sort.Strings(want)
+	sort.Strings(got)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected list of charts. got: %v, want: %v", got, want)
 	}
