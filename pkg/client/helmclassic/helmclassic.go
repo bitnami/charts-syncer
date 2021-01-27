@@ -26,7 +26,7 @@ type Repo struct {
 	password string
 
 	// NOTE: We need a lock for index to allow concurrency
-	index *repo.IndexFile
+	Index *repo.IndexFile
 
 	cache cache.Cacher
 }
@@ -78,7 +78,7 @@ var reloadIndex = func(r *Repo) error {
 		return errors.Annotate(err, "loading index.yaml file")
 	}
 
-	r.index = index
+	r.Index = index
 	return nil
 }
 
@@ -105,7 +105,7 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error)
 
 // GetDownloadURL returns the URL to download a chart
 func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
-	chart, err := r.index.Get(n, v)
+	chart, err := r.Index.Get(n, v)
 	if err != nil {
 		return "", errors.Annotatef(err, "getting %s-%s from index file", n, v)
 	}
@@ -122,7 +122,7 @@ func (r *Repo) GetIndexURL() string {
 // List lists all chart names in a repo
 func (r *Repo) List() ([]string, error) {
 	var names []string
-	for name := range r.index.Entries {
+	for name := range r.Index.Entries {
 		names = append(names, name)
 	}
 
@@ -131,7 +131,7 @@ func (r *Repo) List() ([]string, error) {
 
 // ListChartVersions lists all versions of a chart
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
-	cv, ok := r.index.Entries[name]
+	cv, ok := r.Index.Entries[name]
 	if !ok {
 		return []string{}, nil
 	}
@@ -212,7 +212,7 @@ func (r *Repo) Upload(_ string, _ *chart.Metadata) error {
 
 // GetChartDetails returns the details of a chart
 func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
-	cv, err := r.index.Get(name, version)
+	cv, err := r.Index.Get(name, version)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
