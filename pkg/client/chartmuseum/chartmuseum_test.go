@@ -30,7 +30,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*Repo, *RepoTester, error) {
+func prepareTest(t *testing.T) (*Repo, error) {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -78,11 +78,11 @@ func prepareTest(t *testing.T) (*Repo, *RepoTester, error) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return client, tester, nil
+	return client, nil
 }
 
 func TestFetch(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +162,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	c, _, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,11 +183,11 @@ func TestReload(t *testing.T) {
 }
 
 func TestGetUploadURL(t *testing.T) {
-	c, tester, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := fmt.Sprintf("%s%s", tester.GetURL(), "/api/charts")
+	want := fmt.Sprintf("%s%s", cmRepo.Url, "/api/charts")
 	got := c.GetUploadURL()
 	if got != want {
 		t.Errorf("wrong upload URL. got: %v, want: %v", got, want)
@@ -195,7 +195,7 @@ func TestGetUploadURL(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c, tester, err := prepareTest(t)
+	c, err := prepareTest(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestUpload(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Check the chart really was added to the service's index.
-	req, err := http.NewRequest("GET", tester.GetURL()+"/api/charts/apache", nil)
+	req, err := http.NewRequest("GET", cmRepo.Url+"/api/charts/apache", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
