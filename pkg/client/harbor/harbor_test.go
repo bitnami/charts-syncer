@@ -15,9 +15,9 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
@@ -201,7 +201,7 @@ func TestUpload(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	charts := []*chartrepotest.ChartVersion{}
+	charts := []*helmclassic.ChartVersion{}
 	if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
 		t.Fatal(err)
 	}
