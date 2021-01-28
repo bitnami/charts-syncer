@@ -1,4 +1,4 @@
-package local
+package local_test
 
 import (
 	"os"
@@ -6,13 +6,14 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/bitnami-labs/charts-syncer/pkg/client/local"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/time"
 )
 
 func TestFetch(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +30,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +44,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +61,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +78,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +96,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c, err := New("../../../testdata/charts")
+	c, err := local.New("../../../testdata/charts")
 	if err != nil {
 		t.Fatal(err)
 	}
