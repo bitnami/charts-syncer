@@ -24,11 +24,15 @@ type ClientTester interface {
 //
 // The func is exposed as a var to allow tests to temporarily replace its
 // implementation, e.g. to return a fake.
+<<<<<<< HEAD
 var NewClientTester = func(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) (ClientTester, func(), error) {
+=======
+var NewClientV2Tester = func(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) (ClientV2Tester, error) {
+>>>>>>> f13455b... test: refactor chartmuseum tests to reuse helmclassic tests bits
 	switch repo.Kind {
 	case api.Kind_CHARTMUSEUM:
-		return chartmuseum.NewTester(t, repo, emptyIndex, indexFile)
+		return chartmuseum.NewTester(t, repo, emptyIndex, indexFile), nil
 	default:
-		return nil, nil, errors.Errorf("unsupported repo kind %q", repo.Kind)
+		return nil, errors.Errorf("unsupported repo kind %q", repo.Kind)
 	}
 }

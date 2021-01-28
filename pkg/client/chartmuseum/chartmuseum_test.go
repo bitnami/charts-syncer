@@ -1,4 +1,4 @@
-package chartmuseum
+package chartmuseum_test
 
 import (
 	"encoding/json"
@@ -16,6 +16,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
@@ -30,7 +31,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*Repo, error) {
+func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -45,11 +46,7 @@ func prepareTest(t *testing.T) (*Repo, error) {
 	}
 
 	// Create tester
-	tester, cleanup, err := NewTester(t, cmRepo, false, dstIndex)
-	t.Cleanup(func() { cleanup() })
-	if err != nil {
-		t.Fatal(err)
-	}
+	tester := chartmuseum.NewTester(t, cmRepo, false, dstIndex)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
@@ -74,7 +71,7 @@ func prepareTest(t *testing.T) (*Repo, error) {
 	}
 
 	// Create chartmuseum client
-	client, err := New(cmRepo, cache)
+	client, err := chartmuseum.New(cmRepo, cache)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +167,7 @@ func TestReload(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []string{"common", "etcd", "nginx"}
-	indexFile := c.helm.Index
+	indexFile := c.Helm.Index
 	got := []string{}
 	for chart := range indexFile.Entries {
 		got = append(got, chart)
