@@ -26,7 +26,7 @@ type RepoTester struct {
 	password string
 	t        *testing.T
 
-	// Helmclassic tester with commoon functions
+	// Helmclassic tester with common functions
 	helmTester *helmclassic.RepoTester
 
 	// Map of chart name to indexed versions, as returned by the charts API.
