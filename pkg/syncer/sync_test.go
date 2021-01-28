@@ -113,16 +113,8 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 
 			// Create source and target testers
-			sTester, sCleanup, err := core.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
-			defer sCleanup()
-			if err != nil {
-				t.Fatal(err)
-			}
-			tTester, tCleanup, err := core.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
-			defer tCleanup()
-			if err != nil {
-				t.Fatal(err)
-			}
+			sTester := core.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			tTester := core.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
 
 			// Replace placeholder URL with source url
 			index, err := ioutil.ReadFile(dstIndex)
