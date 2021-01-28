@@ -48,7 +48,7 @@ func prepareTest(t *testing.T) *oci.Repo {
 	}
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
-	// Create chartmuseum client
+	// Create oci client
 	client, err := oci.New(ociRepo, cache)
 	if err != nil {
 		t.Fatal(err)
