@@ -184,7 +184,6 @@ func TestGetDownloadURL(t *testing.T) {
 
 func TestUpload(t *testing.T) {
 	c := prepareOciServer(t)
-	// c := prepareHttpServer(t)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",
 		Version: "7.3.15",
