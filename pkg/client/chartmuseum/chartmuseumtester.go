@@ -2,6 +2,8 @@ package chartmuseum
 
 import (
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -19,6 +21,7 @@ var (
 
 // RepoTester allows to unit test each repo implementation
 type RepoTester struct {
+	url      *url.URL
 	username string
 	password string
 	t        *testing.T
@@ -42,11 +45,18 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 		t:          t,
 		username:   username,
 		password:   password,
-		helmTester: helmclassic.NewTester(t, repo, emptyIndex, indexFile),
+		helmTester: helmclassic.NewTester(t, repo, emptyIndex, indexFile, false),
 		index:      make(map[string][]*helmclassic.ChartVersion),
 		emptyIndex: emptyIndex,
 		indexFile:  indexFile,
 	}
+	s := httptest.NewServer(tester)
+	u, err := url.Parse(s.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(s.Close)
+	tester.url = u
 	return tester
 }
 
@@ -84,7 +94,6 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rt.t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
-
 }
 
 // GetChart returns the chart info from the index
@@ -94,7 +103,7 @@ func (rt *RepoTester) GetChart(w http.ResponseWriter, r *http.Request, chart str
 
 // GetURL returns the URL of the server
 func (rt *RepoTester) GetURL() string {
-	return rt.helmTester.GetURL()
+	return rt.url.String()
 }
 
 // GetIndex returns an index file

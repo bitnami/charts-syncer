@@ -65,7 +65,7 @@ type RepoTester struct {
 }
 
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
-func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) *RepoTester {
+func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string, createServer bool) *RepoTester {
 	t.Helper()
 	tester := &RepoTester{
 		t:          t,
@@ -75,13 +75,15 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 		indexFile:  indexFile,
 		index:      make(map[string][]*ChartVersion),
 	}
-	s := httptest.NewServer(tester)
-	u, err := url.Parse(s.URL)
-	if err != nil {
-		t.Fatal(err)
+	if createServer {
+		s := httptest.NewServer(tester)
+		u, err := url.Parse(s.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(s.Close)
+		tester.url = u
 	}
-	t.Cleanup(func() { s.Close() })
-	tester.url = u
 	return tester
 }
 
@@ -100,14 +102,6 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle recognized requests.
-	if base, chart := path.Split(r.URL.Path); base == "/api/charts/" && r.Method == "GET" {
-		rt.GetChart(w, r, chart)
-		return
-	}
-	if r.URL.Path == "/api/charts" && r.Method == "POST" {
-		rt.PostChart(w, r)
-		return
-	}
 	if r.URL.Path == "/index.yaml" && r.Method == "GET" {
 		rt.GetIndex(w, r, rt.emptyIndex, rt.indexFile)
 		return
@@ -119,7 +113,6 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rt.t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
-
 }
 
 // GetChart returns the chart info from the index
@@ -128,7 +121,6 @@ func (rt *RepoTester) GetChart(w http.ResponseWriter, r *http.Request, chart str
 	if err := json.NewEncoder(w).Encode(rt.index[chart]); err != nil {
 		rt.t.Fatal(err)
 	}
-
 }
 
 // GetURL returns the URL of the server
@@ -154,7 +146,6 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 		rt.t.Fatal(err)
 	}
 	w.Write(index)
-
 }
 
 // GetChartPackage returns a packaged helm chart
@@ -169,7 +160,6 @@ func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, ch
 		rt.t.Fatal(err)
 	}
 	w.Write(chartPackage)
-
 }
 
 // PostChart push a packaged chart
@@ -198,7 +188,6 @@ func (rt *RepoTester) PostChart(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	w.Write([]byte(`{}`))
-
 }
 
 func chartMetadataFromTGZ(r io.Reader) (*Metadata, error) {

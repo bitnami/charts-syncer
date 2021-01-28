@@ -20,7 +20,7 @@ import (
 
 var (
 	cmRepo = &api.Repo{
-		Kind: api.Kind_CHARTMUSEUM,
+		Kind: api.Kind_HELM,
 		Auth: &api.Auth{
 			Username: "user",
 			Password: "password",
@@ -43,7 +43,7 @@ func prepareTest(t *testing.T) *helmclassic.Repo {
 	}
 
 	// Create tester
-	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex)
+	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex, true)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
