@@ -159,27 +159,6 @@ func TestGetChartDetails(t *testing.T) {
 	}
 }
 
-func TestReload(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := c.Reload(); err != nil {
-		t.Fatal(err)
-	}
-	want := []string{"common", "etcd", "nginx"}
-	indexFile := c.Helm.Index
-	got := []string{}
-	for chart := range indexFile.Entries {
-		got = append(got, chart)
-	}
-	sort.Strings(want)
-	sort.Strings(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("unexpected list of charts. got: %v, want: %v", got, want)
-	}
-}
-
 func TestGetUploadURL(t *testing.T) {
 	c, err := prepareTest(t)
 	if err != nil {
