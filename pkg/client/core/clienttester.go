@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/juju/errors"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
 )
@@ -24,11 +22,12 @@ type ClientTester interface {
 //
 // The func is exposed as a var to allow tests to temporarily replace its
 // implementation, e.g. to return a fake.
-var NewClientTester = func(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) (ClientTester, func(), error) {
+var NewClientTester = func(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) ClientTester {
 	switch repo.Kind {
 	case api.Kind_CHARTMUSEUM:
 		return chartmuseum.NewTester(t, repo, emptyIndex, indexFile)
 	default:
-		return nil, nil, errors.Errorf("unsupported repo kind %q", repo.Kind)
+		t.Errorf("unsupported repo kind %q", repo.Kind)
+		return nil
 	}
 }
