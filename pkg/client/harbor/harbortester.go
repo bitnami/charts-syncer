@@ -55,7 +55,7 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { s.Close() })
+	t.Cleanup(s.Close)
 	tester.url = u
 	return tester
 }
