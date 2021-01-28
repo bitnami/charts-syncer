@@ -12,9 +12,9 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 
@@ -163,7 +163,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			charts := []*chartrepotest.ChartVersion{}
+			charts := []*helmclassic.ChartVersion{}
 			if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
 				t.Fatal(err)
 			}
