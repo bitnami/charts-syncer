@@ -13,8 +13,8 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src core.ClientV2
-	dst core.ClientV2
+	src core.Client
+	dst core.Client
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -69,19 +69,7 @@ func WithWorkdir(dir string) Option {
 	}
 }
 
-// NewSyncer creates a new syncer.
-func NewSyncer(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) *Syncer {
-	s := &Syncer{
-		source: source,
-		target: target,
-	}
-	for _, o := range opts {
-		o(s)
-	}
-	return s
-}
-
-// New creates a new syncer using ClientV2
+// New creates a new syncer using Client
 func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Syncer, error) {
 	s := &Syncer{
 		source: source,
@@ -103,12 +91,12 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 		return nil, errors.Trace(err)
 	}
 
-	srcCli, err := core.NewClientV2(source.GetRepo(), types.WithCache(s.workdir))
+	srcCli, err := core.NewClient(source.GetRepo(), types.WithCache(s.workdir))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	dstCli, err := core.NewClientV2(target.GetRepo(), types.WithCache(s.workdir))
+	dstCli, err := core.NewClient(target.GetRepo(), types.WithCache(s.workdir))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

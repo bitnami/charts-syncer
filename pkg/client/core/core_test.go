@@ -8,7 +8,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 )
 
-func TestNewClientV2(t *testing.T) {
+func TestNewClient(t *testing.T) {
 	tests := []struct {
 		repo     *api.Repo
 		typeText string
@@ -67,7 +67,7 @@ func TestNewClientV2(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			// TODO (tpizarro): create simple http server to serve testdata index.yaml file so we don't have to use the index from the public
 			// bitnami charts repo.
-			c, err := NewClientV2(test.repo)
+			c, err := NewClient(test.repo)
 			errText := ""
 			if err != nil {
 				errText = err.Error()

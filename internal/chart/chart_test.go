@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 var (
@@ -31,31 +29,6 @@ var (
 		ContainerRepository: "test/repo",
 	}
 )
-
-func TestDownload(t *testing.T) {
-	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
-	if err != nil {
-		t.Fatalf("error creating temporary: %s", testTmpDir)
-	}
-	defer os.RemoveAll(testTmpDir)
-	chartPath := path.Join(testTmpDir, "nginx-5.3.1.tgz")
-	// Create client for source repo
-	sc, err := core.NewClient(source.Repo)
-	if err != nil {
-		t.Fatal("could not create a client for the source repo", err)
-	}
-	sourceIndex, err := utils.LoadIndexFromRepo(source.Repo)
-	if err != nil {
-		t.Fatalf("error loading index.yaml: %v", err)
-	}
-	if err := sc.Fetch(chartPath, "nginx", "5.3.1", source.Repo, sourceIndex); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := os.Stat(chartPath); err != nil {
-		t.Errorf("chart package does not exist")
-	}
-}
 
 func TestUpdateValuesFile(t *testing.T) {
 	originalValues := `##

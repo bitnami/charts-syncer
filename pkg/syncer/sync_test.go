@@ -12,9 +12,9 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/chartrepotest"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 
@@ -113,12 +113,12 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 
 			// Create source and target testers
-			sTester, sCleanup, err := core.NewClientV2Tester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			sTester, sCleanup, err := core.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
 			defer sCleanup()
 			if err != nil {
 				t.Fatal(err)
 			}
-			tTester, tCleanup, err := core.NewClientV2Tester(t, tc.targetRepo.GetRepo(), true, "")
+			tTester, tCleanup, err := core.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
 			defer tCleanup()
 			if err != nil {
 				t.Fatal(err)
@@ -163,7 +163,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			charts := []*chartrepotest.ChartVersion{}
+			charts := []*helmclassic.ChartVersion{}
 			if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
 				t.Fatal(err)
 			}
