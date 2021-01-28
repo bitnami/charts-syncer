@@ -113,12 +113,12 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 
 			// Create source and target testers
-			sTester, sCleanup, err := core.NewClientV2Tester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			sTester, sCleanup, err := core.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
 			defer sCleanup()
 			if err != nil {
 				t.Fatal(err)
 			}
-			tTester, tCleanup, err := core.NewClientV2Tester(t, tc.targetRepo.GetRepo(), true, "")
+			tTester, tCleanup, err := core.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
 			defer tCleanup()
 			if err != nil {
 				t.Fatal(err)

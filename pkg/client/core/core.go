@@ -46,17 +46,17 @@ func ValidateChartTgz(filepath string) error {
 	return nil
 }
 
-// ClientV2 defines the methods that a chart client should implement.
-type ClientV2 interface {
+// Client defines the methods that a chart client should implement.
+type Client interface {
 	Reader
 	Writer
 }
 
-// NewClientV2 returns a ClientV2 object
+// NewClient returns a Client object
 //
 // The func is exposed as a var to allow tests to temporarily replace its
 // implementation, e.g. to return a fake.
-var NewClientV2 = func(repo *api.Repo, opts ...types.Option) (ClientV2, error) {
+var NewClient = func(repo *api.Repo, opts ...types.Option) (Client, error) {
 	copts := &types.ClientOpts{}
 	for _, o := range opts {
 		o(copts)
