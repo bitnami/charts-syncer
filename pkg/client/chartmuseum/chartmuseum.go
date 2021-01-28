@@ -26,7 +26,7 @@ type Repo struct {
 	username string
 	password string
 
-	Helm *helmclassic.Repo
+	helm *helmclassic.Repo
 
 	cache cache.Cacher
 }
@@ -48,7 +48,7 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error)
 		return nil, errors.Trace(err)
 	}
 
-	return &Repo{url: u, username: user, password: pass, Helm: helm, cache: c}, nil
+	return &Repo{url: u, username: user, password: pass, helm: helm, cache: c}, nil
 }
 
 // GetUploadURL returns the URL to upload a chart
@@ -127,30 +127,30 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 
 // Fetch downloads a chart from the repo
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	return r.Helm.Fetch(name, version)
+	return r.helm.Fetch(name, version)
 }
 
 // List lists all chart names in the repo
 func (r *Repo) List() ([]string, error) {
-	return r.Helm.List()
+	return r.helm.List()
 }
 
 // ListChartVersions lists all versions of a chart
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
-	return r.Helm.ListChartVersions(name)
+	return r.helm.ListChartVersions(name)
 }
 
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(name string, version string) (bool, error) {
-	return r.Helm.Has(name, version)
+	return r.helm.Has(name, version)
 }
 
 // GetChartDetails returns the details of a chart
 func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
-	return r.Helm.GetChartDetails(name, version)
+	return r.helm.GetChartDetails(name, version)
 }
 
 // Reload reloads the index
 func (r *Repo) Reload() error {
-	return r.Helm.Reload()
+	return r.helm.Reload()
 }
