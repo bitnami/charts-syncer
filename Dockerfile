@@ -6,6 +6,7 @@ FROM scratch
 ARG IMAGE_VERSION
 ENV IMAGE_VERSION=${IMAGE_VERSION}
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Workaround to have a /tmp folder in the scratch container
 COPY --from=build /workdir /tmp
 COPY ./charts-syncer /
 ENTRYPOINT [ "/charts-syncer" ]
