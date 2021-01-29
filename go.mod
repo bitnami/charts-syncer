@@ -8,6 +8,7 @@ require (
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/containerd/containerd v1.3.2
 	github.com/deislabs/oras v0.8.1
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.0
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
@@ -24,6 +25,5 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	helm.sh/helm/v3 v3.2.1
 	k8s.io/klog v1.0.0
-	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
