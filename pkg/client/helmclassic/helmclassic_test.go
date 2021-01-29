@@ -28,7 +28,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) *helmclassic.Repo {
+func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -38,7 +38,8 @@ func prepareTest(t *testing.T) *helmclassic.Repo {
 	}
 	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 	dstIndex := filepath.Join(dstTmp, "index.yaml")
-	if err := utils.CopyFile(dstIndex, "../../../testdata/index.yaml"); err != nil {
+	srcIndex := filepath.Join("../../../testdata", indexFileName)
+	if err := utils.CopyFile(dstIndex, srcIndex); err != nil {
 		t.Fatal(err)
 	}
 
@@ -77,7 +78,7 @@ func prepareTest(t *testing.T) *helmclassic.Repo {
 }
 
 func TestFetch(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	chartPath, err := c.Fetch("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -88,7 +89,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	has, err := c.Has("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +100,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	want := []string{"common", "etcd", "nginx"}
 	got, err := c.List()
 	if err != nil {
@@ -113,7 +114,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	want := []string{"4.8.0", "4.7.4", "4.7.3", "4.7.2", "4.7.1", "4.7.0"}
 	got, err := c.ListChartVersions("etcd")
 	if err != nil {
@@ -127,7 +128,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	want := types.ChartDetails{
 		PublishedAt: time.Now().Time,
 		Digest:      "d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867",
@@ -142,7 +143,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	if err := c.Reload(); err != nil {
 		t.Fatal(err)
 	}
@@ -160,19 +161,36 @@ func TestReload(t *testing.T) {
 }
 
 func TestGetDownloadURL(t *testing.T) {
-	c := prepareTest(t)
-	want := fmt.Sprintf("%s%s", cmRepo.Url, "/charts/etcd-4.8.0.tgz")
-	got, err := c.GetDownloadURL("etcd", "4.8.0")
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		desc          string
+		indexFileName string
+	}{
+		{
+			"full url index",
+			"index.yaml",
+		},
+		{
+			"relative url index",
+			"index-relative.yaml",
+		},
 	}
-	if got != want {
-		t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			c := prepareTest(t, tc.indexFileName)
+			want := fmt.Sprintf("%s%s", cmRepo.Url, "/charts/etcd-4.8.0.tgz")
+			got, err := c.GetDownloadURL("etcd", "4.8.0")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != want {
+				t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+			}
+		})
 	}
 }
 
 func TestGetIndexURL(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	want := fmt.Sprintf("%s%s", cmRepo.Url, "/index.yaml")
 	got := c.GetIndexURL()
 	if got != want {
@@ -181,7 +199,7 @@ func TestGetIndexURL(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c := prepareTest(t)
+	c := prepareTest(t, "index.yaml")
 	expectedError := "upload method is not supported yet"
 	err := c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
 	if err.Error() != expectedError {
