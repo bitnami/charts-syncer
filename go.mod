@@ -2,6 +2,8 @@ module github.com/bitnami-labs/charts-syncer
 
 go 1.15
 
+# Pin to specific version to not hit the next issue:
+# Error:    vendor/github.com/docker/distribution/registry/registry.go:157:10: undefined: letsencrypt.Manager
 replace github.com/docker/distribution => github.com/docker/distribution v0.0.0-20191216044856-a8371794149d
 
 require (

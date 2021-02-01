@@ -56,6 +56,7 @@ func prepareTest(t *testing.T) *oci.Repo {
 	return client
 }
 
+// Creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
 func prepareHttpServer(t *testing.T) *oci.Repo {
 	t.Helper()
 
@@ -65,6 +66,9 @@ func prepareHttpServer(t *testing.T) *oci.Repo {
 
 	return prepareTest(t)
 }
+
+// Starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
+// This way we don't have to mimic all the low-level HTTP requests made by oras.
 func prepareOciServer(t *testing.T) *oci.Repo {
 	t.Helper()
 
