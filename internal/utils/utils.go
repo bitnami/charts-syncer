@@ -273,15 +273,21 @@ func EncodeSha1(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-// FormDownloadURL forms the full download URL in case we pass a relative URL
-func FormDownloadURL(repoURL, indexURL string) (string, error) {
-	u, err := url.Parse(indexURL)
+// NormalizeChartURL forms the full download URL in case we pass a relative URL
+func NormalizeChartURL(repoURL, indexURL string) (string, error) {
+	iu, err := url.Parse(indexURL)
 	if err != nil {
 		return "", errors.Trace(err)
 	}
-	chartURL := u.String()
-	if u.Host == "" {
-		chartURL = fmt.Sprintf("%s/%s", repoURL, u.String())
+	ru, err := url.Parse(repoURL)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	chartURL := iu.String()
+	if iu.Host == "" {
+		chartURL = fmt.Sprintf("%s/%s", repoURL, iu.String())
+	} else if iu.Host != ru.Host {
+		return "", errors.Errorf("index URL host (%s) and repo URL host (%s) host are different", iu.Host, ru.Host)
 	}
 	return chartURL, nil
 }

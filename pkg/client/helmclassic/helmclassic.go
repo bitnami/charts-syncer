@@ -109,7 +109,7 @@ func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 	if err != nil {
 		return "", errors.Annotatef(err, "getting %s-%s from index file", n, v)
 	}
-	u, err := utils.FormDownloadURL(r.url.String(), chart.URLs[0])
+	u, err := utils.NormalizeChartURL(r.url.String(), chart.URLs[0])
 	if err != nil {
 		return "", errors.Trace(err)
 	}
