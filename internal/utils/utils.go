@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -290,4 +291,15 @@ func NormalizeChartURL(repoURL, indexURL string) (string, error) {
 		return "", errors.Errorf("index host (%s) and repo host (%s) are different", iu.Host, ru.Host)
 	}
 	return chartURL, nil
+}
+
+// GetListenAddress returns a free local direction
+func GetListenAddress() (string, error) {
+	lst, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	defer lst.Close()
+
+	return lst.Addr().String(), nil
 }

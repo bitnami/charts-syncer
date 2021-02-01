@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"os"
 	"path"
@@ -20,7 +21,6 @@ import (
 	"github.com/docker/distribution/configuration"
 	"github.com/docker/distribution/registry"
 	_ "github.com/docker/distribution/registry/storage/driver/inmemory"
-	"github.com/phayes/freeport"
 	"helm.sh/helm/v3/pkg/chart"
 )
 
@@ -74,12 +74,17 @@ func prepareOciServer(t *testing.T) *oci.Repo {
 
 	// Create OCI server as docker registry
 	config := &configuration.Configuration{}
-	port, err := freeport.GetFreePort()
+
+	addr, err := utils.GetListenAddress()
 	if err != nil {
 		t.Fatal(err)
 	}
-	dockerRegistryHost := fmt.Sprintf("http://127.0.0.1:%d", port)
-	config.HTTP.Addr = fmt.Sprintf(":%d", port)
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dockerRegistryHost := "http://" + addr
+	config.HTTP.Addr = fmt.Sprintf(":%s", port)
 	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
 	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
 	dockerRegistry, err := registry.NewRegistry(context.Background(), config)
