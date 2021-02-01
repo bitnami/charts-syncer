@@ -157,3 +157,32 @@ func TestIsValidURL(t *testing.T) {
 		t.Errorf("got: %t , want: %t", res, true)
 	}
 }
+
+func TestFormDownloadURL(t *testing.T) {
+	repoURL := "https://chart.repo.url"
+	want := "https://chart.repo.url/charts/nats-1.2.3.tgz"
+	tests := []struct {
+		desc     string
+		chartURL string
+	}{
+		{
+			"full url index",
+			"https://chart.repo.url/charts/nats-1.2.3.tgz",
+		},
+		{
+			"relative url index",
+			"charts/nats-1.2.3.tgz",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := FormDownloadURL(repoURL, tc.chartURL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != want {
+				t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+			}
+		})
+	}
+}

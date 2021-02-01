@@ -272,3 +272,16 @@ func EncodeSha1(s string) string {
 	h.Write([]byte(s))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
+
+// FormDownloadURL forms the full download URL in case we pass a relative URL
+func FormDownloadURL(repoURL, indexURL string) (string, error) {
+	u, err := url.Parse(indexURL)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	chartURL := u.String()
+	if u.Host == "" {
+		chartURL = fmt.Sprintf("%s/%s", repoURL, u.String())
+	}
+	return chartURL, nil
+}
