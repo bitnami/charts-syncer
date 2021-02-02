@@ -169,25 +169,21 @@ func TestNormalizeChartURL(t *testing.T) {
 		expectedError error
 	}{
 		{
-			desc:          "full url index",
-			repoURL:       "https://chart.repo.url",
-			chartURL:      "https://chart.repo.url/charts/nats-1.2.3.tgz",
-			shouldFail:    false,
-			expectedError: nil,
+			desc:     "full url index",
+			repoURL:  "https://chart.repo.url",
+			chartURL: "https://chart.repo.url/charts/nats-1.2.3.tgz",
 		},
 		{
-			desc:          "relative url index",
-			repoURL:       "https://chart.repo.url",
-			chartURL:      "charts/nats-1.2.3.tgz",
-			shouldFail:    false,
-			expectedError: nil,
+			desc:     "relative url index",
+			repoURL:  "https://chart.repo.url",
+			chartURL: "charts/nats-1.2.3.tgz",
 		},
 		{
 			desc:          "different hosts",
 			repoURL:       "https://chart.another-repo.url",
 			chartURL:      "https://chart.repo.url/charts/nats-1.2.3.tgz",
 			shouldFail:    true,
-			expectedError: errors.New("index URL host (chart.repo.url) and repo URL host (chart.another-repo.url) host are different"),
+			expectedError: errors.New("index host (chart.repo.url) and repo host (chart.another-repo.url) are different"),
 		},
 	}
 	for _, tc := range tests {
