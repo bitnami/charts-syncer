@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -155,5 +156,48 @@ func TestIsValidURL(t *testing.T) {
 	}
 	if res := isValidURL(invalidURL); res != false {
 		t.Errorf("got: %t , want: %t", res, true)
+	}
+}
+
+func TestNormalizeChartURL(t *testing.T) {
+	want := "https://chart.repo.url/charts/nats-1.2.3.tgz"
+	tests := []struct {
+		desc          string
+		repoURL       string
+		chartURL      string
+		shouldFail    bool
+		expectedError error
+	}{
+		{
+			desc:     "full url index",
+			repoURL:  "https://chart.repo.url",
+			chartURL: "https://chart.repo.url/charts/nats-1.2.3.tgz",
+		},
+		{
+			desc:     "relative url index",
+			repoURL:  "https://chart.repo.url",
+			chartURL: "charts/nats-1.2.3.tgz",
+		},
+		{
+			desc:          "different hosts",
+			repoURL:       "https://chart.another-repo.url",
+			chartURL:      "https://chart.repo.url/charts/nats-1.2.3.tgz",
+			shouldFail:    true,
+			expectedError: errors.New("index host (chart.repo.url) and repo host (chart.another-repo.url) are different"),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := NormalizeChartURL(tc.repoURL, tc.chartURL)
+			if tc.shouldFail {
+				if err.Error() != tc.expectedError.Error() {
+					t.Errorf("error does not match: [%v:%v]", tc.expectedError, err)
+				}
+			} else {
+				if got != want {
+					t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+				}
+			}
+		})
 	}
 }

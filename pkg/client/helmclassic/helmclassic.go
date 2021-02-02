@@ -109,7 +109,11 @@ func (r *Repo) GetDownloadURL(n string, v string) (string, error) {
 	if err != nil {
 		return "", errors.Annotatef(err, "getting %s-%s from index file", n, v)
 	}
-	return chart.URLs[0], nil
+	u, err := utils.NormalizeChartURL(r.url.String(), chart.URLs[0])
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	return u, nil
 }
 
 // GetIndexURL returns the URL to download the index.yaml
