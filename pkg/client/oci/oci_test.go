@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/url"
 	"os"
 	"path"
@@ -79,12 +78,8 @@ func prepareOciServer(t *testing.T) *oci.Repo {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
 	dockerRegistryHost := "http://" + addr
-	config.HTTP.Addr = fmt.Sprintf(":%s", port)
+	config.HTTP.Addr = fmt.Sprintf(addr)
 	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
 	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
 	dockerRegistry, err := registry.NewRegistry(context.Background(), config)
@@ -92,7 +87,6 @@ func prepareOciServer(t *testing.T) *oci.Repo {
 		t.Fatal(err)
 	}
 	go dockerRegistry.ListenAndServe()
-	//	End OCI part
 	ociRepo.Url = dockerRegistryHost + "/someproject/charts"
 	return prepareTest(t)
 }
