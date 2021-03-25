@@ -93,18 +93,28 @@ Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you
 | HELM        | CHARTMUSEUM | :white_check_mark: |
 | HELM        | HARBOR      | :white_check_mark: |
 | HELM        | OCI         | :white_check_mark: |
+| HELM        | LOCAL       | :white_check_mark: |
 | CHARTMUSEUM | HELM        | :x:                |
 | CHARTMUSEUM | CHARTMUSEUM | :white_check_mark: |
 | CHARTMUSEUM | HARBOR      | :white_check_mark: |
 | CHARTMUSEUM | OCI         | :white_check_mark: |
+| CHARTMUSEUM | LOCAL       | :white_check_mark: |
 | HARBOR      | HELM        | :x:                |
 | HARBOR      | CHARTMUSEUM | :white_check_mark: |
 | HARBOR      | HARBOR      | :white_check_mark: |
 | HARBOR      | OCI         | :white_check_mark: |
+| HARBOR      | LOCAL       | :white_check_mark: |
 | OCI         | HELM        | :x:                |
 | OCI         | CHARTMUSEUM | :white_check_mark: |
 | OCI         | HARBOR      | :white_check_mark: |
 | OCI         | OCI         | :white_check_mark: |
+| OCI         | LOCAL       | :white_check_mark: |
+| LOCAL       | HELM        | :x:                |
+| LOCAL       | CHARTMUSEUM | :white_check_mark: |
+| LOCAL       | HARBOR      | :white_check_mark: |
+| LOCAL       | OCI         | :white_check_mark: |
+| LOCAL       | LOCAL       | :white_check_mark: |
+
 
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
@@ -140,6 +150,18 @@ target:
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
 Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
+
+### LOCAL example
+
+In case charts-syncer is not able to directly push the modified charts to the desired target, it would be possible to sync the charts
+to a local folder using the LOCAL target kind and then use any other tool or process to upload these charts to the final charts repository.
+
+~~~yaml
+target:
+ repo:
+   kind: LOCAL
+   path: your_local_path
+~~~
 
 ## Requirements
 
