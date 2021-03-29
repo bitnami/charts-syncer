@@ -2,6 +2,7 @@ package harbor
 
 import (
 	"bytes"
+	"crypto/tls"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -26,6 +27,7 @@ type Repo struct {
 	url      *url.URL
 	username string
 	password string
+	insecure bool
 
 	helm *helmclassic.Repo
 
@@ -33,23 +35,23 @@ type Repo struct {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c)
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error) {
-	helm, err := helmclassic.NewRaw(u, user, pass, c)
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool) (*Repo, error) {
+	helm, err := helmclassic.NewRaw(u, user, pass, c, insecure)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return &Repo{url: u, username: user, password: pass, helm: helm, cache: c}, nil
+	return &Repo{url: u, username: user, password: pass, helm: helm, cache: c, insecure: insecure}, nil
 }
 
 // GetUploadURL returns the URL to upload a chart
@@ -110,13 +112,18 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 
 	reqID := utils.EncodeSha1(u + file)
 	klog.V(4).Infof("[%s] POST %q", reqID, u)
-	client := &http.Client{}
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return errors.Annotatef(err, "uploading %q chart", file)
 	}
 	defer res.Body.Close()
-
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
 		bodyStr := utils.HTTPResponseBody(res)
 		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)

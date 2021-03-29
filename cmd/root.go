@@ -15,8 +15,9 @@ var (
 
 Find more information at: https://github.com/bitnami-labs/charts-syncer`
 
-	rootConfig string
-	rootDryRun bool
+	rootConfig   string
+	rootDryRun   bool
+	rootInsecure bool
 )
 
 func newRootCmd() *cobra.Command {
@@ -30,6 +31,7 @@ func newRootCmd() *cobra.Command {
 
 	cmd.PersistentFlags().BoolVar(&rootDryRun, "dry-run", false, "Only shows the charts pending to be synced without syncing them")
 	cmd.PersistentFlags().StringVarP(&rootConfig, "config", "c", "", fmt.Sprintf("Config file. Defaults to ./%s or $HOME/%s)", defaultCfgFile, defaultCfgFile))
+	cmd.PersistentFlags().BoolVar(&rootInsecure, "insecure", false, "Allow insecure SSL connections")
 
 	// Add subcommands
 	cmd.AddCommand(

@@ -1,6 +1,7 @@
 package helmclassic
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,6 +25,7 @@ type Repo struct {
 	url      *url.URL
 	username string
 	password string
+	insecure bool
 
 	// NOTE: We need a lock for index to allow concurrency
 	Index *repo.IndexFile
@@ -44,7 +46,13 @@ var reloadIndex = func(r *Repo) error {
 
 	reqID := utils.EncodeSha1(u + "index.yaml")
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := &http.Client{}
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return errors.Annotate(err, "fetching index.yaml")
@@ -83,18 +91,18 @@ var reloadIndex = func(r *Repo) error {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c)
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error) {
-	r := &Repo{url: u, username: user, password: pass, cache: c}
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool) (*Repo, error) {
+	r := &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure}
 
 	if err := r.Reload(); err != nil {
 		return nil, errors.Trace(err)
@@ -170,7 +178,13 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 
 	reqID := utils.EncodeSha1(u + remoteFilename)
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := &http.Client{}
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)

@@ -71,8 +71,8 @@ func prepareTest(t *testing.T) (*harbor.Repo, error) {
 		t.Fatal(err)
 	}
 
-	// Create chartmuseum client
-	client, err := harbor.New(harborRepo, cache)
+	// Create harbor client
+	client, err := harbor.New(harborRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}

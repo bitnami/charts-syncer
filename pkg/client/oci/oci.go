@@ -2,6 +2,7 @@ package oci
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,6 +45,7 @@ type Repo struct {
 	url      *url.URL
 	username string
 	password string
+	insecure bool
 
 	cache cache.Cacher
 }
@@ -55,18 +57,18 @@ type Tags struct {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c)
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher) (*Repo, error) {
-	return &Repo{url: u, username: user, password: pass, cache: c}, nil
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool) (*Repo, error) {
+	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure}, nil
 }
 
 // List lists all chart names in a repo
@@ -91,7 +93,14 @@ func (r *Repo) getTagManifest(name, version string) (*ocispec.Manifest, error) {
 	if r.username != "" && r.password != "" {
 		req.SetBasicAuth(r.username, r.password)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -135,7 +144,6 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	u := *r.url
 	// Form API endpoint URL from repository URL
 	u.Path = path.Join("v2", u.Path, name, "tags", "list")
-
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -143,19 +151,23 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	if r.username != "" && r.password != "" {
 		req.SetBasicAuth(r.username, r.password)
 	}
-
-	resp, err := http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 	defer resp.Body.Close()
-
 	status := resp.StatusCode
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Errorf("unexpected response — %d %q — from %s", status, http.StatusText(status), u.String())
 	}
-
 	// Valid response codes from OCI registries are listed here:
 	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
 	switch status {
@@ -168,7 +180,6 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	default:
 		return nil, errors.Errorf("unexpected response — %d %q, %s — from %s", status, http.StatusText(status), string(body), u.String())
 	}
-
 	ot := &Tags{}
 	if err := json.Unmarshal(body, ot); err != nil {
 		return nil, err
@@ -222,7 +233,13 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 
 	reqID := utils.EncodeSha1(u + remoteFilename)
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := &http.Client{}
+	client := http.DefaultClient
+	if r.insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)
@@ -338,7 +355,15 @@ func (r *Repo) Reload() error {
 }
 
 func (r *Repo) newDockerResolver() remotes.Resolver {
-	resolverOptions := docker.ResolverOptions{
+	client := http.DefaultClient
+	if r.insecure {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+	opts := docker.ResolverOptions{
 		Hosts: func(s string) ([]docker.RegistryHost, error) {
 			return []docker.RegistryHost{
 				{
@@ -350,9 +375,11 @@ func (r *Repo) newDockerResolver() remotes.Resolver {
 					Scheme:       r.url.Scheme,
 					Path:         "/v2",
 					Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
+					Client:       client,
 				},
 			}, nil
 		},
 	}
-	return docker.NewResolver(resolverOptions)
+
+	return docker.NewResolver(opts)
 }

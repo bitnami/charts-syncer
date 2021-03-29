@@ -62,6 +62,7 @@ var NewClient = func(repo *api.Repo, opts ...types.Option) (Client, error) {
 		o(copts)
 	}
 
+	insecure := copts.GetInsecure()
 	// Define cache dir if it hasn't been provided
 	cacheDir := copts.GetCache()
 	if cacheDir == "" {
@@ -78,13 +79,13 @@ var NewClient = func(repo *api.Repo, opts ...types.Option) (Client, error) {
 
 	switch repo.Kind {
 	case api.Kind_HELM:
-		return helmclassic.New(repo, c)
+		return helmclassic.New(repo, c, insecure)
 	case api.Kind_CHARTMUSEUM:
-		return chartmuseum.New(repo, c)
+		return chartmuseum.New(repo, c, insecure)
 	case api.Kind_HARBOR:
-		return harbor.New(repo, c)
+		return harbor.New(repo, c, insecure)
 	case api.Kind_OCI:
-		return oci.New(repo, c)
+		return oci.New(repo, c, insecure)
 	case api.Kind_LOCAL:
 		return local.New(repo.Path)
 	default:

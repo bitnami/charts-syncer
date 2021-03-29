@@ -13,6 +13,7 @@ type ChartDetails struct {
 // ClientOpts allows to configure a client
 type ClientOpts struct {
 	cacheDir string
+	insecure bool
 }
 
 // Option is an option value used to create a new syncer instance.
@@ -25,10 +26,25 @@ func WithCache(dir string) Option {
 	}
 }
 
+// WithInsecure enables insecure SSL connections
+func WithInsecure(enable bool) Option {
+	return func(s *ClientOpts) {
+		s.insecure = enable
+	}
+}
+
 // GetCache returns the cache directory
 func (o *ClientOpts) GetCache() string {
 	if o == nil {
 		return ""
 	}
 	return o.cacheDir
+}
+
+// GetInsecure returns if insecure connections are allowed
+func (o *ClientOpts) GetInsecure() bool {
+	if o == nil {
+		return false
+	}
+	return o.insecure
 }

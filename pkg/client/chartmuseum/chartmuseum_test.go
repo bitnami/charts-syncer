@@ -71,7 +71,7 @@ func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
 	}
 
 	// Create chartmuseum client
-	client, err := chartmuseum.New(cmRepo, cache)
+	client, err := chartmuseum.New(cmRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}

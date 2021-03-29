@@ -77,6 +77,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithDryRun(rootDryRun),
 				syncer.WithFromDate(syncFromDate),
 				syncer.WithWorkdir(syncWorkdir),
+				syncer.WithInsecure(rootInsecure),
 			)
 			if err != nil {
 				return errors.Trace(err)
@@ -87,7 +88,7 @@ func newSyncCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
-	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory.")
+	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
 
 	return cmd
 }

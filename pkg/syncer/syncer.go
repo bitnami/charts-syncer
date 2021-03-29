@@ -27,6 +27,7 @@ type Syncer struct {
 	dryRun        bool
 	autoDiscovery bool
 	fromDate      string
+	insecure      bool
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -69,6 +70,13 @@ func WithWorkdir(dir string) Option {
 	}
 }
 
+// WithInsecure configures the syncer to allow insecure SSL connections
+func WithInsecure(enable bool) Option {
+	return func(s *Syncer) {
+		s.insecure = enable
+	}
+}
+
 // New creates a new syncer using Client
 func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Syncer, error) {
 	s := &Syncer{
@@ -91,12 +99,12 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 		return nil, errors.Trace(err)
 	}
 
-	srcCli, err := core.NewClient(source.GetRepo(), types.WithCache(s.workdir))
+	srcCli, err := core.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	dstCli, err := core.NewClient(target.GetRepo(), types.WithCache(s.workdir))
+	dstCli, err := core.NewClient(target.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
