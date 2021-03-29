@@ -13,6 +13,7 @@ Sync chart packages between chart repositories
 - [Configuration](#configuration)
   * [Harbor example](#harbor-example)
   * [OCI example](#oci-example)
+  * [Local example](#local-example)
 - [Requirements](#requirements)
 - [Changes performed in a chart](#changes-performed-in-a-chart)
     + [Update *values.yaml* and *values-production.yaml* (if exists)](#update--valuesyaml--and--values-productionyaml---if-exists-)
