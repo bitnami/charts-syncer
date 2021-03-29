@@ -48,7 +48,7 @@ func prepareTest(t *testing.T) *oci.Repo {
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create oci client
-	client, err := oci.New(ociRepo, cache)
+	client, err := oci.New(ociRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}

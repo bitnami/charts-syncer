@@ -70,7 +70,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create chartmuseum client
-	client, err := helmclassic.New(cmRepo, cache)
+	client, err := helmclassic.New(cmRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}
