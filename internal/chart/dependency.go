@@ -189,9 +189,6 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 		return errors.Annotatef(err, "error unmarshaling %s file", chartFile)
 	}
 	for _, dep := range chartMetadata.Dependencies {
-		// Specify the exact dependencies versions used in the original Chart.lock file
-		// so when running helm dep up we get the same versions resolved.
-		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
@@ -203,8 +200,12 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 			dep.Repository = repoUrl
 		}
 	}
-	// Write updated requirements yamls file
-	writeChartMetadataFile(chartPath, chartMetadata)
+	// Write updated chart yaml file
+	chartMetadataFileName := ChartFilename
+	dest := path.Join(chartPath, chartMetadataFileName)
+	if err := writeChartFile(dest, chartMetadata); err != nil {
+		return errors.Trace(err)
+	}
 	if err := updateLockFile(chartPath, lock, chartMetadata.Dependencies, sourceRepo, targetRepo, false); err != nil {
 		return errors.Trace(err)
 	}
@@ -226,9 +227,6 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		return errors.Annotatef(err, "error unmarshaling %s file", requirementsFile)
 	}
 	for _, dep := range deps.Dependencies {
-		// Specify the exact dependencies versions used in the original requirements.lock file
-		// so when running helm dep up we get the same versions resolved.
-		dep.Version = findDepByName(lock.Dependencies, dep.Name).Version
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
@@ -241,7 +239,12 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		}
 	}
 	// Write updated requirements yamls file
-	writeRequirementsFile(chartPath, deps)
+
+	requirementsFileName := RequirementsFilename
+	dest := path.Join(chartPath, requirementsFileName)
+	if err := writeChartFile(dest, deps); err != nil {
+		return errors.Trace(err)
+	}
 	if err := updateLockFile(chartPath, lock, deps.Dependencies, sourceRepo, targetRepo, true); err != nil {
 		return errors.Trace(err)
 	}
@@ -265,56 +268,24 @@ func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency
 	}
 	lock.Digest = newDigest
 
-	// Write updated requirements yamls file
-	writeLockFile(chartPath, lock, legacyLockfile)
-	return nil
-}
-
-// findDepByName returns the dependency that matches a provided name from a list of dependencies.
-func findDepByName(dependencies []*chart.Dependency, name string) *chart.Dependency {
-	for _, dep := range dependencies {
-		if dep.Name == name {
-			return dep
-		}
-	}
-	return nil
-}
-
-// writeRequirementsFile writes a requirements.yaml file to disk.
-// For helm v2 dependency management
-func writeRequirementsFile(chartPath string, deps *dependencies) error {
-	data, err := yaml.Marshal(deps)
-	if err != nil {
-		return err
-	}
-	requirementsFileName := RequirementsFilename
-	dest := path.Join(chartPath, requirementsFileName)
-	return ioutil.WriteFile(dest, data, 0644)
-}
-
-// writeChartMetadataFile writes a Chart.yaml file to disk.
-// For helm v3 dependency management
-func writeChartMetadataFile(chartPath string, chartMetadata *chart.Metadata) error {
-	data, err := yaml.Marshal(chartMetadata)
-	if err != nil {
-		return err
-	}
-	chartMetadataFileName := ChartFilename
-	dest := path.Join(chartPath, chartMetadataFileName)
-	return ioutil.WriteFile(dest, data, 0644)
-}
-
-// writeLockFile writes a lockfile to disk
-func writeLockFile(chartPath string, lock *chart.Lock, legacyLockfile bool) error {
-	data, err := yaml.Marshal(lock)
-	if err != nil {
-		return err
-	}
+	// Write updated lock file
 	lockFileName := "Chart.lock"
 	if legacyLockfile {
 		lockFileName = "requirements.lock"
 	}
 	dest := path.Join(chartPath, lockFileName)
+	if err := writeChartFile(dest, lock); err != nil {
+		return errors.Trace(err)
+	}
+	return nil
+}
+
+// writeChartFile writes a chart file to disk
+func writeChartFile(dest string, v interface{}) error {
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return errors.Trace(err)
+	}
 	return ioutil.WriteFile(dest, data, 0644)
 }
 

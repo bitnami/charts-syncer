@@ -102,7 +102,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	if got := newDeps.Dependencies[0].Repository; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
-	want = "5.5.5"
+	want = "5.x.x"
 	if got := newDeps.Dependencies[0].Version; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
@@ -176,7 +176,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 	if got := chartMetadata.Dependencies[0].Repository; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
-	want = "5.19.1"
+	want = "5.x.x"
 	if got := chartMetadata.Dependencies[0].Version; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}
@@ -199,22 +199,6 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 	want = "5.19.1"
 	if got := newLock.Dependencies[0].Version; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
-	}
-}
-
-func TestFindDepByName(t *testing.T) {
-	deps := &dependencies{
-		Dependencies: []*chart.Dependency{
-			{Name: "mariadb", Version: "1.2.3"},
-			{Name: "postgresql", Version: "4.5.6"},
-		},
-	}
-	dep := findDepByName(deps.Dependencies, "postgresql")
-	if dep.Name != "postgresql" {
-		t.Errorf("wrong dependency, got: %s , want: %s", dep.Name, "postgresql")
-	}
-	if dep.Version != "4.5.6" {
-		t.Errorf("wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
 	}
 }
 
