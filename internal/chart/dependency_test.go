@@ -14,6 +14,22 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func newChartPath(t *testing.T, file string, name string) string {
+	t.Helper()
+
+	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	if err != nil {
+		t.Fatalf("error creating temporary: %s", testTmpDir)
+	}
+	t.Cleanup(func() { os.RemoveAll(testTmpDir) })
+
+	if err := utils.Untar(file, testTmpDir); err != nil {
+		t.Fatal(err)
+	}
+
+	return path.Join(testTmpDir, name)
+}
+
 func TestLockFilePath(t *testing.T) {
 	tests := map[string]struct {
 		chartPath     string
@@ -71,18 +87,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 		},
 	}
 
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
-	if err != nil {
-		t.Fatalf("error creating temporary: %s", testTmpDir)
-	}
-	defer os.RemoveAll(testTmpDir)
-
-	sourceChart := "../../testdata/kafka-10.3.3.tgz"
-	if err := utils.Untar(sourceChart, testTmpDir); err != nil {
-		t.Fatal(err)
-	}
-
-	chartPath := path.Join(testTmpDir, "kafka")
+	chartPath := newChartPath(t, "../../testdata/kafka-10.3.3.tgz", "kafka")
 	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	if err := updateRequirementsFile(chartPath, lock, source.GetRepo(), target.GetRepo()); err != nil {
 		t.Fatal(err)
