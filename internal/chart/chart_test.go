@@ -18,7 +18,7 @@ var (
 	}
 	target = &api.TargetRepo{
 		Repo: &api.Repo{
-			Url:  "http://fake.target/com",
+			Url:  "http://fake.target.com",
 			Kind: api.Kind_CHARTMUSEUM,
 			Auth: &api.Auth{
 				Username: "user",

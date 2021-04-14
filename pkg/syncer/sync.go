@@ -85,7 +85,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		// Update deps
 		if hasDeps {
 			klog.V(3).Infof("Building %q dependencies", id)
-			if err := chart.BuildDependencies(chartPath, s.cli.dst); err != nil {
+			if err := chart.BuildDependencies(chartPath, s.cli.dst, s.source.GetRepo(), s.target.GetRepo()); err != nil {
 				klog.Errorf("unable to build %q chart dependencies: %+v", id, err)
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
