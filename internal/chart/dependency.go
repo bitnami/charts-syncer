@@ -110,9 +110,9 @@ func GetLockAPIVersion(chartPath string) (string, error) {
 	return "", nil
 }
 
-// BuildDependencies updates a local charts directory and update repository references in Chart.yaml/Chart.lock/requirements.yaml/requirements.lock
+// BuildDependencies updates the chart dependencies and their repository references in the provided chart path
 //
-// If reads the Chart.lock/requirements.lock file to download the versions from the target
+// It reads the lock file to download the versions from the target
 // chart repository (it assumes all charts are stored in a single repo).
 func BuildDependencies(chartPath string, r core.Reader, sourceRepo, targetRepo *api.Repo) error {
 	// Build deps manually for OCI as helm does not support it yet
@@ -128,7 +128,7 @@ func BuildDependencies(chartPath string, r core.Reader, sourceRepo, targetRepo *
 	if err != nil {
 		return errors.Trace(err)
 	}
-	// Step 1. Update references in Chart.yaml/Chart.lock or Requirements.yaml/Requirements.lock
+	// Step 1. Update references in the dependencies object
 	// If the API version is not set, there is not a lock file. Hence, this
 	// chart has no dependencies.
 	apiVersion, err := GetLockAPIVersion(chartPath)
@@ -191,7 +191,6 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 	for _, dep := range chartMetadata.Dependencies {
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
-		// For example, old charts pointing to helm/charts repo
 		if dep.Repository == sourceRepo.GetUrl() {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {
@@ -201,8 +200,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 		}
 	}
 	// Write updated chart yaml file
-	chartMetadataFileName := ChartFilename
-	dest := path.Join(chartPath, chartMetadataFileName)
+	dest := path.Join(chartPath, ChartFilename)
 	if err := writeChartFile(dest, chartMetadata); err != nil {
 		return errors.Trace(err)
 	}
@@ -240,8 +238,7 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 	}
 	// Write updated requirements yamls file
 
-	requirementsFileName := RequirementsFilename
-	dest := path.Join(chartPath, requirementsFileName)
+	dest := path.Join(chartPath, RequirementsFilename)
 	if err := writeChartFile(dest, deps); err != nil {
 		return errors.Trace(err)
 	}
@@ -269,9 +266,9 @@ func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency
 	lock.Digest = newDigest
 
 	// Write updated lock file
-	lockFileName := "Chart.lock"
+	lockFileName := ChartLockFilename
 	if legacyLockfile {
-		lockFileName = "requirements.lock"
+		lockFileName = RequirementsLockFilename
 	}
 	dest := path.Join(chartPath, lockFileName)
 	if err := writeChartFile(dest, lock); err != nil {
