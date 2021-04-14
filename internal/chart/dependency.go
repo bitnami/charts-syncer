@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 
@@ -195,7 +196,11 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
 		if dep.Repository == sourceRepo.GetUrl() {
-			dep.Repository = targetRepo.GetUrl()
+			repoUrl, err := getDependencyRepoURL(targetRepo)
+			if err != nil {
+				return errors.Trace(err)
+			}
+			dep.Repository = repoUrl
 		}
 	}
 	// Write updated requirements yamls file
@@ -228,7 +233,11 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
 		if dep.Repository == sourceRepo.GetUrl() {
-			dep.Repository = targetRepo.GetUrl()
+			repoUrl, err := getDependencyRepoURL(targetRepo)
+			if err != nil {
+				return errors.Trace(err)
+			}
+			dep.Repository = repoUrl
 		}
 	}
 	// Write updated requirements yamls file
@@ -243,12 +252,16 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency, sourceRepo *api.Repo, targetRepo *api.Repo, legacyLockfile bool) error {
 	for _, dep := range lock.Dependencies {
 		if dep.Repository == sourceRepo.GetUrl() {
-			dep.Repository = targetRepo.GetUrl()
+			repoUrl, err := getDependencyRepoURL(targetRepo)
+			if err != nil {
+				return errors.Trace(err)
+			}
+			dep.Repository = repoUrl
 		}
 	}
 	newDigest, err := hashDeps(deps, lock.Dependencies)
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	lock.Digest = newDigest
 
@@ -316,4 +329,18 @@ func hashDeps(req, lock []*chart.Dependency) (string, error) {
 	}
 	s, err := provenance.Digest(bytes.NewBuffer(data))
 	return "sha256:" + s, err
+}
+
+// getDependencyRepoURL calculates and return the proper URL to be used in dependencies files
+func getDependencyRepoURL(targetRepo *api.Repo) (string, error) {
+	repoUrl := targetRepo.GetUrl()
+	if targetRepo.GetKind() == api.Kind_OCI {
+		parseUrl, err := url.Parse(repoUrl)
+		if err != nil {
+			return "", errors.Trace(err)
+		}
+		parseUrl.Scheme = "oci"
+		repoUrl = parseUrl.String()
+	}
+	return repoUrl, nil
 }

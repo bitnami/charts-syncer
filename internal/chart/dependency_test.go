@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"helm.sh/helm/v3/pkg/chart"
 	"sigs.k8s.io/yaml"
@@ -214,5 +215,39 @@ func TestFindDepByName(t *testing.T) {
 	}
 	if dep.Version != "4.5.6" {
 		t.Errorf("wrong dependency, got: %s , want: %s", dep.Version, "4.5.6")
+	}
+}
+
+func TestGetDependencyRepoURL(t *testing.T) {
+	tests := map[string]struct {
+		targetRepo *api.Repo
+		want       string
+	}{
+		"not oci repo": {
+			&api.Repo{
+				Url:  "https://harbor.endpoint.io/chartrepo/library",
+				Kind: api.Kind_HARBOR,
+			},
+			"https://harbor.endpoint.io/chartrepo/library",
+		},
+		"oci repo": {
+			&api.Repo{
+				Url:  "https://harbor.endpoint.io/my-project/my-charts-library",
+				Kind: api.Kind_OCI,
+			},
+			"oci://harbor.endpoint.io/my-project/my-charts-library",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := getDependencyRepoURL(tc.targetRepo)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("got: %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
