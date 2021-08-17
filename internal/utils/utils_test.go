@@ -201,3 +201,34 @@ func TestNormalizeChartURL(t *testing.T) {
 		})
 	}
 }
+
+func TestGithubChartURL(t *testing.T) {
+	want := "https://github.com/nats/releases/v1.2.3/nats-1.2.3.tgz"
+	tests := []struct {
+		desc          string
+		repoURL       string
+		chartURL      string
+		shouldFail    bool
+		expectedError error
+	}{
+		{
+			desc:     "github.io repo and github.com chart",
+			repoURL:  "https://chart.github.io/helm-charts",
+			chartURL: "https://github.com/nats/releases/v1.2.3/nats-1.2.3.tgz",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := NormalizeChartURL(tc.repoURL, tc.chartURL)
+			if tc.shouldFail {
+				if err.Error() != tc.expectedError.Error() {
+					t.Errorf("error does not match: [%v:%v]", tc.expectedError, err)
+				}
+			} else {
+				if got != want {
+					t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+				}
+			}
+		})
+	}
+}
