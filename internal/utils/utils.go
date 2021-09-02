@@ -18,7 +18,6 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/juju/errors"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
-
 	"k8s.io/klog"
 )
 
@@ -275,22 +274,27 @@ func EncodeSha1(s string) string {
 }
 
 // NormalizeChartURL forms the full download URL in case we pass a relative URL
-func NormalizeChartURL(repoURL, indexURL string) (string, error) {
-	iu, err := url.Parse(indexURL)
-	if err != nil {
+func NormalizeChartURL(repoURL, chartURL string) (string, error) {
+	if chartURL == "" {
+		return "", errors.New("chart URL cannot be empty")
+	}
+
+	// Return chart URL if it refers to a host (it is absolute)
+	if cu, err := url.Parse(chartURL); err != nil {
+		return "", errors.Trace(err)
+	} else if cu.Host != "" {
+		return chartURL, nil
+	}
+
+	// Build chart URL using the repository URL if, and only if, the chart
+	// URL is relative
+	if repoURL == "" {
+		return "", errors.New("repository URL cannot be empty")
+	}
+	if _, err := url.Parse(repoURL); err != nil {
 		return "", errors.Trace(err)
 	}
-	ru, err := url.Parse(repoURL)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	chartURL := iu.String()
-	if iu.Host == "" {
-		chartURL = fmt.Sprintf("%s/%s", repoURL, iu.String())
-	} else if iu.Host != ru.Host {
-		return "", errors.Errorf("index host (%s) and repo host (%s) are different", iu.Host, ru.Host)
-	}
-	return chartURL, nil
+	return fmt.Sprintf("%s/%s", repoURL, chartURL), nil
 }
 
 // GetListenAddress returns a free local direction
