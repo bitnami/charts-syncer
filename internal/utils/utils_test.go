@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -160,43 +160,70 @@ func TestIsValidURL(t *testing.T) {
 }
 
 func TestNormalizeChartURL(t *testing.T) {
-	want := "https://chart.repo.url/charts/nats-1.2.3.tgz"
 	tests := []struct {
 		desc          string
 		repoURL       string
 		chartURL      string
+		want          string
 		shouldFail    bool
 		expectedError error
 	}{
 		{
-			desc:     "full url index",
-			repoURL:  "https://chart.repo.url",
-			chartURL: "https://chart.repo.url/charts/nats-1.2.3.tgz",
-		},
-		{
-			desc:     "relative url index",
-			repoURL:  "https://chart.repo.url",
+			desc:     "should use repo URL when chart uses relative URL",
+			repoURL:  "https://github.com/kubernetes",
 			chartURL: "charts/nats-1.2.3.tgz",
+			want:     "https://github.com/kubernetes/charts/nats-1.2.3.tgz",
 		},
 		{
-			desc:          "different hosts",
-			repoURL:       "https://chart.another-repo.url",
-			chartURL:      "https://chart.repo.url/charts/nats-1.2.3.tgz",
+			desc:     "should return chart URL when chart uses absolute URL",
+			repoURL:  "https://kubernetes.github.io",
+			chartURL: "https://github.com/kubernetes/nats-1.2.3.tgz",
+			want:     "https://github.com/kubernetes/nats-1.2.3.tgz",
+		},
+		{
+			desc:          "should return error if the repository URL is empty and the chart URL is relative",
+			chartURL:      "charts/nats-1.2.3.tgz",
 			shouldFail:    true,
-			expectedError: errors.New("index host (chart.repo.url) and repo host (chart.another-repo.url) are different"),
+			expectedError: fmt.Errorf("repository URL cannot be empty"),
+		},
+		{
+			desc:          "should return error if the chart URL is empty",
+			repoURL:       "https://kubernetes.github.io",
+			shouldFail:    true,
+			expectedError: fmt.Errorf("chart URL cannot be empty"),
+		},
+		{
+			desc:          "should return error if the repository URL is malformed and chart URL is relative",
+			repoURL:       "://kubernetes.github.io",
+			chartURL:      "charts/nats-1.2.3.tgz",
+			shouldFail:    true,
+			expectedError: fmt.Errorf(`parse "://kubernetes.github.io": missing protocol scheme`),
+		},
+		{
+			desc:          "should return error if the chart URL is malformed",
+			repoURL:       "https://kubernetes.github.io",
+			chartURL:      "://github.com/kubernetes/nats-1.2.3.tgz",
+			shouldFail:    true,
+			expectedError: fmt.Errorf(`parse "://github.com/kubernetes/nats-1.2.3.tgz": missing protocol scheme`),
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			got, err := NormalizeChartURL(tc.repoURL, tc.chartURL)
 			if tc.shouldFail {
+				if err == nil {
+					t.Errorf("expected %+v but found %+v", tc.expectedError, err)
+					return
+				}
 				if err.Error() != tc.expectedError.Error() {
-					t.Errorf("error does not match: [%v:%v]", tc.expectedError, err)
+					t.Errorf("\n got: %v\nwant: %v", err, tc.expectedError)
+					return
 				}
-			} else {
-				if got != want {
-					t.Errorf("wrong download URL. got: %v, want: %v", got, want)
-				}
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("wrong download URL. got: %v, want: %v", got, tc.want)
 			}
 		})
 	}
