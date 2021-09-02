@@ -286,12 +286,14 @@ func NormalizeChartURL(repoURL, indexURL string) (string, error) {
 	}
 	chartURL := iu.String()
 
-	if iu.Host != "github.com" {
-		if iu.Host == "" {
-			chartURL = fmt.Sprintf("%s/%s", repoURL, iu.String())
-		} else if iu.Host != ru.Host {
-			return "", errors.Errorf("index host (%s) and repo host (%s) are different", iu.Host, ru.Host)
-		}
+	if iu.Host != "" {
+		return indexURL, nil
+	}
+
+	if iu.Host == "" {
+		chartURL = fmt.Sprintf("%s/%s", repoURL, iu.String())
+	} else if iu.Host != ru.Host {
+		return "", errors.Errorf("index host (%s) and repo host (%s) are different", iu.Host, ru.Host)
 	}
 	return chartURL, nil
 }
