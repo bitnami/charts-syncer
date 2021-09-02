@@ -10,10 +10,8 @@ builds:
     binary: charts-syncer
 dockers:
   -
-    builds:
+    ids:
       - release
-    binaries:
-      - charts-syncer
     dockerfile: Dockerfile
     image_templates:
       - "gcr.io/bitnami-labs/charts-syncer:{{ .Tag }}"
