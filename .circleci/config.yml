@@ -50,7 +50,8 @@ jobs:
     steps:
       - checkout
       - run: make build
-      - run: go test ./...
+      - <<: *install_helm_cli
+      - run: GO111MODULE=on go test ./...
       # Persist compiled tool
       - persist_to_workspace:
           root: dist
