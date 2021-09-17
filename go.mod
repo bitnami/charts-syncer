@@ -8,7 +8,7 @@ replace github.com/docker/distribution => github.com/docker/distribution v0.0.0-
 
 require (
 	github.com/bitnami-labs/pbjson v1.1.0
-	github.com/containerd/containerd v1.4.4
+	github.com/containerd/containerd v1.4.8
 	github.com/deislabs/oras v0.11.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/golang/protobuf v1.4.3
