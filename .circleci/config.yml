@@ -46,14 +46,11 @@ workflows:
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.14
-    environment:
-      HELM_VERSION: "3.2.3"
+      - image: circleci/golang:1.15
     steps:
       - checkout
       - run: make build
-      - <<: *install_helm_cli
-      - run: GO111MODULE=on go test ./...
+      - run: go test ./...
       # Persist compiled tool
       - persist_to_workspace:
           root: dist
