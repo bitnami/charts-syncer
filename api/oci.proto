@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package api;
+option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
+
+
+message OciIndex {
+    message ChartVersions {
+        string version = 1;
+        string digest = 2;
+        string uri = 3;
+    }
+    message Charts {
+        string name = 1;
+        repeated ChartVersions versions = 2;
+    }
+    repeated Charts charts = 2;
+}
+
+// Example of valid JSON
+//
+//{
+//  "charts": [
+//    {
+//      "name": "asset-1",
+//      "versions": [
+//        {
+//          "version": "1.0.0",
+//          "digest": "sha256:vbgc4a39804b5fe02051d562d29f0ad34dec96d49e099cc0ee14c316663cayue",
+//          "uri": "my-oci-registry.io/my-project/charts/asset-1:9.1.1"
+//        }
+//      ]
+//    },
+//    {
+//      "name": "asset-2",
+//      "versions": [
+//        {
+//          "version": "2.2.2",
+//          "digest": "sha256:jki0ea2a722b455851ff4688ea5bed2bac1992b7c72aece178bd12e3a70cetra",
+//          "uri": "my-oci-registry.io/my-project/charts/asset-2:2.2.2"
+//        }
+//      ]
+//    }
+//  ]
+//}

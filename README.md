@@ -150,7 +150,48 @@ target:
 `subpath` in the previous url is optional in case your charts are not stored directly under your projects.
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
-Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
+Also, take into account that if you use OCI as the source repository you must specify the list of charts to synchronize
+or a pointer to an [index file](#oci-index) in the repository.
+
+#### OCI index
+
+In order to speed up the sync process for OCI charts, it is possible to specify a reference to an OCI index file containing 
+the chart versions to be synced from the repository. Thanks to the index, chart-syncer don't need to autodiscover 
+what tags for a specific asset are charts or other kind of artifacts which is a costly process.
+
+~~~yaml
+source:
+ repo:
+   kind: OCI
+   url: https://my-oci-registry.io/my-project/subpath
+   ociIndex: my-oci-registry.io/my-project/index:latest
+~~~
+
+You can specify the index in the format of `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`. If the `ociIndex` property is provided,
+charts-syncer will use it directly, otherwise it will try to guess it from the URL field by looking for an index:latest asset located
+directly at URL level.
+
+For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `ociIndex` is specified, charts-syncer will try to use 
+`my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
+
+An example of the valid index format can be seen directly in its [protobuffer definition](api/oci.proto). 
+
+Finally, if no OCI index is found, charts-syncer would still need the list of charts in the config file:
+
+~~~yaml
+#
+# Example config file
+#
+source:
+  repo:
+    kind: OCI
+    url: https://my-oci-registry.io/my-project/subpath
+...
+charts:
+  - redis
+  - mariadb
+  - ...
+~~~
 
 ### LOCAL example
 

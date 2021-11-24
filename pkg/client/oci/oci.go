@@ -1,10 +1,12 @@
 package oci
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/bitnami-labs/pbjson"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +14,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/containerd/containerd/remotes"
@@ -40,6 +44,10 @@ const (
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
 )
 
+var (
+	tagRegex = regexp.MustCompile(`^([a-z0-9.:]+/[\w\-_/]+):?([\w0-9.]+)?`)
+)
+
 // Repo allows to operate a chart repository.
 type Repo struct {
 	url      *url.URL
@@ -47,7 +55,9 @@ type Repo struct {
 	password string
 	insecure bool
 
+	entries map[string][]string
 	cache cache.Cacher
+	dockerResolver remotes.Resolver
 }
 
 // Tags contains the tags for a specific OCI artifact
@@ -62,18 +72,75 @@ func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	resolver := newDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
+	// Init entries
+	entries := make(map[string][]string)
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure)
+	// First we try to load the index referenced from config file,
+	// if it does not exist, then we try to guess it directly from repo url
+	ociIndexRef := repo.GetOciIndex()
+	if ociIndexRef == "" {
+		klog.Infof("OCI index reference is empty in config file. Guessing index from repo url")
+		ociIndexRef = fmt.Sprintf("%s%s/index:latest", u.Host, u.Path)
+	}
+
+	ociIndexExists, err := ociReferenceExists(u, ociIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	if ociIndexExists {
+		// Pull with ORAS lib
+		filename := "asset-index.json"
+		defer os.Remove(filename)
+		ctx := context.Background()
+		klog.Infof("Pulling index from %s...", ociIndexRef)
+		fileStore := content.NewFileStore("")
+		defer fileStore.Close()
+		_, _, err := oras.Pull(ctx, resolver, ociIndexRef, fileStore)
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+
+		// Read downloaded file
+		ociIndexBytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		r := bytes.NewReader(ociIndexBytes)
+
+		// Unmarshall index and populate entries
+		ociIndex := &api.OciIndex{}
+		err = pbjson.NewDecoder(r).Decode(ociIndex)
+		for _, c := range ociIndex.Charts{
+			for _, version := range c.Versions{
+				entries[c.Name] = append(entries[c.Name], version.Version)
+			}
+		}
+	} else {
+		klog.Info("Unable to load OCI index file. Using 'charts' filter from config file...")
+	}
+
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, entries, resolver)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool) (*Repo, error) {
-	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure}, nil
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool, entries map[string][]string, resolver remotes.Resolver) (*Repo, error) {
+	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure, entries: entries, dockerResolver: resolver}, nil
 }
 
 // List lists all chart names in a repo
 func (r *Repo) List() ([]string, error) {
-	return nil, errors.Errorf("list method is not supported yet")
+	var names []string
+	// If entries is not populated, it means we couldn't load any index file so we need the charts filter in the
+	// configuration file
+	if len(r.entries) == 0 {
+		return nil, errors.New("No OCI index file detected. Please provide the charts filter in config file")
+	}
+	for name := range r.entries {
+		names = append(names, name)
+	}
+	return names, nil
 }
 
 // getTagManifest returns the manifests of a published tag
@@ -138,6 +205,10 @@ func (r *Repo) getChartDigest(name, version string) (string, error) {
 
 // ListChartVersions lists all versions of a chart
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
+	// If entries is populated use it to list the chart versions
+	if _, ok := r.entries[name]; ok {
+		return r.entries[name], nil
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), getTimeout)
 	defer cancel()
 
@@ -306,7 +377,7 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	}
 
 	memoryStore := content.NewMemoryStore()
-	resolver := r.newDockerResolver()
+	resolver := r.dockerResolver
 
 	// Preparing layers
 	var layers []ocispec.Descriptor
@@ -354,9 +425,85 @@ func (r *Repo) Reload() error {
 	return errors.Errorf("reload method is not supported yet")
 }
 
-func (r *Repo) newDockerResolver() remotes.Resolver {
+
+// OciReference contains info about an oci reference
+type ociReference struct {
+	path string
+	tag string
+}
+
+// splitOciReference split the tag or digest from an oci reference if exists
+func splitOciReference(ociRef string) ociReference {
+	parts := strings.Split(ociRef, "@")
+	if len(parts) == 2 { // Digest provided (Easy to split)
+		digest := parts[1]
+		digestRef := strings.Split(digest, ":")
+		return ociReference{path: parts[0], tag: digestRef[1]}
+	}
+	parts = strings.Split(ociRef, ":") // Tag provided or host:port. Let's use a regex
+	if len(parts) >= 2 {
+		res := tagRegex.FindStringSubmatch(ociRef)
+		return ociReference{path: res[1], tag: res[2]}
+	}
+
+	return ociReference{path: ociRef}
+}
+
+// ociReferenceExists checks if a given oci reference exists in the repository
+// OCI endpoints: https://github.com/opencontainers/distribution-spec/blob/main/spec.md#endpoints
+func ociReferenceExists(repoUrl *url.URL, ociRef, username, password string, insecure bool) (bool, error) {
+	ociReference := splitOciReference(ociRef)
+	fullOciRef := fmt.Sprintf("%s://%s",repoUrl.Scheme, ociReference.path)
+	u, err := url.Parse(fullOciRef)
+	if err != nil {
+		return false, errors.Trace(err)
+	}
+	u.Path = path.Join("v2", u.Path, "manifests", ociReference.tag)
+
+	req, err := http.NewRequest("HEAD", u.String(), nil)
+	if err != nil {
+		return false, errors.Trace(err)
+	}
+	if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	}
+
+	req.Header.Set("Accept","application/vnd.oci.image.manifest.v1+json")
+	reqID := utils.EncodeSha1(u.String())
+	klog.V(4).Infof("[%s] HEAD %q", reqID, u.String())
 	client := http.DefaultClient
-	if r.insecure {
+	if insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return false, errors.Annotatef(err, "checking existence of %q oci reference", ociRef)
+	}
+	defer res.Body.Close()
+
+	status := res.StatusCode
+	// Valid response codes from OCI registries are listed here:
+	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
+	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
+	switch status {
+	case http.StatusOK:
+		//do nothing, just continue
+	case http.StatusNotFound:
+		return false, nil
+	default:
+		bodyStr := utils.HTTPResponseBody(res)
+		return false, errors.Errorf("unable to check if OCI index exists, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+	}
+
+	return true, nil
+}
+
+func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
+	client := http.DefaultClient
+	if insecure {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
@@ -369,10 +516,10 @@ func (r *Repo) newDockerResolver() remotes.Resolver {
 				{
 					Authorizer: docker.NewDockerAuthorizer(
 						docker.WithAuthCreds(func(s string) (string, string, error) {
-							return r.username, r.password, nil
+							return username, password, nil
 						})),
-					Host:         r.url.Host,
-					Scheme:       r.url.Scheme,
+					Host:         u.Host,
+					Scheme:       u.Scheme,
 					Path:         "/v2",
 					Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
 					Client:       client,

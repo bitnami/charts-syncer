@@ -1,23 +1,36 @@
 package oci
 
 import (
+	"context"
 	"fmt"
+	"github.com/containerd/containerd/remotes/docker"
+	"github.com/deislabs/oras/pkg/content"
+	"github.com/deislabs/oras/pkg/oras"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/docker/distribution/configuration"
+	"github.com/docker/distribution/registry"
 
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 )
 
 var (
+	ociIndexRegex        = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
 	ociTagManifestRegex        = regexp.MustCompile(`(?m)\/v2\/(.*)\/manifests\/(.*)`)
 	ociBlobsRegex              = regexp.MustCompile(`(?m)\/v2\/(.*)\/blobs\/sha256:(.*)`)
 	ociTagsListRegex           = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/list`)
@@ -41,6 +54,82 @@ type RepoTester struct {
 	indexFile string
 }
 
+
+func PushFileToOCI(t *testing.T, filepath string, ref string) {
+	ctx := context.Background()
+	resolver := docker.NewResolver(docker.ResolverOptions{PlainHTTP: true})
+	fileContent, err := os.ReadFile(filepath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := path.Base(filepath)
+	customMediaType := "my.custom.media.type"
+	memoryStore := content.NewMemoryStore()
+	desc := memoryStore.Add(filename, customMediaType, fileContent)
+	pushContents := []ocispec.Descriptor{desc}
+	desc, err = oras.Push(ctx, resolver, ref, memoryStore, pushContents)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
+	t.Helper()
+
+	// Define cache dir
+	cacheDir, err := ioutil.TempDir("", "client")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cache, err := cache.New(cacheDir, ociRepo.GetUrl())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(cacheDir) })
+
+	// Create oci client
+	client, err := New(ociRepo, cache, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client
+}
+
+// Creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
+func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
+	t.Helper()
+
+	// Create HTTP server
+	tester := NewTester(t, ociRepo)
+	ociRepo.Url = tester.GetURL() + "/someproject/charts"
+
+	return PrepareTest(t, ociRepo)
+}
+
+// Starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
+// This way we don't have to mimic all the low-level HTTP requests made by oras.
+func PrepareOciServer(t *testing.T, ociRepo *api.Repo) {
+	t.Helper()
+
+	// Create OCI server as docker registry
+	config := &configuration.Configuration{}
+
+	addr, err := utils.GetListenAddress()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dockerRegistryHost := "http://" + addr
+	config.HTTP.Addr = fmt.Sprintf(addr)
+	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
+	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
+	dockerRegistry, err := registry.NewRegistry(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go dockerRegistry.ListenAndServe()
+	ociRepo.Url = dockerRegistryHost + "/someproject/charts"
+}
+
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
 func NewTester(t *testing.T, repo *api.Repo) *RepoTester {
 	t.Helper()
@@ -60,7 +149,7 @@ func NewTester(t *testing.T, repo *api.Repo) *RepoTester {
 	return tester
 }
 
-// ServeHTTP implements the the http Handler type
+// ServeHTTP implements the http Handler type
 func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check basic auth credentals.
 	username, password, ok := r.BasicAuth()
@@ -75,6 +164,10 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle recognized requests.
+	if ociIndexRegex.Match([]byte(r.URL.Path)) && r.Method == "HEAD" {
+		rt.HeadManifest404(w)
+		return
+	}
 	if ociBlobsRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		name := strings.Split(r.URL.Path, "/")[4]
 		fulldigest := strings.Split(r.URL.Path, "/")[6]
@@ -93,6 +186,7 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rt.GetTagsList(w, r, name)
 		return
 	}
+
 
 	rt.t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
 }
@@ -133,6 +227,12 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 	}
 	w.Write(tagsList)
 }
+
+// HeadManifest404 return if a manifests exists or not
+func (rt *RepoTester) HeadManifest404(w http.ResponseWriter) {
+	w.WriteHeader(404)
+}
+
 
 // GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, name, digest string) {

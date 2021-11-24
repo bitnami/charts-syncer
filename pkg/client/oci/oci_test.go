@@ -1,9 +1,6 @@
 package oci_test
 
 import (
-	"context"
-	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -13,12 +10,9 @@ import (
 	"time"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/docker/distribution/configuration"
-	"github.com/docker/distribution/registry"
 	_ "github.com/docker/distribution/registry/storage/driver/inmemory"
 	"helm.sh/helm/v3/pkg/chart"
 )
@@ -33,66 +27,8 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) *oci.Repo {
-	t.Helper()
-
-	// Define cache dir
-	cacheDir, err := ioutil.TempDir("", "client")
-	if err != nil {
-		t.Fatal(err)
-	}
-	cache, err := cache.New(cacheDir, ociRepo.GetUrl())
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { os.RemoveAll(cacheDir) })
-
-	// Create oci client
-	client, err := oci.New(ociRepo, cache, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return client
-}
-
-// Creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
-func prepareHttpServer(t *testing.T) *oci.Repo {
-	t.Helper()
-
-	// Create HTTP server
-	tester := oci.NewTester(t, ociRepo)
-	ociRepo.Url = tester.GetURL() + "/someproject/charts"
-
-	return prepareTest(t)
-}
-
-// Starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
-// This way we don't have to mimic all the low-level HTTP requests made by oras.
-func prepareOciServer(t *testing.T) *oci.Repo {
-	t.Helper()
-
-	// Create OCI server as docker registry
-	config := &configuration.Configuration{}
-
-	addr, err := utils.GetListenAddress()
-	if err != nil {
-		t.Fatal(err)
-	}
-	dockerRegistryHost := "http://" + addr
-	config.HTTP.Addr = fmt.Sprintf(addr)
-	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
-	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
-	dockerRegistry, err := registry.NewRegistry(context.Background(), config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	go dockerRegistry.ListenAndServe()
-	ociRepo.Url = dockerRegistryHost + "/someproject/charts"
-	return prepareTest(t)
-}
-
 func TestFetch(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	chartPath, err := c.Fetch("kafka", "12.2.1")
 	if err != nil {
 		t.Fatal(err)
@@ -111,7 +47,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	has, err := c.Has("kafka", "12.2.1")
 	if err != nil {
 		t.Fatal(err)
@@ -122,8 +58,8 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c := prepareHttpServer(t)
-	expectedError := "list method is not supported yet"
+	c := oci.PrepareHttpServer(t, ociRepo)
+	expectedError := "No OCI index file detected. Please provide the charts filter in config file"
 	_, err := c.List()
 	if err.Error() != expectedError {
 		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
@@ -131,7 +67,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	want := []string{"12.2.1"}
 	got, err := c.ListChartVersions("kafka")
 	if err != nil {
@@ -145,7 +81,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	want := types.ChartDetails{
 		PublishedAt: time.Now(),
 		Digest:      "sha256:11e974d88391a39e4dd6d7d6c4350b237b1cca1bf32f2074bba41109eaa5f438",
@@ -160,7 +96,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	expectedError := "reload method is not supported yet"
 	err := c.Reload()
 	if err.Error() != expectedError {
@@ -169,7 +105,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestGetDownloadURL(t *testing.T) {
-	c := prepareHttpServer(t)
+	c := oci.PrepareHttpServer(t, ociRepo)
 	u, err := url.Parse(ociRepo.Url)
 	if err != nil {
 		t.Fatal(err)
@@ -186,7 +122,8 @@ func TestGetDownloadURL(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c := prepareOciServer(t)
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",
 		Version: "7.3.15",

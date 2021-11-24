@@ -2,11 +2,21 @@ package core
 
 import (
 	"fmt"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"strconv"
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 )
+
+// Creates an HTTP server that knows how to reply to all OCI related requests
+func prepareHttpServer(t *testing.T, ociRepo *api.Repo) {
+	t.Helper()
+
+	// Create HTTP server
+	tester := oci.NewTester(t, ociRepo)
+	ociRepo.Url = tester.GetURL() + "/someproject/charts"
+}
 
 func TestNewClient(t *testing.T) {
 	tests := []struct {
@@ -43,6 +53,11 @@ func TestNewClient(t *testing.T) {
 		{
 			&api.Repo{
 				Kind: api.Kind_OCI,
+				Url: "http://localhost:9090/my-project",
+				Auth: &api.Auth{
+					Username: "user",
+					Password: "password",
+				},
 			},
 			"*oci.Repo",
 			"",
@@ -67,6 +82,11 @@ func TestNewClient(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			// TODO (tpizarro): create simple http server to serve testdata index.yaml file so we don't have to use the index from the public
 			// bitnami charts repo.
+
+			// For OCI kind we need first to init an HTTP server to mock responses during client initialization
+			if test.repo.Kind == api.Kind_OCI {
+				prepareHttpServer(t, test.repo)
+			}
 			c, err := NewClient(test.repo)
 			errText := ""
 			if err != nil {
