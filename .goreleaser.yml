@@ -8,6 +8,8 @@ builds:
       - GO111MODULE=on
     main: ./main.go
     binary: charts-syncer
+    ldflags:
+      - -X github.com/bitnami-labs/charts-syncer/cmd.Version={{.Version}}
 dockers:
   -
     ids:
