@@ -1,5 +1,7 @@
 OUTPUT = ./dist/charts-syncer
 GO_SOURCES = $(shell find . -type f -name '*.go')
+VERSION := $(or $(VERSION), dev)
+LDFLAGS="-X github.com/bitnami-labs/charts-syncer/cmd.version=$(VERSION)"
 
 test:
 	GO111MODULE=on go test ./...
@@ -15,4 +17,4 @@ gen:
 	go generate github.com/bitnami-labs/charts-syncer/...
 
 build: $(GO_SOURCES)
-	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) ./
+	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./
