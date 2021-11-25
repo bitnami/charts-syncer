@@ -32,7 +32,7 @@ func TestLoadCharts(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			s := NewFake(t)
-			if err := s.loadCharts(tc.entries...); err != nil {
+			if _, err := s.loadCharts(tc.entries...); err != nil {
 				t.Fatalf("unable to load charts: %v", err)
 			}
 

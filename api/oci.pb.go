@@ -7,11 +7,12 @@
 package api
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -25,12 +26,14 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
+// The following is a proposed custom index for OCI repositories.
+// For charts-syncer use case, we are only interested on charts artifacts
+//
 type OciIndex struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	//    repeated Containers containers = 1;
 	Charts []*OciIndex_Charts `protobuf:"bytes,2,rep,name=charts,proto3" json:"charts,omitempty"`
 }
 

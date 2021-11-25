@@ -13,7 +13,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	_ "github.com/docker/distribution/registry/storage/driver/inmemory"
+	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 	"helm.sh/helm/v3/pkg/chart"
 )
 
@@ -59,10 +59,35 @@ func TestHas(t *testing.T) {
 
 func TestList(t *testing.T) {
 	c := oci.PrepareHttpServer(t, ociRepo)
-	expectedError := "No OCI index file detected. Please provide the charts filter in config file"
-	_, err := c.List()
-	if err.Error() != expectedError {
-		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
+	want := []string{}
+	got, err := c.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(want)
+	sort.Strings(got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected list of charts names. got: %v, want: %v", got, want)
+	}
+}
+
+func TestListWithEntries(t *testing.T) {
+	entries := map[string][]string{
+		"chartA": {"1.0.1", "1.0.2"},
+		"chartB": {"2.0.1", "2.0.2"},
+		"chartC": {"0.0.1", "0.0.2"},
+	}
+	c := oci.PrepareHttpServer(t, ociRepo)
+	c.SetEntries(entries)
+	want := []string{"chartA", "chartB", "chartC"}
+	got, err := c.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(want)
+	sort.Strings(got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected list of charts names. got: %v, want: %v", got, want)
 	}
 }
 

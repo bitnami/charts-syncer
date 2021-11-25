@@ -3,10 +3,6 @@ package oci
 import (
 	"context"
 	"fmt"
-	"github.com/containerd/containerd/remotes/docker"
-	"github.com/deislabs/oras/pkg/content"
-	"github.com/deislabs/oras/pkg/oras"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -20,8 +16,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/distribution/configuration"
-	"github.com/docker/distribution/registry"
+	"github.com/containerd/containerd/remotes/docker"
+	"oras.land/oras-go/pkg/content"
+	"oras.land/oras-go/pkg/oras"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+
+	"github.com/distribution/distribution/v3/configuration"
+	"github.com/distribution/distribution/v3/registry"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
@@ -30,7 +31,7 @@ import (
 )
 
 var (
-	ociIndexRegex        = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
+	ociIndexRegex              = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
 	ociTagManifestRegex        = regexp.MustCompile(`(?m)\/v2\/(.*)\/manifests\/(.*)`)
 	ociBlobsRegex              = regexp.MustCompile(`(?m)\/v2\/(.*)\/blobs\/sha256:(.*)`)
 	ociTagsListRegex           = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/list`)
@@ -53,7 +54,6 @@ type RepoTester struct {
 	// index.yaml to be loaded for testing purposes
 	indexFile string
 }
-
 
 func PushFileToOCI(t *testing.T, filepath string, ref string) {
 	ctx := context.Background()
@@ -187,7 +187,6 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	rt.t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
 }
 
@@ -232,7 +231,6 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 func (rt *RepoTester) HeadManifest404(w http.ResponseWriter) {
 	w.WriteHeader(404)
 }
-
 
 // GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, name, digest string) {

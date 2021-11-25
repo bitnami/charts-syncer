@@ -151,27 +151,26 @@ target:
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
 Also, take into account that if you use OCI as the source repository you must specify the list of charts to synchronize
-or a pointer to an [index file](#oci-index) in the repository.
+or a pointer to an [index file](#helm-charts-index-for-oci-based-repositories) in the repository.
 
-#### OCI index
+#### Helm Charts Index for OCI-based repositories
 
-In order to speed up the sync process for OCI charts, it is possible to specify a reference to an OCI index file containing 
-the chart versions to be synced from the repository. Thanks to the index, chart-syncer don't need to autodiscover 
-what tags for a specific asset are charts or other kind of artifacts which is a costly process.
+By using a charts index file for OCI-bases repository you won't need to maintain a hardcoded list of chart names in the config file.
+charts-syncer will be able to auto-discover what charts need to be synchronized.
 
 ~~~yaml
 source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   ociIndex: my-oci-registry.io/my-project/index:latest
+   chartsIndex: my-oci-registry.io/my-project/index:latest
 ~~~
 
-You can specify the index in the format of `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`. If the `ociIndex` property is provided,
-charts-syncer will use it directly, otherwise it will try to guess it from the URL field by looking for an index:latest asset located
+You can specify the index in the format of `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`. If the `chartsIndex` property is provided,
+charts-syncer will use it directly, otherwise it will fallback to retrieve the index from a default location `index:latest` asset located
 directly at URL level.
 
-For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `ociIndex` is specified, charts-syncer will try to use 
+For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
 `my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
 
 An example of the valid index format can be seen directly in its [protobuffer definition](api/oci.proto). 

@@ -4,6 +4,9 @@ package api;
 option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
 
 
+// The following is a proposed custom index for OCI repositories.
+// For charts-syncer use case, we are only interested on charts artifacts
+//
 message OciIndex {
     message ChartVersions {
         string version = 1;

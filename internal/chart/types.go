@@ -12,5 +12,3 @@ const (
 	RequirementsLockFilename string = "requirements.lock"
 	ReadmeFilename           string = "README.md"
 )
-
-

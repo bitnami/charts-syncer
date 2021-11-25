@@ -31,7 +31,7 @@ message Repo {
     // The path where the repo stores charts. Useful for LOCAL kind only
     string path = 4;
     // The uri where the OCI repository keeps the index of charts
-    string ociIndex = 5;
+    string chartsIndex = 5;
 }
 
 // Auth contains credentials to login to a chart repository

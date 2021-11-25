@@ -2,9 +2,10 @@ package core
 
 import (
 	"fmt"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"strconv"
 	"testing"
+
+	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 )
@@ -53,7 +54,7 @@ func TestNewClient(t *testing.T) {
 		{
 			&api.Repo{
 				Kind: api.Kind_OCI,
-				Url: "http://localhost:9090/my-project",
+				Url:  "http://localhost:9090/my-project",
 				Auth: &api.Auth{
 					Username: "user",
 					Password: "password",

@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/bitnami-labs/pbjson"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,20 +17,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bitnami-labs/pbjson"
+
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
-	"github.com/deislabs/oras/pkg/content"
-	"github.com/deislabs/oras/pkg/oras"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
+	"oras.land/oras-go/pkg/content"
+	"oras.land/oras-go/pkg/oras"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	orascontext "github.com/deislabs/oras/pkg/context"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	orascontext "oras.land/oras-go/pkg/context"
 )
 
 const (
@@ -55,8 +57,8 @@ type Repo struct {
 	password string
 	insecure bool
 
-	entries map[string][]string
-	cache cache.Cacher
+	entries        map[string][]string
+	cache          cache.Cacher
 	dockerResolver remotes.Resolver
 }
 
@@ -73,49 +75,25 @@ func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 		return nil, errors.Trace(err)
 	}
 	resolver := newDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
-	// Init entries
-	entries := make(map[string][]string)
 
 	// First we try to load the index referenced from config file,
 	// if it does not exist, then we try to guess it directly from repo url
-	ociIndexRef := repo.GetOciIndex()
-	if ociIndexRef == "" {
-		klog.Infof("OCI index reference is empty in config file. Guessing index from repo url")
-		ociIndexRef = fmt.Sprintf("%s%s/index:latest", u.Host, u.Path)
+	chartsIndexRef := repo.GetChartsIndex()
+	if chartsIndexRef == "" {
+		chartsIndexRef = fmt.Sprintf("%s%s/index:latest", u.Host, u.Path)
+		klog.Infof("No Charts OCI index reference specified. Checking default location: %q", chartsIndexRef)
 	}
 
-	ociIndexExists, err := ociReferenceExists(u, ociIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
+	ociIndexExists, err := ociReferenceExists(u, chartsIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-
+	// Init entries
+	entries := make(map[string][]string)
 	if ociIndexExists {
-		// Pull with ORAS lib
-		filename := "asset-index.json"
-		defer os.Remove(filename)
-		ctx := context.Background()
-		klog.Infof("Pulling index from %s...", ociIndexRef)
-		fileStore := content.NewFileStore("")
-		defer fileStore.Close()
-		_, _, err := oras.Pull(ctx, resolver, ociIndexRef, fileStore)
+		entries, err = populateEntries(chartsIndexRef, resolver)
 		if err != nil {
 			return nil, errors.Trace(err)
-		}
-
-		// Read downloaded file
-		ociIndexBytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		r := bytes.NewReader(ociIndexBytes)
-
-		// Unmarshall index and populate entries
-		ociIndex := &api.OciIndex{}
-		err = pbjson.NewDecoder(r).Decode(ociIndex)
-		for _, c := range ociIndex.Charts{
-			for _, version := range c.Versions{
-				entries[c.Name] = append(entries[c.Name], version.Version)
-			}
 		}
 	} else {
 		klog.Info("Unable to load OCI index file. Using 'charts' filter from config file...")
@@ -132,13 +110,13 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool,
 // List lists all chart names in a repo
 func (r *Repo) List() ([]string, error) {
 	var names []string
-	// If entries is not populated, it means we couldn't load any index file so we need the charts filter in the
-	// configuration file
+	// If entries is not populated, it means we couldn't load any index file, so we need the charts filter in the
+	// configuration file. The List() caller will handle this case
 	if len(r.entries) == 0 {
-		return nil, errors.New("No OCI index file detected. Please provide the charts filter in config file")
+		return []string{}, nil
 	}
-	for name := range r.entries {
-		names = append(names, name)
+	for entry := range r.entries {
+		names = append(names, entry)
 	}
 	return names, nil
 }
@@ -206,6 +184,8 @@ func (r *Repo) getChartDigest(name, version string) (string, error) {
 // ListChartVersions lists all versions of a chart
 func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	// If entries is populated use it to list the chart versions
+	// Otherwise, we need the charts list to be defined in the config file, retrieve all the tags for those chart names
+	// and verify which tags are real charts by checking its mimeType.
 	if _, ok := r.entries[name]; ok {
 		return r.entries[name], nil
 	}
@@ -425,40 +405,35 @@ func (r *Repo) Reload() error {
 	return errors.Errorf("reload method is not supported yet")
 }
 
+// SetEntries sets the entries of a repo
+func (r *Repo) SetEntries(entries map[string][]string) {
+	r.entries = entries
+}
 
 // OciReference contains info about an oci reference
 type ociReference struct {
 	path string
-	tag string
-}
-
-// splitOciReference split the tag or digest from an oci reference if exists
-func splitOciReference(ociRef string) ociReference {
-	parts := strings.Split(ociRef, "@")
-	if len(parts) == 2 { // Digest provided (Easy to split)
-		digest := parts[1]
-		digestRef := strings.Split(digest, ":")
-		return ociReference{path: parts[0], tag: digestRef[1]}
-	}
-	parts = strings.Split(ociRef, ":") // Tag provided or host:port. Let's use a regex
-	if len(parts) >= 2 {
-		res := tagRegex.FindStringSubmatch(ociRef)
-		return ociReference{path: res[1], tag: res[2]}
-	}
-
-	return ociReference{path: ociRef}
+	tag  string
 }
 
 // ociReferenceExists checks if a given oci reference exists in the repository
 // OCI endpoints: https://github.com/opencontainers/distribution-spec/blob/main/spec.md#endpoints
 func ociReferenceExists(repoUrl *url.URL, ociRef, username, password string, insecure bool) (bool, error) {
-	ociReference := splitOciReference(ociRef)
-	fullOciRef := fmt.Sprintf("%s://%s",repoUrl.Scheme, ociReference.path)
-	u, err := url.Parse(fullOciRef)
+	ociReference, err := name.ParseReference(ociRef)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
-	u.Path = path.Join("v2", u.Path, "manifests", ociReference.tag)
+	ociReferenceIdentifier := ociReference.Identifier()
+	parts := strings.Split(ociReference.Identifier(), ":")
+	if len(parts) == 2 { // Identifier is a digest. We should remove sha256 prefix
+		ociReferenceIdentifier = parts[1]
+	}
+	contextOciRef := fmt.Sprintf("%s://%s", repoUrl.Scheme, ociReference.Context())
+	u, err := url.Parse(contextOciRef)
+	if err != nil {
+		return false, errors.Trace(err)
+	}
+	u.Path = path.Join("v2", u.Path, "manifests", ociReferenceIdentifier)
 
 	req, err := http.NewRequest("HEAD", u.String(), nil)
 	if err != nil {
@@ -468,7 +443,7 @@ func ociReferenceExists(repoUrl *url.URL, ociRef, username, password string, ins
 		req.SetBasicAuth(username, password)
 	}
 
-	req.Header.Set("Accept","application/vnd.oci.image.manifest.v1+json")
+	req.Header.Set("Accept", "application/vnd.oci.image.manifest.v1+json")
 	reqID := utils.EncodeSha1(u.String())
 	klog.V(4).Infof("[%s] HEAD %q", reqID, u.String())
 	client := http.DefaultClient
@@ -499,6 +474,39 @@ func ociReferenceExists(repoUrl *url.URL, ociRef, username, password string, ins
 	}
 
 	return true, nil
+}
+
+// populateEntries populates the entries map with the info from the charts index
+func populateEntries(chartsIndexRef string, resolver remotes.Resolver) (map[string][]string, error) {
+	entries := make(map[string][]string)
+	// Pull with ORAS lib
+	filename := "asset-index.json"
+	defer os.Remove(filename)
+	ctx := context.Background()
+	klog.Infof("Pulling index from %s...", chartsIndexRef)
+	fileStore := content.NewFileStore("")
+	defer fileStore.Close()
+	_, _, err := oras.Pull(ctx, resolver, chartsIndexRef, fileStore)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	// Read downloaded file
+	ociIndexBytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	r := bytes.NewReader(ociIndexBytes)
+
+	// Unmarshall index and populate entries
+	ociIndex := &api.OciIndex{}
+	err = pbjson.NewDecoder(r).Decode(ociIndex)
+	for _, c := range ociIndex.Charts {
+		for _, version := range c.Versions {
+			entries[c.Name] = append(entries[c.Name], version.Version)
+		}
+	}
+	return entries, nil
 }
 
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
