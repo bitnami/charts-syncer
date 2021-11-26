@@ -155,7 +155,7 @@ or a pointer to an [index file](#helm-charts-index-for-oci-based-repositories) i
 
 #### Helm Charts Index for OCI-based repositories
 
-By using a charts index file for OCI-bases repository you won't need to maintain a hardcoded list of chart names in the config file.
+By using a charts index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
 charts-syncer will be able to auto-discover what charts need to be synchronized.
 
 ~~~yaml
@@ -173,9 +173,10 @@ directly at URL level.
 For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
 `my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
 
-An example of the valid index format can be seen directly in its [protobuffer definition](api/oci.proto). 
+An example of the valid index format can be seen directly in its [protobuffer definition](api/oci.proto). Worth to mention 
+that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
 
-Finally, if no OCI index is found, charts-syncer would still need the list of charts in the config file:
+Finally, if no OCI index is found, charts-syncer will require the list of charts in the config file:
 
 ~~~yaml
 #

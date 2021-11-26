@@ -63,6 +63,8 @@ func (i ChartIndex) Get(id string) *Chart {
 }
 
 // loadCharts loads the charts map into the index from the source repo
+// The returned boolean means that we should abort the execution rather that keeping the error to show all of them
+// together at the end of the execution
 func (s *Syncer) loadCharts(charts ...string) (bool, error) {
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
@@ -72,7 +74,7 @@ func (s *Syncer) loadCharts(charts ...string) (bool, error) {
 		// For OCI source we need either access to a charts index file in the repo or a list of charts provided via
 		// config file
 		if len(srcCharts) == 0 && s.source.GetRepo().GetKind() == api.Kind_OCI {
-			return true, errors.Errorf("unable to load charts OCI index file and charts filter not provided in config" +
+			return true, errors.Errorf("unable to load charts OCI index file and charts filter not provided in config " +
 				"file. Unable to know which charts needs syncing")
 		}
 		if err != nil {

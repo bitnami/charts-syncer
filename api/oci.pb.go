@@ -7,12 +7,11 @@
 package api
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -29,16 +28,16 @@ const _ = proto.ProtoPackageIsVersion4
 // The following is a proposed custom index for OCI repositories.
 // For charts-syncer use case, we are only interested on charts artifacts
 //
-type OciIndex struct {
+type OCIIndex struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Charts []*OciIndex_Charts `protobuf:"bytes,2,rep,name=charts,proto3" json:"charts,omitempty"`
+	Charts []*OCIIndex_Charts `protobuf:"bytes,2,rep,name=charts,proto3" json:"charts,omitempty"`
 }
 
-func (x *OciIndex) Reset() {
-	*x = OciIndex{}
+func (x *OCIIndex) Reset() {
+	*x = OCIIndex{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_oci_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -46,13 +45,13 @@ func (x *OciIndex) Reset() {
 	}
 }
 
-func (x *OciIndex) String() string {
+func (x *OCIIndex) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*OciIndex) ProtoMessage() {}
+func (*OCIIndex) ProtoMessage() {}
 
-func (x *OciIndex) ProtoReflect() protoreflect.Message {
+func (x *OCIIndex) ProtoReflect() protoreflect.Message {
 	mi := &file_oci_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -64,19 +63,19 @@ func (x *OciIndex) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use OciIndex.ProtoReflect.Descriptor instead.
-func (*OciIndex) Descriptor() ([]byte, []int) {
+// Deprecated: Use OCIIndex.ProtoReflect.Descriptor instead.
+func (*OCIIndex) Descriptor() ([]byte, []int) {
 	return file_oci_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *OciIndex) GetCharts() []*OciIndex_Charts {
+func (x *OCIIndex) GetCharts() []*OCIIndex_Charts {
 	if x != nil {
 		return x.Charts
 	}
 	return nil
 }
 
-type OciIndex_ChartVersions struct {
+type OCIIndex_ChartVersions struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -86,8 +85,8 @@ type OciIndex_ChartVersions struct {
 	Uri     string `protobuf:"bytes,3,opt,name=uri,proto3" json:"uri,omitempty"`
 }
 
-func (x *OciIndex_ChartVersions) Reset() {
-	*x = OciIndex_ChartVersions{}
+func (x *OCIIndex_ChartVersions) Reset() {
+	*x = OCIIndex_ChartVersions{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_oci_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -95,13 +94,13 @@ func (x *OciIndex_ChartVersions) Reset() {
 	}
 }
 
-func (x *OciIndex_ChartVersions) String() string {
+func (x *OCIIndex_ChartVersions) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*OciIndex_ChartVersions) ProtoMessage() {}
+func (*OCIIndex_ChartVersions) ProtoMessage() {}
 
-func (x *OciIndex_ChartVersions) ProtoReflect() protoreflect.Message {
+func (x *OCIIndex_ChartVersions) ProtoReflect() protoreflect.Message {
 	mi := &file_oci_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -113,43 +112,43 @@ func (x *OciIndex_ChartVersions) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use OciIndex_ChartVersions.ProtoReflect.Descriptor instead.
-func (*OciIndex_ChartVersions) Descriptor() ([]byte, []int) {
+// Deprecated: Use OCIIndex_ChartVersions.ProtoReflect.Descriptor instead.
+func (*OCIIndex_ChartVersions) Descriptor() ([]byte, []int) {
 	return file_oci_proto_rawDescGZIP(), []int{0, 0}
 }
 
-func (x *OciIndex_ChartVersions) GetVersion() string {
+func (x *OCIIndex_ChartVersions) GetVersion() string {
 	if x != nil {
 		return x.Version
 	}
 	return ""
 }
 
-func (x *OciIndex_ChartVersions) GetDigest() string {
+func (x *OCIIndex_ChartVersions) GetDigest() string {
 	if x != nil {
 		return x.Digest
 	}
 	return ""
 }
 
-func (x *OciIndex_ChartVersions) GetUri() string {
+func (x *OCIIndex_ChartVersions) GetUri() string {
 	if x != nil {
 		return x.Uri
 	}
 	return ""
 }
 
-type OciIndex_Charts struct {
+type OCIIndex_Charts struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Name     string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Versions []*OciIndex_ChartVersions `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
+	Versions []*OCIIndex_ChartVersions `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
 }
 
-func (x *OciIndex_Charts) Reset() {
-	*x = OciIndex_Charts{}
+func (x *OCIIndex_Charts) Reset() {
+	*x = OCIIndex_Charts{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_oci_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -157,13 +156,13 @@ func (x *OciIndex_Charts) Reset() {
 	}
 }
 
-func (x *OciIndex_Charts) String() string {
+func (x *OCIIndex_Charts) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*OciIndex_Charts) ProtoMessage() {}
+func (*OCIIndex_Charts) ProtoMessage() {}
 
-func (x *OciIndex_Charts) ProtoReflect() protoreflect.Message {
+func (x *OCIIndex_Charts) ProtoReflect() protoreflect.Message {
 	mi := &file_oci_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -175,19 +174,19 @@ func (x *OciIndex_Charts) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use OciIndex_Charts.ProtoReflect.Descriptor instead.
-func (*OciIndex_Charts) Descriptor() ([]byte, []int) {
+// Deprecated: Use OCIIndex_Charts.ProtoReflect.Descriptor instead.
+func (*OCIIndex_Charts) Descriptor() ([]byte, []int) {
 	return file_oci_proto_rawDescGZIP(), []int{0, 1}
 }
 
-func (x *OciIndex_Charts) GetName() string {
+func (x *OCIIndex_Charts) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *OciIndex_Charts) GetVersions() []*OciIndex_ChartVersions {
+func (x *OCIIndex_Charts) GetVersions() []*OCIIndex_ChartVersions {
 	if x != nil {
 		return x.Versions
 	}
@@ -198,9 +197,9 @@ var File_oci_proto protoreflect.FileDescriptor
 
 var file_oci_proto_rawDesc = []byte{
 	0x0a, 0x09, 0x6f, 0x63, 0x69, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x03, 0x61, 0x70, 0x69,
-	0x22, 0xe4, 0x01, 0x0a, 0x08, 0x4f, 0x63, 0x69, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x2c, 0x0a,
+	0x22, 0xe4, 0x01, 0x0a, 0x08, 0x4f, 0x43, 0x49, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x2c, 0x0a,
 	0x06, 0x63, 0x68, 0x61, 0x72, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e,
-	0x61, 0x70, 0x69, 0x2e, 0x4f, 0x63, 0x69, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x2e, 0x43, 0x68, 0x61,
+	0x61, 0x70, 0x69, 0x2e, 0x4f, 0x43, 0x49, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x2e, 0x43, 0x68, 0x61,
 	0x72, 0x74, 0x73, 0x52, 0x06, 0x63, 0x68, 0x61, 0x72, 0x74, 0x73, 0x1a, 0x53, 0x0a, 0x0d, 0x43,
 	0x68, 0x61, 0x72, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x18, 0x0a, 0x07,
 	0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76,
@@ -210,7 +209,7 @@ var file_oci_proto_rawDesc = []byte{
 	0x1a, 0x55, 0x0a, 0x06, 0x43, 0x68, 0x61, 0x72, 0x74, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
 	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x37,
 	0x0a, 0x08, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x1b, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x63, 0x69, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x2e,
+	0x32, 0x1b, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x4f, 0x43, 0x49, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x2e,
 	0x43, 0x68, 0x61, 0x72, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x08, 0x76,
 	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75,
 	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x69, 0x74, 0x6e, 0x61, 0x6d, 0x69, 0x2d, 0x6c, 0x61,
@@ -232,13 +231,13 @@ func file_oci_proto_rawDescGZIP() []byte {
 
 var file_oci_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_oci_proto_goTypes = []interface{}{
-	(*OciIndex)(nil),               // 0: api.OciIndex
-	(*OciIndex_ChartVersions)(nil), // 1: api.OciIndex.ChartVersions
-	(*OciIndex_Charts)(nil),        // 2: api.OciIndex.Charts
+	(*OCIIndex)(nil),               // 0: api.OCIIndex
+	(*OCIIndex_ChartVersions)(nil), // 1: api.OCIIndex.ChartVersions
+	(*OCIIndex_Charts)(nil),        // 2: api.OCIIndex.Charts
 }
 var file_oci_proto_depIdxs = []int32{
-	2, // 0: api.OciIndex.charts:type_name -> api.OciIndex.Charts
-	1, // 1: api.OciIndex.Charts.versions:type_name -> api.OciIndex.ChartVersions
+	2, // 0: api.OCIIndex.charts:type_name -> api.OCIIndex.Charts
+	1, // 1: api.OCIIndex.Charts.versions:type_name -> api.OCIIndex.ChartVersions
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -253,7 +252,7 @@ func file_oci_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_oci_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OciIndex); i {
+			switch v := v.(*OCIIndex); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -265,7 +264,7 @@ func file_oci_proto_init() {
 			}
 		}
 		file_oci_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OciIndex_ChartVersions); i {
+			switch v := v.(*OCIIndex_ChartVersions); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -277,7 +276,7 @@ func file_oci_proto_init() {
 			}
 		}
 		file_oci_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OciIndex_Charts); i {
+			switch v := v.(*OCIIndex_Charts); i {
 			case 0:
 				return &v.state
 			case 1:

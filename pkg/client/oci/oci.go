@@ -13,7 +13,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,7 +20,9 @@ import (
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
@@ -44,10 +45,6 @@ const (
 	HelmChartContentLayerMediaType = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
-)
-
-var (
-	tagRegex = regexp.MustCompile(`^([a-z0-9.:]+/[\w\-_/]+):?([\w0-9.]+)?`)
 )
 
 // Repo allows to operate a chart repository.
@@ -84,7 +81,7 @@ func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 		klog.Infof("No Charts OCI index reference specified. Checking default location: %q", chartsIndexRef)
 	}
 
-	ociIndexExists, err := ociReferenceExists(u, chartsIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
+	ociIndexExists, err := ociReferenceExists(chartsIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -405,74 +402,24 @@ func (r *Repo) Reload() error {
 	return errors.Errorf("reload method is not supported yet")
 }
 
-// SetEntries sets the entries of a repo
-func (r *Repo) SetEntries(entries map[string][]string) {
-	r.entries = entries
-}
-
-// OciReference contains info about an oci reference
-type ociReference struct {
-	path string
-	tag  string
-}
-
 // ociReferenceExists checks if a given oci reference exists in the repository
-// OCI endpoints: https://github.com/opencontainers/distribution-spec/blob/main/spec.md#endpoints
-func ociReferenceExists(repoUrl *url.URL, ociRef, username, password string, insecure bool) (bool, error) {
+func ociReferenceExists(ociRef, username, password string) (bool, error) {
 	ociReference, err := name.ParseReference(ociRef)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
-	ociReferenceIdentifier := ociReference.Identifier()
-	parts := strings.Split(ociReference.Identifier(), ":")
-	if len(parts) == 2 { // Identifier is a digest. We should remove sha256 prefix
-		ociReferenceIdentifier = parts[1]
+	authOptions := authn.Basic{Username: username, Password: password}
+	opt := []remote.Option{
+		remote.WithAuth(&authOptions),
 	}
-	contextOciRef := fmt.Sprintf("%s://%s", repoUrl.Scheme, ociReference.Context())
-	u, err := url.Parse(contextOciRef)
+	_, err = remote.Head(ociReference, opt...)
 	if err != nil {
-		return false, errors.Trace(err)
-	}
-	u.Path = path.Join("v2", u.Path, "manifests", ociReferenceIdentifier)
-
-	req, err := http.NewRequest("HEAD", u.String(), nil)
-	if err != nil {
-		return false, errors.Trace(err)
-	}
-	if username != "" && password != "" {
-		req.SetBasicAuth(username, password)
-	}
-
-	req.Header.Set("Accept", "application/vnd.oci.image.manifest.v1+json")
-	reqID := utils.EncodeSha1(u.String())
-	klog.V(4).Infof("[%s] HEAD %q", reqID, u.String())
-	client := http.DefaultClient
-	if insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		if strings.Contains(err.Error(), "404 Not Found") {
+			return false, nil
+		} else {
+			return false, errors.Trace(err)
 		}
-		client = &http.Client{Transport: tr}
 	}
-	res, err := client.Do(req)
-	if err != nil {
-		return false, errors.Annotatef(err, "checking existence of %q oci reference", ociRef)
-	}
-	defer res.Body.Close()
-
-	status := res.StatusCode
-	// Valid response codes from OCI registries are listed here:
-	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
-	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
-	switch status {
-	case http.StatusOK:
-		//do nothing, just continue
-	case http.StatusNotFound:
-		return false, nil
-	default:
-		bodyStr := utils.HTTPResponseBody(res)
-		return false, errors.Errorf("unable to check if OCI index exists, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
-	}
-
 	return true, nil
 }
 
@@ -499,7 +446,7 @@ func populateEntries(chartsIndexRef string, resolver remotes.Resolver) (map[stri
 	r := bytes.NewReader(ociIndexBytes)
 
 	// Unmarshall index and populate entries
-	ociIndex := &api.OciIndex{}
+	ociIndex := &api.OCIIndex{}
 	err = pbjson.NewDecoder(r).Decode(ociIndex)
 	for _, c := range ociIndex.Charts {
 		for _, version := range c.Versions {

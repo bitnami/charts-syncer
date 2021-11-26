@@ -3,6 +3,8 @@ package oci
 import (
 	"fmt"
 	"net/url"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -50,7 +52,7 @@ func TestOciReferenceExists(t *testing.T) {
 			if tc.pushTestAsset {
 				PushFileToOCI(t, "../../../testdata/oci/index.json", ociRef)
 			}
-			got, err := ociReferenceExists(u, ociRef, ociRepo.GetAuth().GetUsername(), ociRepo.GetAuth().GetPassword(), true)
+			got, err := ociReferenceExists(ociRef, ociRepo.GetAuth().GetUsername(), ociRepo.GetAuth().GetPassword())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -58,5 +60,26 @@ func TestOciReferenceExists(t *testing.T) {
 				t.Errorf("wrong result from OCI reference existence check. got: %v, want: %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestListWithEntries(t *testing.T) {
+	entries := map[string][]string{
+		"chartA": {"1.0.1", "1.0.2"},
+		"chartB": {"2.0.1", "2.0.2"},
+		"chartC": {"0.0.1", "0.0.2"},
+	}
+	repo := Repo{
+		entries: entries,
+	}
+	want := []string{"chartA", "chartB", "chartC"}
+	got, err := repo.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(want)
+	sort.Strings(got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected list of charts names. got: %v, want: %v", got, want)
 	}
 }

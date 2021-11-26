@@ -71,26 +71,6 @@ func TestList(t *testing.T) {
 	}
 }
 
-func TestListWithEntries(t *testing.T) {
-	entries := map[string][]string{
-		"chartA": {"1.0.1", "1.0.2"},
-		"chartB": {"2.0.1", "2.0.2"},
-		"chartC": {"0.0.1", "0.0.2"},
-	}
-	c := oci.PrepareHttpServer(t, ociRepo)
-	c.SetEntries(entries)
-	want := []string{"chartA", "chartB", "chartC"}
-	got, err := c.List()
-	if err != nil {
-		t.Fatal(err)
-	}
-	sort.Strings(want)
-	sort.Strings(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("unexpected list of charts names. got: %v, want: %v", got, want)
-	}
-}
-
 func TestListChartVersions(t *testing.T) {
 	c := oci.PrepareHttpServer(t, ociRepo)
 	want := []string{"12.2.1"}
