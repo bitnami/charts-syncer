@@ -2,16 +2,13 @@ package syncer
 
 import (
 	"fmt"
-	"github.com/bitnami-labs/charts-syncer/api"
-	"sort"
-
-	"github.com/juju/errors"
-	"github.com/mkmik/multierror"
-	toposort "github.com/philopon/go-toposort"
-	"k8s.io/klog"
-
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/juju/errors"
+	"github.com/mkmik/multierror"
+	"github.com/philopon/go-toposort"
+	"k8s.io/klog"
+	"sort"
 )
 
 // Chart describes a chart, including dependencies
@@ -65,20 +62,17 @@ func (i ChartIndex) Get(id string) *Chart {
 // loadCharts loads the charts map into the index from the source repo
 // The returned boolean means that we should abort the execution rather that keeping the error to show all of them
 // together at the end of the execution
-func (s *Syncer) loadCharts(charts ...string) (bool, error) {
+func (s *Syncer) loadCharts(charts ...string) error {
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
-			return true, errors.Errorf("unable to discover charts to sync")
+			return errors.Errorf("unable to discover charts to sync")
 		}
 		srcCharts, err := s.cli.src.List()
-		// For OCI source we need either access to a charts index file in the repo or a list of charts provided via
-		// config file
-		if len(srcCharts) == 0 && s.source.GetRepo().GetKind() == api.Kind_OCI {
-			return true, errors.Errorf("unable to load charts OCI index file and charts filter not provided in config " +
-				"file. Unable to know which charts needs syncing")
-		}
 		if err != nil {
-			return false, errors.Trace(err)
+			return errors.Trace(err)
+		}
+		if len(srcCharts) == 0 {
+			return errors.Errorf("not found charts to sync")
 		}
 		charts = srcCharts
 	}
@@ -88,7 +82,7 @@ func (s *Syncer) loadCharts(charts ...string) (bool, error) {
 	// Create basic layout for date and parse flag to time type
 	publishingThreshold, err := utils.GetDateThreshold(s.fromDate)
 	if err != nil {
-		return false, errors.Trace(err)
+		return errors.Trace(err)
 	}
 	klog.V(4).Infof("Publishing threshold set to %q", publishingThreshold.String())
 
@@ -139,7 +133,7 @@ func (s *Syncer) loadCharts(charts ...string) (bool, error) {
 		}
 	}
 
-	return false, errors.Trace(errs)
+	return errors.Trace(errs)
 }
 
 // loadChart loads a chart in the chart index map

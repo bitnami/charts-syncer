@@ -3,8 +3,6 @@ package core
 import (
 	"io/ioutil"
 
-	"github.com/juju/errors"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
@@ -14,6 +12,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/local"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
 )
 

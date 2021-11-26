@@ -3,12 +3,11 @@ package syncer
 import (
 	"os"
 
-	"github.com/juju/errors"
-	"k8s.io/klog"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/juju/errors"
+	"k8s.io/klog"
 )
 
 // Clients holds the source and target chart repo clients

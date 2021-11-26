@@ -1,15 +1,14 @@
 package cmd
 
 import (
-	"github.com/juju/errors"
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"k8s.io/klog"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/config"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
+	"github.com/juju/errors"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"k8s.io/klog"
 )
 
 var (

@@ -16,27 +16,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerd/containerd/remotes/docker"
-	"oras.land/oras-go/pkg/content"
-	"oras.land/oras-go/pkg/oras"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-
-	"github.com/distribution/distribution/v3/configuration"
-	"github.com/distribution/distribution/v3/registry"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/containerd/containerd/remotes/docker"
+	"github.com/distribution/distribution/v3/configuration"
+	"github.com/distribution/distribution/v3/registry"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"oras.land/oras-go/pkg/content"
+	"oras.land/oras-go/pkg/oras"
 )
 
 var (
-	ociIndexRegex              = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
-	ociTagManifestRegex        = regexp.MustCompile(`(?m)\/v2\/(.*)\/manifests\/(.*)`)
-	ociBlobsRegex              = regexp.MustCompile(`(?m)\/v2\/(.*)\/blobs\/sha256:(.*)`)
-	ociTagsListRegex           = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/list`)
-	username            string = "user"
-	password            string = "password"
+	ociIndexRegex       = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
+	ociTagManifestRegex = regexp.MustCompile(`(?m)\/v2\/(.*)\/manifests\/(.*)`)
+	ociBlobsRegex       = regexp.MustCompile(`(?m)\/v2\/(.*)\/blobs\/sha256:(.*)`)
+	ociTagsListRegex    = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/list`)
+	username            = "user"
+	password            = "password"
 )
 
 // RepoTester allows to unit test each repo implementation

@@ -16,25 +16,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/bitnami-labs/pbjson"
-
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/juju/errors"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
 	"oras.land/oras-go/pkg/content"
-	"oras.land/oras-go/pkg/oras"
-
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	orascontext "oras.land/oras-go/pkg/context"
+	"oras.land/oras-go/pkg/oras"
 )
 
 const (
@@ -45,6 +43,8 @@ const (
 	HelmChartContentLayerMediaType = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
+	// Timeout for pulling the charts index
+	ChartsIndexPullTimeout = time.Second * 60
 )
 
 // Repo allows to operate a chart repository.
@@ -425,11 +425,11 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 
 // populateEntries populates the entries map with the info from the charts index
 func populateEntries(chartsIndexRef string, resolver remotes.Resolver) (map[string][]string, error) {
-	entries := make(map[string][]string)
+	ctx, cancel := context.WithTimeout(context.Background(), ChartsIndexPullTimeout)
+	defer cancel()
 	// Pull with ORAS lib
 	filename := "asset-index.json"
 	defer os.Remove(filename)
-	ctx := context.Background()
 	klog.Infof("Pulling index from %s...", chartsIndexRef)
 	fileStore := content.NewFileStore("")
 	defer fileStore.Close()
@@ -447,7 +447,11 @@ func populateEntries(chartsIndexRef string, resolver remotes.Resolver) (map[stri
 
 	// Unmarshall index and populate entries
 	ociIndex := &api.OCIIndex{}
-	err = pbjson.NewDecoder(r).Decode(ociIndex)
+	if err := pbjson.NewDecoder(r, pbjson.AllowUnknownFields(true)).Decode(ociIndex); err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	entries := make(map[string][]string, len(ociIndex.Charts))
 	for _, c := range ociIndex.Charts {
 		for _, version := range c.Versions {
 			entries[c.Name] = append(entries[c.Name], version.Version)
