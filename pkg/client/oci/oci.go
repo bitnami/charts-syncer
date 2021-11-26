@@ -43,7 +43,7 @@ const (
 	HelmChartContentLayerMediaType = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
-	// Timeout for pulling the charts index
+	// ChartsIndexPullTimeout is the timeout for pulling the charts index
 	ChartsIndexPullTimeout = time.Second * 60
 )
 

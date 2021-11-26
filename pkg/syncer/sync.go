@@ -25,7 +25,6 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	// There might be problems loading all the charts due to missing dependencies,
 	// invalid/wrong charts in the repository, etc. Therefore, let's warn about
 	// them instead of blocking the whole sync.
-	// If there is a severe error, abortExecution would be true, and we would end the whole sync (with proper error code)
 	err := s.loadCharts(names...)
 	if err != nil {
 		klog.Warningf("There were some problems loading the information of the requested charts: %v", err)
