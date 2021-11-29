@@ -6,15 +6,14 @@ import (
 	"os"
 	"path"
 
+	"github.com/bitnami-labs/charts-syncer/internal/chart"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
-
-	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // SyncPendingCharts syncs the charts not found in the target
@@ -26,7 +25,8 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	// There might be problems loading all the charts due to missing dependencies,
 	// invalid/wrong charts in the repository, etc. Therefore, let's warn about
 	// them instead of blocking the whole sync.
-	if err := s.loadCharts(names...); err != nil {
+	err := s.loadCharts(names...)
+	if err != nil {
 		klog.Warningf("There were some problems loading the information of the requested charts: %v", err)
 		errs = multierror.Append(errs, errors.Trace(err))
 	}

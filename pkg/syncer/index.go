@@ -2,15 +2,13 @@ package syncer
 
 import (
 	"fmt"
-	"sort"
-
-	"github.com/juju/errors"
-	"github.com/mkmik/multierror"
-	toposort "github.com/philopon/go-toposort"
-	"k8s.io/klog"
-
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/juju/errors"
+	"github.com/mkmik/multierror"
+	"github.com/philopon/go-toposort"
+	"k8s.io/klog"
+	"sort"
 )
 
 // Chart describes a chart, including dependencies
@@ -67,10 +65,12 @@ func (s *Syncer) loadCharts(charts ...string) error {
 		if !s.autoDiscovery {
 			return errors.Errorf("unable to discover charts to sync")
 		}
-
 		srcCharts, err := s.cli.src.List()
 		if err != nil {
 			return errors.Trace(err)
+		}
+		if len(srcCharts) == 0 {
+			return errors.Errorf("not found charts to sync")
 		}
 		charts = srcCharts
 	}

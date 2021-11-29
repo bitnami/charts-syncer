@@ -150,7 +150,48 @@ target:
 `subpath` in the previous url is optional in case your charts are not stored directly under your projects.
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
-Also, take into account that if you use OCI as the source repository you must specify the list of chart to synchronize
+Also, take into account that if you use OCI as the source repository you must specify the list of charts to synchronize
+or a pointer to an [index file](#helm-charts-index-for-oci-based-repositories) in the repository.
+
+#### Helm Charts Index for OCI-based repositories
+
+By using a charts index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
+charts-syncer will be able to auto-discover what charts need to be synchronized.
+
+~~~yaml
+source:
+ repo:
+   kind: OCI
+   url: https://my-oci-registry.io/my-project/subpath
+   chartsIndex: my-oci-registry.io/my-project/index:latest
+~~~
+
+You can specify the index in the format of `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`. If the `chartsIndex` property is provided,
+charts-syncer will use it directly, otherwise it will fallback to retrieve the index from a default location `index:latest` asset located
+directly at URL level.
+
+For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
+`my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
+
+An example of the valid index format can be seen directly in its [protobuffer definition](api/oci.proto). Worth to mention 
+that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
+
+Finally, if no OCI index is found, charts-syncer will require the list of charts in the config file:
+
+~~~yaml
+#
+# Example config file
+#
+source:
+  repo:
+    kind: OCI
+    url: https://my-oci-registry.io/my-project/subpath
+...
+charts:
+  - redis
+  - mariadb
+  - ...
+~~~
 
 ### LOCAL example
 
