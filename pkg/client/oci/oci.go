@@ -40,7 +40,10 @@ const (
 	// HelmChartConfigMediaType is the reserved media type for the Helm chart manifest config
 	HelmChartConfigMediaType = "application/vnd.cncf.helm.config.v1+json"
 	// HelmChartContentLayerMediaType is the reserved media type for Helm chart package content
-	HelmChartContentLayerMediaType = "application/tar+gzip"
+	HelmChartContentLayerMediaType = "application/vnd.cncf.helm.chart.content.v1.tar+gzip"
+	// HelmChartContentLayerMediaTypeDeprecated is the (deprecated) reserved media type for Helm
+	// chart package content
+	HelmChartContentLayerMediaTypeDeprecated = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
 	// ChartsIndexPullTimeout is the timeout for pulling the charts index
@@ -170,7 +173,7 @@ func (r *Repo) getChartDigest(name, version string) (string, error) {
 		return "", errors.Trace(err)
 	}
 	for _, layer := range tm.Layers {
-		if layer.MediaType == HelmChartContentLayerMediaType {
+		if isHelmChartContentLayerMediaType(layer.MediaType) {
 			return layer.Digest.String(), nil
 		}
 	}
@@ -238,7 +241,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
-		if tm.Config.MediaType == HelmChartConfigMediaType {
+		if isHelmChartContentLayerMediaType(tm.Config.MediaType) {
 			chartTags = append(chartTags, tag)
 		} else {
 			klog.V(5).Infof("Skipping %q tag as it is not chart type", tag)
@@ -400,6 +403,16 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 // Reload reloads the index
 func (r *Repo) Reload() error {
 	return errors.Errorf("reload method is not supported yet")
+}
+
+func isHelmChartContentLayerMediaType(t string) bool {
+	if t == HelmChartContentLayerMediaType {
+		return true
+	}
+	if t == HelmChartContentLayerMediaTypeDeprecated {
+		return true
+	}
+	return false
 }
 
 // ociReferenceExists checks if a given oci reference exists in the repository
