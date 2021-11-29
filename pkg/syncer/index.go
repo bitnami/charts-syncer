@@ -60,8 +60,6 @@ func (i ChartIndex) Get(id string) *Chart {
 }
 
 // loadCharts loads the charts map into the index from the source repo
-// The returned boolean means that we should abort the execution rather that keeping the error to show all of them
-// together at the end of the execution
 func (s *Syncer) loadCharts(charts ...string) error {
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
