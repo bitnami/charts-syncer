@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/bitnami-labs/pbjson v1.1.0
-	github.com/containerd/containerd v1.5.7
+	github.com/containerd/containerd v1.5.8
 	github.com/distribution/distribution/v3 v3.0.0-20210804104954-38ab4c606ee3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
@@ -13,7 +13,7 @@ require (
 	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0
-	github.com/opencontainers/image-spec v1.0.2-0.20210730191737-8e42a01fb1b7
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.2.1
