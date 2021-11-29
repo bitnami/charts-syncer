@@ -29,6 +29,7 @@ import (
 )
 
 var (
+	ociPing             = regexp.MustCompile(`(?m)\/v2\/(.*)`)
 	ociIndexRegex       = regexp.MustCompile(`(?m)\/v2\/(.*)\/index\/manifests\/latest`)
 	ociTagManifestRegex = regexp.MustCompile(`(?m)\/v2\/(.*)\/manifests\/(.*)`)
 	ociBlobsRegex       = regexp.MustCompile(`(?m)\/v2\/(.*)\/blobs\/sha256:(.*)`)
@@ -100,7 +101,6 @@ func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	// Create HTTP server
 	tester := NewTester(t, ociRepo)
 	ociRepo.Url = tester.GetURL() + "/someproject/charts"
-
 	return PrepareTest(t, ociRepo)
 }
 
@@ -147,41 +147,50 @@ func NewTester(t *testing.T, repo *api.Repo) *RepoTester {
 	return tester
 }
 
-// ServeHTTP implements the http Handler type
-func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func testBasicAuth(t *testing.T, r *http.Request) {
 	// Check basic auth credentals.
 	username, password, ok := r.BasicAuth()
 	if got, want := ok, true; got != want {
-		rt.t.Errorf("got: %t, want: %t", got, want)
+		t.Fatalf("got: %t, want: %t", got, want)
 	}
-	if got, want := username, rt.username; got != want {
-		rt.t.Errorf("got: %q, want: %q", got, want)
+	if got, want := username, username; got != want {
+		t.Fatalf("got: %q, want: %q", got, want)
 	}
-	if got, want := password, rt.password; got != want {
-		rt.t.Errorf("got: %q, want: %q", got, want)
+	if got, want := password, password; got != want {
+		t.Fatalf("got: %q, want: %q", got, want)
 	}
+}
 
+// ServeHTTP implements the http Handler type
+func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle recognized requests.
 	if ociIndexRegex.Match([]byte(r.URL.Path)) && r.Method == "HEAD" {
 		rt.HeadManifest404(w)
 		return
 	}
 	if ociBlobsRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+		testBasicAuth(rt.t, r)
 		name := strings.Split(r.URL.Path, "/")[4]
-		fulldigest := strings.Split(r.URL.Path, "/")[6]
-		digest := strings.Split(fulldigest, ":")[1]
+		fullDigest := strings.Split(r.URL.Path, "/")[6]
+		digest := strings.Split(fullDigest, ":")[1]
 		rt.GetChartPackage(w, r, name, digest)
 		return
 	}
 	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+		testBasicAuth(rt.t, r)
 		name := strings.Split(r.URL.Path, "/")[4]
 		version := strings.Split(r.URL.Path, "/")[6]
 		rt.GetTagManifest(w, r, name, version)
 		return
 	}
 	if ociTagsListRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+		testBasicAuth(rt.t, r)
 		name := strings.Split(r.URL.Path, "/")[4]
 		rt.GetTagsList(w, r, name)
+		return
+	}
+	if ociPing.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+		rt.ReplyPing(w)
 		return
 	}
 
@@ -228,6 +237,12 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 // HeadManifest404 return if a manifests exists or not
 func (rt *RepoTester) HeadManifest404(w http.ResponseWriter) {
 	w.WriteHeader(404)
+}
+
+// ReplyPing reply to a ping operation done by remote.Head to guess some connection parameters
+// https://github.com/google/go-containerregistry/blob/main/pkg/v1/remote/transport/transport.go#L51
+func (rt *RepoTester) ReplyPing(w http.ResponseWriter) {
+	w.WriteHeader(200)
 }
 
 // GetChartPackage returns a packaged helm chart

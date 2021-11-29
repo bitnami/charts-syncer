@@ -241,7 +241,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
-		if isHelmChartContentLayerMediaType(tm.Config.MediaType) {
+		if tm.Config.MediaType == HelmChartConfigMediaType {
 			chartTags = append(chartTags, tag)
 		} else {
 			klog.V(5).Infof("Skipping %q tag as it is not chart type", tag)
@@ -327,7 +327,6 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 	if err != nil {
 		return false, errors.Trace(err)
 	}
-
 	for _, v := range versions {
 		if v == version {
 			return true, nil
