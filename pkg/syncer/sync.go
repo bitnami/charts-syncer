@@ -81,14 +81,12 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		if s.relocateContainerImages {
 			packagedChartPath, err = s.SyncWithRelok8s(ch, outdir)
 			if err != nil {
-				klog.Errorf("unable to move chart %q with relok8s: %+v", id, err)
 				errs = multierror.Append(errs, errors.Annotatef(err, "unable to move chart %q with relok8s", id))
 				continue
 			}
 		} else {
 			packagedChartPath, err = s.SyncWithChartsSyncer(ch, id, workdir, outdir, hasDeps)
 			if err != nil {
-				klog.Errorf("unable to move chart %q with charts-syncer: %+v", id, err)
 				errs = multierror.Append(errs, errors.Annotatef(err, "unable to move chart %q with charts-syncer", id))
 				continue
 			}
@@ -110,13 +108,18 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 	return errors.Trace(errs)
 }
 
+// SyncWithRelok8s will take a local packaged chart, a container registry and a container repository and will rewrite the chart
+// updating the images in values.yaml. The local chart must include an image hints file so relok8s library knows how to
+// update the images
 func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
+	// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
+	// specify the name we want for the output file. Until then, we should keep using this template thing
 	outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
 	packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
-				Local: mover.LocalChart{
+				Local: &mover.LocalChart{
 					// This chart has a .relok8s-images.yaml file inside so no need to explicitly pass that
 					Path: chart.TgzPath,
 				},
@@ -126,9 +129,10 @@ func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
 			Rules: mover.RewriteRules{
 				Registry:         s.target.GetContainerRegistry(),
 				RepositoryPrefix: s.target.GetContainerRepository(),
+				ForcePush:        true,
 			},
 			Chart: mover.ChartSpec{
-				Local: mover.LocalChart{
+				Local: &mover.LocalChart{
 					// output will be [chart-name]-[chart-version].relocated.tgz
 					Path: outputChartPath,
 				},
