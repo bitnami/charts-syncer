@@ -105,17 +105,17 @@ func downloadIndex(repo *api.Repo) (string, error) {
 // Untar extracts compressed archives
 func Untar(tarball, targetDir string) error {
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		return err
+		return errors.Trace(err)
 	}
 
 	f, err := os.Open(tarball)
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	defer f.Close()
 	gzipReader, err := gzip.NewReader(f)
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	tarReader := tar.NewReader(gzipReader)
 
@@ -125,7 +125,7 @@ func Untar(tarball, targetDir string) error {
 			break
 		}
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		path := filepath.Join(targetDir, header.Name)
 		targetFolder := filepath.Join(targetDir, filepath.Dir(header.Name))
@@ -139,17 +139,19 @@ func Untar(tarball, targetDir string) error {
 		switch header.Typeflag {
 		// Related to previous comment. It seems this block of code is never executed.
 		case tar.TypeDir:
-			if err := os.Mkdir(path, 0755); err != nil {
-				return err
+			if _, err := os.Stat(path); err != nil {
+				if err := os.Mkdir(path, 0755); err != nil {
+					return errors.Trace(err)
+				}
 			}
 		case tar.TypeReg:
 			outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
-				return err
+				return errors.Trace(err)
 			}
 			if _, err := io.Copy(outFile, tarReader); err != nil {
 				outFile.Close()
-				return err
+				return errors.Trace(err)
 			}
 			outFile.Close()
 		// We don't want to process these extension header files.

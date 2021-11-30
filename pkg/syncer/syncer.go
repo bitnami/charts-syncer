@@ -23,10 +23,11 @@ type Syncer struct {
 
 	cli *Clients
 
-	dryRun        bool
-	autoDiscovery bool
-	fromDate      string
-	insecure      bool
+	dryRun                  bool
+	autoDiscovery           bool
+	fromDate                string
+	insecure                bool
+	relocateContainerImages bool
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -73,6 +74,14 @@ func WithWorkdir(dir string) Option {
 func WithInsecure(enable bool) Option {
 	return func(s *Syncer) {
 		s.insecure = enable
+	}
+}
+
+// WithContainerImageRelocation configures the syncer to use relok8s to make the chart transformations and push the
+// container images to the target registry
+func WithContainerImageRelocation(enable bool) Option {
+	return func(s *Syncer) {
+		s.relocateContainerImages = enable
 	}
 }
 
