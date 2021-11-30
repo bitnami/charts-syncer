@@ -2,6 +2,10 @@ module github.com/bitnami-labs/charts-syncer
 
 go 1.16
 
+// Needed so we can require asset-relocation-tool-for-kubernetes packages
+// https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/89
+replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d16ab90
+
 require (
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/containerd/containerd v1.5.8
@@ -18,6 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
+	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.3.41
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.7.0

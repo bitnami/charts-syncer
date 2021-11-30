@@ -8,6 +8,7 @@ message Config {
     SourceRepo source = 1;
     TargetRepo target = 2;
     repeated string charts = 3;
+    bool relocate_container_images = 4;
 }
 
 // SourceRepo contains the required information of the source chart repository

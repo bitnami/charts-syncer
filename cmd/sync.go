@@ -77,6 +77,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithFromDate(syncFromDate),
 				syncer.WithWorkdir(syncWorkdir),
 				syncer.WithInsecure(rootInsecure),
+				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 			)
 			if err != nil {
 				return errors.Trace(err)
