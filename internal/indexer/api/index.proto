@@ -1,22 +1,22 @@
 syntax = "proto3";
 
 package api;
-option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
+option go_package = "github.com/bitnami-labs/charts-syncer/internal/indexer/api;api";
 
-
-// The following is a proposed custom index for OCI repositories.
-// For charts-syncer use case, we are only interested on charts artifacts
-//
-message OCIIndex {
-    message ChartVersions {
+// Charts describes the releases of a chart
+message Charts {
+    // ChartVersion describes a chart version
+    message ChartVersion {
         string version = 1;
         string digest = 2;
         string uri = 3;
     }
-    message Charts {
-        string name = 1;
-        repeated ChartVersions versions = 2;
-    }
+    string name = 1;
+    repeated ChartVersion versions = 2;
+}
+
+// Index describes a chart releases index
+message Index {
     repeated Charts charts = 2;
 }
 
