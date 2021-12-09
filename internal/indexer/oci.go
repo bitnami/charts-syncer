@@ -8,10 +8,11 @@ import (
 	"k8s.io/klog"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
-	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/bitnami-labs/pbjson"
+	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
 	"github.com/pkg/errors"
 	"oras.land/oras-go/pkg/content"
@@ -102,7 +103,9 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 		resolver:  resolver,
 	}
 	if ind.reference == "" {
-		ind.reference = fmt.Sprintf("%s/%s:%s", u.Host, DefaultIndexName, DefaultIndexTag)
+		host := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
+		ind.reference = fmt.Sprintf("%s/%s:%s", host, DefaultIndexName, DefaultIndexTag)
+		klog.Infof("Remote index was not provided. Using default location %q", ind.reference)
 	}
 
 	return ind, nil
@@ -190,7 +193,7 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	}
 	// Fallback to the default index filename if the layers don't specify it
 	if indexFilename == "" {
-		klog.Infof("unable to find index filename: using default")
+		klog.Infof("Unable to find index filename: using default")
 		indexFilename = DefaultIndexFilename
 	}
 
