@@ -117,7 +117,6 @@ const VacAssetIndexConfigMediaType = "application/vnd.vmware.tac.index.config.v1
 const DefaultIndexFilename = "asset-index.json"
 
 // Get implements Indexer
-//nolint:funlen
 func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 	// Allocate folder for temporary downloads
 	dir, err := os.MkdirTemp("", "indexer")
@@ -131,8 +130,24 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 		}
 	}()
 
+	indexFile, err := ind.downloadIndex(ctx, dir)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	data, err := ioutil.ReadFile(indexFile)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	// Populate and return index
+	idx = &api.Index{}
+	return idx, pbjson.NewDecoder(bytes.NewReader(data), pbjson.AllowUnknownFields(true)).Decode(idx)
+}
+
+func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f string, e error) {
 	// Pull index files from remote
-	store := content.NewFileStore(dir)
+	store := content.NewFileStore(rootPath)
 	defer func() {
 		err := store.Close()
 		// This library is buggy, and we need to check the error string too
@@ -154,7 +169,7 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 	}
 	_, layers, err := oras.Pull(ctx, ind.resolver, ind.reference, store, opts...)
 	if err != nil {
-		return nil, errors.Trace(err)
+		return "", errors.Trace(err)
 	}
 
 	// Infer index filename from layer annotations
@@ -172,13 +187,5 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 		indexFilename = DefaultIndexFilename
 	}
 
-	indexFile := store.ResolvePath(indexFilename)
-	data, err := ioutil.ReadFile(indexFile)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-
-	// Populate and return index
-	idx = &api.Index{}
-	return idx, pbjson.NewDecoder(bytes.NewReader(data), pbjson.AllowUnknownFields(true)).Decode(idx)
+	return store.ResolvePath(indexFilename), nil
 }
