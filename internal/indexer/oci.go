@@ -4,31 +4,75 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"k8s.io/klog"
+	"net/url"
+	"os"
+
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
 	"github.com/containerd/containerd/remotes"
 	"github.com/juju/errors"
-	"io/ioutil"
-	"k8s.io/klog"
-	"net/url"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
-	"os"
 )
 
-// OciIndexerOpts are the options to configure the OciIndexer
-type OciIndexerOpts struct {
-	Reference string
-	URL       string
-	Username  string
-	Password  string
-	Insecure  bool
+// ociIndexerOpts are the options to configure the ociIndexer
+type ociIndexerOpts struct {
+	reference string
+	url      string
+	username string
+	password string
+	insecure bool
 }
 
-// type OciIndexerOpt func(opts *OciIndexerOpts)
+// OciIndexerOpt allows setting configuration options
+type OciIndexerOpt func(opts *ociIndexerOpts)
 
-// OciIndexer is an OCI-based Indexer
-type OciIndexer struct {
+// WithIndexRef configures the charts index OCI reference instead of letting the library
+// using the default host/index:latest one.
+//
+// 	opt := WithIndexRef("my.oci.domain/index:prod")
+//
+func WithIndexRef(r string) OciIndexerOpt {
+	return func(opts *ociIndexerOpts) {
+		opts.reference = r
+	}
+}
+
+// WithBasicAuth configures basic authentication for the OCI host
+//
+// 	opt := WithBasicAuth("user", "pass")
+//
+func WithBasicAuth(user, pass string) OciIndexerOpt {
+	return func(opts *ociIndexerOpts) {
+		opts.username = user
+		opts.password = pass
+	}
+}
+
+// WithInsecure configures insecure connection
+//
+// 	opt := WithInsecure()
+//
+func WithInsecure() OciIndexerOpt {
+	return func(opts *ociIndexerOpts) {
+		opts.insecure = true
+	}
+}
+
+// WithHost configures the OCI host
+//
+// 	opt := WithHost("my.oci.domain")
+//
+func WithHost(h string) OciIndexerOpt {
+	return func(opts *ociIndexerOpts) {
+		opts.url = h
+	}
+}
+
+// ociIndexer is an OCI-based Indexer
+type ociIndexer struct {
 	reference string
 	resolver  remotes.Resolver
 }
@@ -40,15 +84,20 @@ const DefaultIndexName = "index"
 const DefaultIndexTag = "latest"
 
 // NewOciIndexer returns a new OCI-based indexer
-func NewOciIndexer(opts *OciIndexerOpts) (*OciIndexer, error) {
-	u, err := url.Parse(opts.URL)
+func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
+	opt := &ociIndexerOpts{}
+	for _, o := range opts {
+		o(opt)
+	}
+
+	u, err := url.Parse(opt.url)
 	if err != nil {
 		return nil, err
 	}
-	resolver := newDockerResolver(u, opts.Username, opts.Password, opts.Insecure)
+	resolver := newDockerResolver(u, opt.username, opt.password, opt.insecure)
 
-	ind := &OciIndexer{
-		reference: opts.Reference,
+	ind := &ociIndexer{
+		reference: opt.reference,
 		resolver:  resolver,
 	}
 	if ind.reference == "" {
@@ -69,7 +118,7 @@ const DefaultIndexFilename = "asset-index.json"
 
 // Get implements Indexer
 //nolint:funlen
-func (ind *OciIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
+func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 	// Allocate folder for temporary downloads
 	dir, err := os.MkdirTemp("", "indexer")
 	if err != nil {
