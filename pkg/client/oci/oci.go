@@ -418,10 +418,14 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 
 // populateEntries populates the entries map with the info from the charts index
 func populateEntries(repo *api.Repo) (map[string][]string, error) {
+	if !repo.GetUseRemoteIndex() {
+		return make(map[string][]string), nil
+	}
+
 	ind, err := indexer.NewOciIndexer(
 		indexer.WithHost(repo.GetUrl()),
 		indexer.WithBasicAuth(repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()),
-		indexer.WithIndexRef(repo.GetChartsIndex()),
+		indexer.WithIndexRef(repo.GetRemoteIndex()),
 	)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -430,8 +434,15 @@ func populateEntries(repo *api.Repo) (map[string][]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	klog.Infof("Attempting to retrieve charts index...")
+
 	ociIndex, err := ind.Get(ctx)
 	if err != nil {
+		// Since we automatically attempt to retrieve the index, let's not fail if not exists
+		if indexer.IsNotFound(err) {
+			klog.Warningf("The charts index does not exist. This process might be slow.")
+			return make(map[string][]string), nil
+		}
+
 		return nil, errors.Trace(err)
 	}
 

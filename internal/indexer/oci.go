@@ -10,9 +10,10 @@ import (
 	"os"
 
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
+	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/bitnami-labs/pbjson"
 	"github.com/containerd/containerd/remotes"
-	"github.com/juju/errors"
+	"github.com/pkg/errors"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
 )
@@ -92,7 +93,7 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 
 	u, err := url.Parse(opt.url)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(ErrInvalidArgument, "invalid OCI host URL: %+v", err)
 	}
 	resolver := newDockerResolver(u, opt.username, opt.password, opt.insecure)
 
@@ -121,7 +122,7 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 	// Allocate folder for temporary downloads
 	dir, err := os.MkdirTemp("", "indexer")
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, errors.Wrapf(err, "unable to create temporary indexer directory")
 	}
 	defer func() {
 		err := os.RemoveAll(dir)
@@ -132,17 +133,20 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 
 	indexFile, err := ind.downloadIndex(ctx, dir)
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, errors.Wrapf(err, "unable to download index")
 	}
 
 	data, err := ioutil.ReadFile(indexFile)
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, errors.Wrapf(err, "unable to read index file")
 	}
 
 	// Populate and return index
 	idx = &api.Index{}
-	return idx, pbjson.NewDecoder(bytes.NewReader(data), pbjson.AllowUnknownFields(true)).Decode(idx)
+	if err := pbjson.NewDecoder(bytes.NewReader(data), pbjson.AllowUnknownFields(true)).Decode(idx); err != nil {
+		return nil, errors.Wrapf(err, "unable to parse index file")
+	}
+	return idx, nil
 }
 
 func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f string, e error) {
@@ -169,7 +173,10 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	}
 	_, layers, err := oras.Pull(ctx, ind.resolver, ind.reference, store, opts...)
 	if err != nil {
-		return "", errors.Trace(err)
+		if containerderrs.IsNotFound(err) {
+			return "", errors.Wrap(ErrNotFound, err.Error())
+		}
+		return "", err
 	}
 
 	// Infer index filename from layer annotations
