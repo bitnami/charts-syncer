@@ -160,6 +160,7 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	defer func() {
 		err := store.Close()
 		// This library is buggy, and we need to check the error string too
+		// https://github.com/oras-project/oras-go/issues/84
 		if e == nil && err != nil && err.Error() != "" {
 			e = err
 		}
