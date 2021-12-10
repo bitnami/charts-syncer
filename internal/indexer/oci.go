@@ -103,9 +103,11 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 		resolver:  resolver,
 	}
 	if ind.reference == "" {
-		host := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
-		ind.reference = fmt.Sprintf("%s/%s:%s", host, DefaultIndexName, DefaultIndexTag)
-		klog.Infof("Remote index was not provided. Using default location %q", ind.reference)
+		uri := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
+		ind.reference = fmt.Sprintf("%s/%s:%s", uri, DefaultIndexName, DefaultIndexTag)
+		klog.Infof("Remote index was not provided, using default location: %q", ind.reference)
+	} else {
+		klog.Infof("Remote index was provided: %q", ind.reference)
 	}
 
 	return ind, nil
