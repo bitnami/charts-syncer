@@ -1,4 +1,4 @@
-package local
+package intermediate
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.tgz")
+	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.tar")
 )
 
 // Repo allows to operate a chart repository.
@@ -38,7 +38,7 @@ func New(dir string) (*Repo, error) {
 
 	// Populate entries from directory
 	entries := make(map[string][]string)
-	matches, err := filepath.Glob(filepath.Join(d, "*.tgz"))
+	matches, err := filepath.Glob(filepath.Join(d, "*.tar"))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -72,7 +72,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	return path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version)), nil
+	return path.Join(r.dir, fmt.Sprintf("%s-%s.tar", name, version)), nil
 }
 
 // Has checks if a repo has a specific chart
@@ -107,7 +107,7 @@ func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
 		return errors.Annotatef(err, "reading %q", filepath)
 	}
 
-	out := path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version))
+	out := path.Join(r.dir, fmt.Sprintf("%s-%s.tar", name, version))
 	if err := ioutil.WriteFile(out, input, 0644); err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}

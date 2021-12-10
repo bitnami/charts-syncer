@@ -7,6 +7,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/bitnami-labs/charts-syncer/api"
+
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
@@ -78,7 +80,9 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		}
 		var packagedChartPath string
 
-		if s.relocateContainerImages {
+		useIntermediateBundle := s.source.GetRepo().GetKind() == api.Kind_LOCAL_INTERMEDIATE_BUNDLE ||
+			s.target.GetRepo().GetKind() == api.Kind_LOCAL_INTERMEDIATE_BUNDLE
+		if s.relocateContainerImages || useIntermediateBundle {
 			packagedChartPath, err = s.SyncWithRelok8s(ch, outdir)
 			if err != nil {
 				errs = multierror.Append(errs, errors.Annotatef(err, "unable to move chart %q with relok8s", id))
@@ -112,32 +116,17 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 // updating the images in values.yaml. The local chart must include an image hints file so relok8s library knows how to
 // update the images
 func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
-	// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
-	// specify the name we want for the output file. Until then, we should keep using this template thing
-	outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
-	packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
-	req := &mover.ChartMoveRequest{
-		Source: mover.Source{
-			Chart: mover.ChartSpec{
-				Local: &mover.LocalChart{
-					// This chart has a .relok8s-images.yaml file inside so no need to explicitly pass that
-					Path: chart.TgzPath,
-				},
-			},
-		},
-		Target: mover.Target{
-			Rules: mover.RewriteRules{
-				Registry:         s.target.GetContainerRegistry(),
-				RepositoryPrefix: s.target.GetContainerRepository(),
-				ForcePush:        true,
-			},
-			Chart: mover.ChartSpec{
-				Local: &mover.LocalChart{
-					// output will be [chart-name]-[chart-version].relocated.tgz
-					Path: outputChartPath,
-				},
-			},
-		},
+	packagedChartPath := ""
+	req := &mover.ChartMoveRequest{}
+	if s.target.GetRepo().GetKind() == api.Kind_LOCAL_INTERMEDIATE_BUNDLE {
+		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.intermediate.tar", chart.Name, chart.Version))
+		req = s.getIntermediateTargetRequest(chart.TgzPath, packagedChartPath)
+	} else {
+		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
+		// specify the name we want for the output file. Until then, we should keep using this template thing
+		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
+		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
+		req = s.getMoverRequest(chart.TgzPath, outputChartPath)
 	}
 	chartMover, err := mover.NewChartMover(req)
 	if err != nil {
@@ -199,4 +188,49 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 	}
 
 	return packagedChartPath, nil
+}
+
+func (s *Syncer) getMoverRequest(sourcePath, targetPath string) *mover.ChartMoveRequest {
+	req := &mover.ChartMoveRequest{
+		Source: mover.Source{
+			Chart: mover.ChartSpec{
+				Local: &mover.LocalChart{
+					Path: sourcePath,
+				},
+			},
+		},
+		Target: mover.Target{
+			Rules: mover.RewriteRules{
+				Registry:         s.target.GetContainerRegistry(),
+				RepositoryPrefix: s.target.GetContainerRepository(),
+				ForcePush:        true,
+			},
+			Chart: mover.ChartSpec{
+				Local: &mover.LocalChart{
+					Path: targetPath,
+				},
+			},
+		},
+	}
+	return req
+}
+
+func (s *Syncer) getIntermediateTargetRequest(sourcePath, targetPath string) *mover.ChartMoveRequest {
+	req := &mover.ChartMoveRequest{
+		Source: mover.Source{
+			Chart: mover.ChartSpec{
+				Local: &mover.LocalChart{
+					Path: sourcePath,
+				},
+			},
+		},
+		Target: mover.Target{
+			Chart: mover.ChartSpec{
+				IntermediateBundle: &mover.IntermediateBundle{
+					Path: targetPath,
+				},
+			},
+		},
+	}
+	return req
 }

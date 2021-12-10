@@ -71,6 +71,13 @@ func TestNewClient(t *testing.T) {
 		},
 		{
 			&api.Repo{
+				Kind: api.Kind_LOCAL_INTERMEDIATE_BUNDLE,
+			},
+			"*intermediate.Repo",
+			"",
+		},
+		{
+			&api.Repo{
 				Kind: api.Kind_UNKNOWN,
 			},
 			"<nil>",

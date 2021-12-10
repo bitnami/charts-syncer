@@ -48,4 +48,5 @@ enum Kind {
     HARBOR = 3;
     OCI = 4;
     LOCAL = 5;
+    LOCAL_INTERMEDIATE_BUNDLE = 6;
 }
