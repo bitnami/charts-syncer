@@ -84,7 +84,7 @@ func TestGetChartDetails(t *testing.T) {
 	}
 	want := types.ChartDetails{
 		PublishedAt: time.Now().Time,
-		Digest:      "deadbuff",
+		Digest:      "deadbeef",
 	}
 	got, err := c.GetChartDetails("etcd", "4.8.0")
 	if err != nil {
