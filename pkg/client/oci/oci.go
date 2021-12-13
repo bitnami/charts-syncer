@@ -418,7 +418,7 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 
 // populateEntries populates the entries map with the info from the charts index
 func populateEntries(repo *api.Repo) (map[string][]string, error) {
-	if !repo.GetUseRemoteIndex() {
+	if !repo.GetUseChartsIndex() {
 		return make(map[string][]string), nil
 	}
 
@@ -426,7 +426,7 @@ func populateEntries(repo *api.Repo) (map[string][]string, error) {
 	ind, err := indexer.NewOciIndexer(
 		indexer.WithHost(repo.GetUrl()),
 		indexer.WithBasicAuth(repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()),
-		indexer.WithIndexRef(repo.GetRemoteIndex()),
+		indexer.WithIndexRef(repo.GetChartsIndex()),
 	)
 	if err != nil {
 		return nil, errors.Trace(err)

@@ -151,11 +151,11 @@ target:
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
 
 Also, take into account that if you use OCI as the source repository you must specify the list of charts to synchronize
-or a pointer to a [remote index file](#remote-index-for-oci-based-repositories) in the repository.
+or a pointer to a [charts index file](#charts-index-for-oci-based-repositories) in the repository.
 
-#### Remote index for OCI-based repositories
+#### Charts index for OCI-based repositories
 
-By using a remote index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
+By using a charts index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
 charts-syncer will be able to auto-discover what charts need to be synchronized.
 
 ~~~yaml
@@ -163,31 +163,31 @@ source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   # Enable remote index lookup
-   useRemoteIndex: true
+   # Enable charts index lookup
+   useChartsIndex: true
 ~~~
 
-By default, the library will look up for an "index:latest" remote index artifact within the source OCI repository.
+By default, the library will look up for an "index:latest" charts index artifact within the source OCI repository.
 
-However, this can be customized using the `remoteIndex` field using the format `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`.
+However, this can be customized using the `chartsIndex` field using the format `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`.
 
 ~~~yaml
 source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   # Enable remote index lookup
-   useRemoteIndex: true
-   remoteIndex: my-oci-registry.io/my-project/index:prod
+   # Enable charts index lookup
+   useChartsIndex: true
+   chartsIndex: my-oci-registry.io/my-project/index:prod
 ~~~
 
-For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `remoteIndex` is specified, charts-syncer will try to use 
+For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
 `my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
 
 An example of the valid index format can be seen directly in its [protobuffer definition](internal/indexer/api/oci.proto). Worth to mention 
-that the format of the remote index for OCI repositories is a custom one, not a traditional Helm index file.
+that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
 
-Finally, if no remote index is found, charts-syncer will require the list of charts in the config file:
+Finally, if no charts index is found, charts-syncer will require the list of charts in the config file:
 
 ~~~yaml
 #

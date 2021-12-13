@@ -33,9 +33,9 @@ message Repo {
     string path = 4;
     // The OCI reference where the index of charts is located
     // Example: my.oci.domain/index:latest
-    string remoteIndex = 5;
-    // Whether to use a remote index to find charts
-    bool useRemoteIndex = 6;
+    string chartsIndex = 5;
+    // Whether to use a charts index to find charts
+    bool useChartsIndex = 6;
 }
 
 // Auth contains credentials to login to a chart repository

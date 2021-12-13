@@ -3,29 +3,26 @@ package indexer
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"io/ioutil"
-	"k8s.io/klog"
-	"net/url"
-	"os"
-	"strings"
-
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"k8s.io/klog"
+	"net/url"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
+	"os"
 )
 
 // ociIndexerOpts are the options to configure the ociIndexer
 type ociIndexerOpts struct {
 	reference string
-	url      string
-	username string
-	password string
-	insecure bool
+	url       string
+	username  string
+	password  string
+	insecure  bool
 }
 
 // OciIndexerOpt allows setting configuration options
@@ -79,12 +76,6 @@ type ociIndexer struct {
 	resolver  remotes.Resolver
 }
 
-// DefaultIndexName is the name for the OCI artifact with the index
-const DefaultIndexName = "index"
-
-// DefaultIndexTag is the tag for the OCI artifact with the index
-const DefaultIndexTag = "latest"
-
 // NewOciIndexer returns a new OCI-based indexer
 func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 	opt := &ociIndexerOpts{}
@@ -102,13 +93,6 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 		reference: opt.reference,
 		resolver:  resolver,
 	}
-	if ind.reference == "" {
-		uri := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
-		ind.reference = fmt.Sprintf("%s/%s:%s", uri, DefaultIndexName, DefaultIndexTag)
-		klog.Infof("Remote index was not provided, using default location: %q", ind.reference)
-	} else {
-		klog.Infof("Remote index was provided: %q", ind.reference)
-	}
 
 	return ind, nil
 }
@@ -116,6 +100,7 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 // VacAssetIndexLayerMediaType is a media type used in VAC to store a JSON containing the index of
 // charts and containers in a repository
 const VacAssetIndexLayerMediaType = "application/vnd.vmware.tac.asset-index.layer.v1.json"
+
 // VacAssetIndexConfigMediaType is a media type used in VAC for the configuration of the layer above
 const VacAssetIndexConfigMediaType = "application/vnd.vmware.tac.index.config.v1+json"
 
