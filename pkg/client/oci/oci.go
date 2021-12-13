@@ -1,7 +1,6 @@
 package oci
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -18,9 +17,9 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami-labs/charts-syncer/internal/indexer"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/bitnami-labs/pbjson"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -46,8 +45,6 @@ const (
 	HelmChartContentLayerMediaTypeDeprecated = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
-	// ChartsIndexPullTimeout is the timeout for pulling the charts index
-	ChartsIndexPullTimeout = time.Second * 60
 )
 
 // Repo allows to operate a chart repository.
@@ -70,34 +67,17 @@ type Tags struct {
 
 // New creates a Repo object from an api.Repo object.
 func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
+	// Init entries
+	entries, err := populateEntries(repo)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 	resolver := newDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
-
-	// First we try to load the index referenced from config file,
-	// if it does not exist, then we try to guess it directly from repo url
-	chartsIndexRef := repo.GetChartsIndex()
-	if chartsIndexRef == "" {
-		chartsIndexRef = fmt.Sprintf("%s%s/index:latest", u.Host, u.Path)
-		klog.Infof("No Charts OCI index reference specified. Checking default location: %q", chartsIndexRef)
-	}
-
-	ociIndexExists, err := ociReferenceExists(chartsIndexRef, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword())
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	// Init entries
-	entries := make(map[string][]string)
-	if ociIndexExists {
-		entries, err = populateEntries(chartsIndexRef, resolver)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-	} else {
-		klog.Info("Unable to load OCI index file. Using 'charts' filter from config file...")
-	}
 
 	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, entries, resolver)
 }
@@ -109,12 +89,13 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool,
 
 // List lists all chart names in a repo
 func (r *Repo) List() ([]string, error) {
-	var names []string
 	// If entries is not populated, it means we couldn't load any index file, so we need the charts filter in the
 	// configuration file. The List() caller will handle this case
 	if len(r.entries) == 0 {
 		return []string{}, nil
 	}
+
+	names := make([]string, 0, len(r.entries))
 	for entry := range r.entries {
 		names = append(names, entry)
 	}
@@ -227,7 +208,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 		// TODO (tpizarro): Use the NotFound error instead of just returning nil and handle the case in the caller
 		return []string{}, nil
 	case http.StatusOK:
-		//do nothing, just continue
+		// do nothing, just continue
 	default:
 		return nil, errors.Errorf("unexpected response — %d %q, %s — from %s", status, http.StatusText(status), string(body), u.String())
 	}
@@ -302,7 +283,7 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
 	switch status {
 	case http.StatusOK:
-		//do nothing, just continue
+		// do nothing, just continue
 	default:
 		bodyStr := utils.HTTPResponseBody(res)
 		return "", errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
@@ -436,30 +417,32 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 }
 
 // populateEntries populates the entries map with the info from the charts index
-func populateEntries(chartsIndexRef string, resolver remotes.Resolver) (map[string][]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), ChartsIndexPullTimeout)
+func populateEntries(repo *api.Repo) (map[string][]string, error) {
+	if !repo.GetUseChartsIndex() {
+		return make(map[string][]string), nil
+	}
+
+	klog.Infof("Attempting to retrieve remote index...")
+	ind, err := indexer.NewOciIndexer(
+		indexer.WithHost(repo.GetUrl()),
+		indexer.WithBasicAuth(repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()),
+		indexer.WithIndexRef(repo.GetChartsIndex()),
+	)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	// Pull with ORAS lib
-	filename := "asset-index.json"
-	defer os.Remove(filename)
-	klog.Infof("Pulling index from %s...", chartsIndexRef)
-	fileStore := content.NewFileStore("")
-	defer fileStore.Close()
-	_, _, err := oras.Pull(ctx, resolver, chartsIndexRef, fileStore)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
 
-	// Read downloaded file
-	ociIndexBytes, err := ioutil.ReadFile(filename)
+	ociIndex, err := ind.Get(ctx)
 	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	r := bytes.NewReader(ociIndexBytes)
+		// Since we automatically attempt to retrieve the index, let's not fail if not exists
+		if indexer.IsNotFound(err) {
+			klog.Warningf("The remote index does not exist yet. This process might be slow.")
+			return make(map[string][]string), nil
+		}
 
-	// Unmarshall index and populate entries
-	ociIndex := &api.OCIIndex{}
-	if err := pbjson.NewDecoder(r, pbjson.AllowUnknownFields(true)).Decode(ociIndex); err != nil {
 		return nil, errors.Trace(err)
 	}
 
