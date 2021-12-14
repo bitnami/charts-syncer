@@ -24,17 +24,17 @@ func TestLoad(t *testing.T) {
 	}
 	source := syncConfig.Source
 	target := syncConfig.Target
-	if source.Repo.Kind != api.Kind_HELM {
-		t.Errorf("got: %s, want %s", source.Repo.Kind, "HELM")
+	if source.GetRepo().GetKind() != api.Kind_HELM {
+		t.Errorf("got: %s, want %s", source.GetRepo().GetKind(), "HELM")
 	}
-	if target.Repo.Kind != api.Kind_CHARTMUSEUM {
-		t.Errorf("got: %s, want %s", target.Repo.Kind, "CHARTMUSEUM")
+	if target.GetRepo().GetKind() != api.Kind_CHARTMUSEUM {
+		t.Errorf("got: %s, want %s", target.GetRepo().GetKind(), "CHARTMUSEUM")
 	}
-	if target.ContainerRegistry != "test.registry.io" {
-		t.Errorf("got: %s, want %s", target.ContainerRegistry, "test.registry.io")
+	if target.GetContainerRegistry() != "test.registry.io" {
+		t.Errorf("got: %s, want %s", target.GetContainerRegistry(), "test.registry.io")
 	}
-	if target.ContainerRepository != "user/demo" {
-		t.Errorf("got: %s, want %s", target.ContainerRepository, "user/demo")
+	if target.GetContainerRepository() != "user/demo" {
+		t.Errorf("got: %s, want %s", target.GetContainerRepository(), "user/demo")
 	}
 }
 
@@ -114,10 +114,10 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			for k := range tc.envVars {
 				os.Unsetenv(k)
 			}
-			if got, want := source.Repo.Auth, tc.expectedSourceAuth; !proto.Equal(got, want) {
+			if got, want := source.GetRepo().GetAuth(), tc.expectedSourceAuth; !proto.Equal(got, want) {
 				t.Errorf("got: %+v, want %+v", got, want)
 			}
-			if got, want := target.Repo.Auth, tc.expectedTargetAuth; !proto.Equal(got, want) {
+			if got, want := target.GetRepo().GetAuth(), tc.expectedTargetAuth; !proto.Equal(got, want) {
 				t.Errorf("got: %+v, want %+v", got, want)
 			}
 		})

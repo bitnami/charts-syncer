@@ -9,22 +9,26 @@ import (
 func TestValidate(t *testing.T) {
 	config := &api.Config{
 		Source: &api.SourceRepo{
-			Repo: &api.Repo{
-				Url:  "ht//:fake.source.com",
-				Kind: api.Kind_CHARTMUSEUM,
-				Auth: &api.Auth{
-					Username: "user",
-					Password: "password",
+			Spec: &api.SourceRepo_Repo{
+				Repo: &api.Repo{
+					Url:  "ht//:fake.source.com",
+					Kind: api.Kind_CHARTMUSEUM,
+					Auth: &api.Auth{
+						Username: "user",
+						Password: "password",
+					},
 				},
 			},
 		},
 		Target: &api.TargetRepo{
-			Repo: &api.Repo{
-				Url:  "http://fake.target.com",
-				Kind: api.Kind_CHARTMUSEUM,
-				Auth: &api.Auth{
-					Username: "user",
-					Password: "password",
+			Spec: &api.TargetRepo_Repo{
+				Repo: &api.Repo{
+					Url:  "http://fake.target.com",
+					Kind: api.Kind_CHARTMUSEUM,
+					Auth: &api.Auth{
+						Username: "user",
+						Password: "password",
+					},
 				},
 			},
 			ContainerRegistry:   "test.registry.io",

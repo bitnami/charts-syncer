@@ -13,12 +13,18 @@ message Config {
 
 // SourceRepo contains the required information of the source chart repository
 message SourceRepo {
-    Repo repo = 1;
+    oneof spec {
+        Repo repo = 1;
+        string intermediate_bundles_path = 2;
+    }
 }
 
 // TargetRepo contains the required information of the target chart repository
 message TargetRepo {
-    Repo repo = 1;
+    oneof spec {
+        Repo repo = 1;
+        string intermediate_bundles_path = 5;
+    }
     string container_registry = 2;
     string container_repository = 3;
     string repo_name = 4;

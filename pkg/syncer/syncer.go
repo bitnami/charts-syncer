@@ -3,8 +3,12 @@ package syncer
 import (
 	"os"
 
+	"github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
+
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
+
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
+	"github.com/bitnami-labs/charts-syncer/pkg/client"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	"k8s.io/klog"
@@ -12,8 +16,8 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src core.Client
-	dst core.Client
+	src client.ReadWriter
+	dst client.ReadWriter
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -107,19 +111,39 @@ func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Synce
 		return nil, errors.Trace(err)
 	}
 
-	srcCli, err := core.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
-	if err != nil {
-		return nil, errors.Trace(err)
+	s.cli = &Clients{}
+	if source.GetRepo() != nil {
+		srcCli, err := repo.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		s.cli.src = srcCli
+	} else if source.GetIntermediateBundlesPath() != "" {
+		// Create new intermediate bundles client
+		srcCli, err := intermediate.NewIntermediateClient(source.GetIntermediateBundlesPath())
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		s.cli.src = srcCli
+	} else {
+		return nil, errors.New("no source info defined in config file")
 	}
 
-	dstCli, err := core.NewClient(target.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-
-	s.cli = &Clients{
-		src: srcCli,
-		dst: dstCli,
+	if target.GetRepo() != nil {
+		dstCli, err := repo.NewClient(target.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		s.cli.dst = dstCli
+	} else if target.GetIntermediateBundlesPath() != "" {
+		// Create new intermediate bundles client
+		dstCli, err := intermediate.NewIntermediateClient(target.GetIntermediateBundlesPath())
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		s.cli.dst = dstCli
+	} else {
+		return nil, errors.New("no target info defined in config file")
 	}
 
 	return s, nil

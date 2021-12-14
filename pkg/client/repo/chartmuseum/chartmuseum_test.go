@@ -1,11 +1,10 @@
-package harbor_test
+package chartmuseum_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -13,18 +12,19 @@ import (
 	"strings"
 	"testing"
 
+	chartmuseum2 "github.com/bitnami-labs/charts-syncer/pkg/client/repo/chartmuseum"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
+
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/harbor"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
 
 var (
-	harborRepo = &api.Repo{
-		Kind: api.Kind_HARBOR,
+	cmRepo = &api.Repo{
+		Kind: api.Kind_CHARTMUSEUM,
 		Auth: &api.Auth{
 			Username: "user",
 			Password: "password",
@@ -32,7 +32,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*harbor.Repo, error) {
+func prepareTest(t *testing.T) (*chartmuseum2.Repo, error) {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -42,16 +42,16 @@ func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	}
 	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 	dstIndex := filepath.Join(dstTmp, "index.yaml")
-	if err := utils.CopyFile(dstIndex, "../../../testdata/index.yaml"); err != nil {
+	if err := utils.CopyFile(dstIndex, "../../../../testdata/index.yaml"); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create tester
-	tester := harbor.NewTester(t, harborRepo, false, dstIndex)
-	harborRepo.Url = fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library")
+	tester := chartmuseum2.NewTester(t, cmRepo, false, dstIndex)
+	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
-	u := fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library/charts")
+	u := fmt.Sprintf("%s%s", tester.GetURL(), "/charts")
 	index, err := ioutil.ReadFile(dstIndex)
 	if err != nil {
 		t.Fatal(err)
@@ -66,13 +66,13 @@ func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cache, err := cache.New(cacheDir, harborRepo.GetUrl())
+	cache, err := cache.New(cacheDir, cmRepo.GetUrl())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Create harbor client
-	client, err := harbor.New(harborRepo, cache, false)
+	// Create chartmuseum client
+	client, err := chartmuseum2.New(cmRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,14 +164,7 @@ func TestGetUploadURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	u, err := url.Parse(harborRepo.Url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	oldPath := u.Path
-	u.Path = fmt.Sprintf("%s%s%s", "/api", oldPath, "/charts")
-
-	want := u.String()
+	want := fmt.Sprintf("%s%s", cmRepo.Url, "/api/charts")
 	got := c.GetUploadURL()
 	if got != want {
 		t.Errorf("wrong upload URL. got: %v, want: %v", got, want)
@@ -183,17 +176,17 @@ func TestUpload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
+	err = c.Upload("../../../../testdata/apache-7.3.15.tgz", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Check the chart really was added to the service's index.
-	req, err := http.NewRequest("GET", harborRepo.Url+"/apache", nil)
+	req, err := http.NewRequest("GET", cmRepo.Url+"/api/charts/apache", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth(harborRepo.Auth.Username, harborRepo.Auth.Password)
+	req.SetBasicAuth(cmRepo.Auth.Username, cmRepo.Auth.Password)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

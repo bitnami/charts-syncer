@@ -56,10 +56,10 @@ func Load(config *api.Config) error {
 			return err
 		}
 	}
-	if err := config.Source.Repo.SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
+	if err := config.GetSource().GetRepo().SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
 		return err
 	}
-	if err := config.Target.Repo.SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
+	if err := config.GetTarget().GetRepo().SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
 		return err
 	}
 	return nil

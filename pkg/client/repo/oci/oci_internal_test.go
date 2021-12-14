@@ -50,7 +50,7 @@ func TestOciReferenceExists(t *testing.T) {
 			}
 			ociRef := fmt.Sprintf("%s%s/%s", u.Host, u.Path, tc.ociPartialRef)
 			if tc.pushTestAsset {
-				PushFileToOCI(t, "../../../testdata/oci/index.json", ociRef)
+				PushFileToOCI(t, "../../../../testdata/oci/index.json", ociRef)
 			}
 			got, err := ociReferenceExists(ociRef, ociRepo.GetAuth().GetUsername(), ociRepo.GetAuth().GetPassword())
 			if err != nil {

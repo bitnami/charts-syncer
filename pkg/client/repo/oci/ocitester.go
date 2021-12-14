@@ -16,10 +16,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
+
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/distribution/distribution/v3/configuration"
 	"github.com/distribution/distribution/v3/registry"
@@ -207,7 +208,7 @@ func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, nam
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	_, filename, _, _ := runtime.Caller(1)
-	testdataPath := path.Join(path.Dir(filename), "../../../testdata/oci")
+	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get oci manifest from testdata folder
 	manifestFileName := fmt.Sprintf("%s-%s-oci-manifest.json", name, version)
 	manifestFile := filepath.Join(testdataPath, manifestFileName)
@@ -223,7 +224,7 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	_, filename, _, _ := runtime.Caller(1)
-	testdataPath := path.Join(path.Dir(filename), "../../../testdata/oci")
+	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get oci manifest from testdata folder
 	tagsListFileName := fmt.Sprintf("%s-oci-tags-list.json", name)
 	tagsListFile := filepath.Join(testdataPath, tagsListFileName)
@@ -250,7 +251,7 @@ func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, na
 	w.WriteHeader(200)
 	_, filename, _, _ := runtime.Caller(1)
 	chartPackageName := fmt.Sprintf("%s-%s.tgz", name, digest)
-	testdataPath := path.Join(path.Dir(filename), "../../../testdata/oci")
+	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
 	chartPackage, err := ioutil.ReadFile(chartPackageFile)

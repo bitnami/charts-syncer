@@ -133,7 +133,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(200)
 	_, filename, _, _ := runtime.Caller(1)
-	testdataPath := path.Join(path.Dir(filename), "../../../testdata")
+	testdataPath := path.Join(path.Dir(filename), "../../../../testdata")
 	// Get index from testdata folder
 	if indexFile == "" {
 		indexFile = filepath.Join(testdataPath, "index.yaml")
@@ -152,7 +152,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
 	_, filename, _, _ := runtime.Caller(1)
-	testdataPath := path.Join(path.Dir(filename), "../../../testdata")
+	testdataPath := path.Join(path.Dir(filename), "../../../../testdata")
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
 	chartPackage, err := ioutil.ReadFile(chartPackageFile)
