@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"sort"
 
+	"github.com/bitnami-labs/charts-syncer/pkg/client"
+
 	"github.com/juju/errors"
 
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
@@ -24,6 +26,11 @@ var (
 type Repo struct {
 	dir     string
 	entries map[string][]string
+}
+
+// NewIntermediateClient returns a ReadWriter object
+var NewIntermediateClient = func(intermediateBundlesPath string) (client.ReadWriter, error) {
+	return New(intermediateBundlesPath)
 }
 
 // New creates a Repo object from an api.Repo object.

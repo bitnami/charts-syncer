@@ -11,12 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
-
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 

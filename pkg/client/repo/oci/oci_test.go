@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 	"helm.sh/helm/v3/pkg/chart"

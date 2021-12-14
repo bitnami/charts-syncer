@@ -10,11 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	helmclassic2 "github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
@@ -29,7 +28,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T, indexFileName string) *helmclassic2.Repo {
+func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -45,7 +44,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic2.Repo {
 	}
 
 	// Create tester
-	tester := helmclassic2.NewTester(t, cmRepo, false, dstIndex, true)
+	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex, true)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
@@ -71,7 +70,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic2.Repo {
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create chartmuseum client
-	client, err := helmclassic2.New(cmRepo, cache, false)
+	client, err := helmclassic.New(cmRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}

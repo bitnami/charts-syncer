@@ -13,12 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	harbor2 "github.com/bitnami-labs/charts-syncer/pkg/client/repo/harbor"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/harbor"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
@@ -33,7 +32,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*harbor2.Repo, error) {
+func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -48,7 +47,7 @@ func prepareTest(t *testing.T) (*harbor2.Repo, error) {
 	}
 
 	// Create tester
-	tester := harbor2.NewTester(t, harborRepo, false, dstIndex)
+	tester := harbor.NewTester(t, harborRepo, false, dstIndex)
 	harborRepo.Url = fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library")
 
 	// Replace placeholder
@@ -73,7 +72,7 @@ func prepareTest(t *testing.T) (*harbor2.Repo, error) {
 	}
 
 	// Create harbor client
-	client, err := harbor2.New(harborRepo, cache, false)
+	client, err := harbor.New(harborRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -16,11 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/distribution/distribution/v3/configuration"
 	"github.com/distribution/distribution/v3/registry"

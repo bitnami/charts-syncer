@@ -3,12 +3,10 @@ package syncer
 import (
 	"os"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
-
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
-
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	"k8s.io/klog"
