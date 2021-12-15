@@ -69,15 +69,15 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	testCases := []struct {
 		desc       string
-		sourceRepo *api.SourceRepo
-		targetRepo *api.TargetRepo
+		sourceRepo *api.Source
+		targetRepo *api.Target
 		entries    []string
 		want       []string
 	}{
 		{
 			desc: "sync etcd and common",
-			sourceRepo: &api.SourceRepo{
-				Spec: &api.SourceRepo_Repo{
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
 					Repo: &api.Repo{
 						Kind: api.Kind_CHARTMUSEUM,
 						Auth: &api.Auth{
@@ -87,8 +87,8 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 					},
 				},
 			},
-			targetRepo: &api.TargetRepo{
-				Spec: &api.TargetRepo_Repo{
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
 					Repo: &api.Repo{
 						Kind: api.Kind_CHARTMUSEUM,
 						Auth: &api.Auth{

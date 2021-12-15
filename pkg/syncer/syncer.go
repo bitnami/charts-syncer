@@ -14,14 +14,14 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src client.ReadWriter
-	dst client.ReadWriter
+	src client.ReaderWriter
+	dst client.ReaderWriter
 }
 
 // A Syncer can be used to sync a source and target chart repos.
 type Syncer struct {
-	source *api.SourceRepo
-	target *api.TargetRepo
+	source *api.Source
+	target *api.Target
 
 	cli *Clients
 
@@ -88,7 +88,7 @@ func WithContainerImageRelocation(enable bool) Option {
 }
 
 // New creates a new syncer using Client
-func New(source *api.SourceRepo, target *api.TargetRepo, opts ...Option) (*Syncer, error) {
+func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error) {
 	s := &Syncer{
 		source: source,
 		target: target,

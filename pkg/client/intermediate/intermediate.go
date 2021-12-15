@@ -2,19 +2,17 @@ package intermediate
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client"
-
-	"github.com/juju/errors"
-
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
 )
 
@@ -22,19 +20,22 @@ var (
 	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.bundle.tar")
 )
 
-// Repo allows to operate a chart repository.
-type Repo struct {
+type chartVersions []string
+
+// BundlesDir allows to operate a chart bundles directory
+// It should implement pkg/client ReaderWriter interface
+type BundlesDir struct {
 	dir     string
-	entries map[string][]string
+	entries map[string]chartVersions
 }
 
-// NewIntermediateClient returns a ReadWriter object
-var NewIntermediateClient = func(intermediateBundlesPath string) (client.ReadWriter, error) {
+// NewIntermediateClient returns a ReaderWriter object
+func NewIntermediateClient(intermediateBundlesPath string) (client.ReaderWriter, error) {
 	return New(intermediateBundlesPath)
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(dir string) (*Repo, error) {
+func New(dir string) (*BundlesDir, error) {
 	d, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -44,7 +45,7 @@ func New(dir string) (*Repo, error) {
 	}
 
 	// Populate entries from directory
-	entries := make(map[string][]string)
+	entries := make(map[string]chartVersions)
 	matches, err := filepath.Glob(filepath.Join(d, "*.tar"))
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -56,21 +57,21 @@ func New(dir string) (*Repo, error) {
 		sort.Strings(entries[s[0]])
 	}
 
-	return &Repo{dir: d, entries: entries}, nil
+	return &BundlesDir{dir: d, entries: entries}, nil
 }
 
 // List lists all chart names in a repo
-func (r *Repo) List() ([]string, error) {
+func (bd *BundlesDir) List() ([]string, error) {
 	var names []string
-	for name := range r.entries {
+	for name := range bd.entries {
 		names = append(names, name)
 	}
 	return names, nil
 }
 
 // ListChartVersions lists all versions of a chart
-func (r *Repo) ListChartVersions(name string) ([]string, error) {
-	versions, ok := r.entries[name]
+func (bd *BundlesDir) ListChartVersions(name string) ([]string, error) {
+	versions, ok := bd.entries[name]
 	if !ok {
 		return []string{}, nil
 	}
@@ -78,13 +79,13 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 }
 
 // Fetch fetches a chart
-func (r *Repo) Fetch(name string, version string) (string, error) {
-	return path.Join(r.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version)), nil
+func (bd *BundlesDir) Fetch(name string, version string) (string, error) {
+	return path.Join(bd.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version)), nil
 }
 
 // Has checks if a repo has a specific chart
-func (r *Repo) Has(name string, version string) (bool, error) {
-	versions, err := r.ListChartVersions(name)
+func (bd *BundlesDir) Has(name string, version string) (bool, error) {
+	versions, err := bd.ListChartVersions(name)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
@@ -98,35 +99,40 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 }
 
 // Upload uploads a chart to the repo
-func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
+func (bd *BundlesDir) Upload(filepath string, metadata *chart.Metadata) error {
 	name := metadata.Name
 	version := metadata.Version
-	if _, ok := r.entries[name]; ok {
-		for _, v := range r.entries[name] {
-			if v == version {
-				return errors.AlreadyExistsf("%s-%s", name, version)
-			}
-		}
+	exists, err := bd.Has(name, version)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	if exists {
+		return errors.AlreadyExistsf("%s-%s", name, version)
 	}
 
-	input, err := ioutil.ReadFile(filepath)
+	src, err := os.Open(filepath)
 	if err != nil {
 		return errors.Annotatef(err, "reading %q", filepath)
 	}
 
-	out := path.Join(r.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version))
-	if err := ioutil.WriteFile(out, input, 0644); err != nil {
+	out := path.Join(bd.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version))
+	dst, err := os.Create(out)
+	if err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return errors.Annotatef(err, "copying %q to %q", filepath, out)
+	}
 
-	r.entries[name] = append(r.entries[name], version)
-	sort.Strings(r.entries[name])
+	bd.entries[name] = append(bd.entries[name], version)
+	sort.Strings(bd.entries[name])
 
 	return nil
 }
 
 // GetChartDetails returns the details of a chart
-func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
+func (bd *BundlesDir) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
 	return &types.ChartDetails{
 		PublishedAt: utils.UnixEpoch,
 		Digest:      "deadbeef",
@@ -134,6 +140,6 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 }
 
 // Reload reloads the index
-func (r *Repo) Reload() error {
+func (bd *BundlesDir) Reload() error {
 	return nil
 }

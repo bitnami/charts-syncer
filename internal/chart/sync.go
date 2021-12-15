@@ -12,7 +12,7 @@ import (
 
 // ChangeReferences changes the references of a chart tgz file from the source
 // repo to the target repo
-func ChangeReferences(chartPath, name, version string, srcRepo *api.SourceRepo, tgtRepo *api.TargetRepo) error {
+func ChangeReferences(chartPath, name, version string, source *api.Source, target *api.Target) error {
 	// Update values*.yaml
 	for _, f := range []string{
 		path.Join(chartPath, ValuesFilename),
@@ -22,7 +22,7 @@ func ChangeReferences(chartPath, name, version string, srcRepo *api.SourceRepo, 
 			return errors.Trace(err)
 		} else if ok {
 			klog.V(5).Infof("Processing %q file...", f)
-			if err := updateValuesFile(f, tgtRepo); err != nil {
+			if err := updateValuesFile(f, target); err != nil {
 				return errors.Trace(err)
 			}
 		}
@@ -36,10 +36,10 @@ func ChangeReferences(chartPath, name, version string, srcRepo *api.SourceRepo, 
 		klog.V(5).Infof("Processing %q file...", readmeFile)
 		if err := updateReadmeFile(
 			readmeFile,
-			srcRepo.GetRepo().GetUrl(),
-			tgtRepo.GetRepo().GetUrl(),
+			source.GetRepo().GetUrl(),
+			target.GetRepo().GetUrl(),
 			name,
-			tgtRepo.GetRepoName(),
+			target.GetRepoName(),
 		); err != nil {
 			return errors.Trace(err)
 		}

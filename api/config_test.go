@@ -8,8 +8,8 @@ import (
 
 func TestValidate(t *testing.T) {
 	config := &api.Config{
-		Source: &api.SourceRepo{
-			Spec: &api.SourceRepo_Repo{
+		Source: &api.Source{
+			Spec: &api.Source_Repo{
 				Repo: &api.Repo{
 					Url:  "ht//:fake.source.com",
 					Kind: api.Kind_CHARTMUSEUM,
@@ -20,8 +20,8 @@ func TestValidate(t *testing.T) {
 				},
 			},
 		},
-		Target: &api.TargetRepo{
-			Spec: &api.TargetRepo_Repo{
+		Target: &api.Target{
+			Spec: &api.Target_Repo{
 				Repo: &api.Repo{
 					Url:  "http://fake.target.com",
 					Kind: api.Kind_CHARTMUSEUM,

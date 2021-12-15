@@ -7,6 +7,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/bitnami-labs/charts-syncer/api"
+
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
@@ -78,6 +80,8 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		}
 		var packagedChartPath string
 
+		// If any of the source or target objects contains an intermediate bundles path it means we are running a partial
+		// sync. Either from a repo to an intermediate dir, or from an intermediate dir to a repo.
 		intermediateScenario := s.source.GetIntermediateBundlesPath() != "" || s.target.GetIntermediateBundlesPath() != ""
 		if s.relocateContainerImages || intermediateScenario {
 			packagedChartPath, err = s.SyncWithRelok8s(ch, outdir)
@@ -113,29 +117,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 // updating the images in values.yaml. The local chart must include an image hints file so relok8s library knows how to
 // update the images
 func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
-	packagedChartPath := ""
-	req := &mover.ChartMoveRequest{}
-	if s.target.GetIntermediateBundlesPath() != "" {
-		// First step of intermediate process
-		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.bundle.tar", chart.Name, chart.Version))
-		req = s.getBundleRequest(chart.TgzPath, packagedChartPath)
-	} else if s.source.GetIntermediateBundlesPath() != "" {
-		// Second step of intermediate process
-		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
-		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
-		// specify the name we want for the output file. Until then, we should keep using this template thing
-		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
-		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
-		req = s.loadBundleRequest(chart.TgzPath, outputChartPath)
-	} else {
-		// Direct syncing
-		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
-		// specify the name we want for the output file. Until then, we should keep using this template thing
-		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
-		packagedChartPath = filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
-		req = s.getMoverRequest(chart.TgzPath, outputChartPath)
-	}
-
+	req, packagedChartPath := getRelok8sMoveRequest(s.source, s.target, chart, outdir)
 	chartMover, err := mover.NewChartMover(req)
 	if err != nil {
 		klog.Errorf("unable to create chart mover: %+v", err)
@@ -198,7 +180,29 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 	return packagedChartPath, nil
 }
 
-func (s *Syncer) getMoverRequest(sourcePath, targetPath string) *mover.ChartMoveRequest {
+func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart, outdir string) (*mover.ChartMoveRequest, string) {
+	if target.GetIntermediateBundlesPath() != "" {
+		// First step of intermediate process
+		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.bundle.tar", chart.Name, chart.Version))
+		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath), packagedChartPath
+	} else if source.GetIntermediateBundlesPath() != "" {
+		// Second step of intermediate process
+		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
+		// specify the name we want for the output file. Until then, we should keep using this template thing
+		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
+		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
+		return relok8sBundleLoadReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository()), packagedChartPath
+	} else {
+		// Direct syncing
+		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
+		// specify the name we want for the output file. Until then, we should keep using this template thing
+		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
+		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
+		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository()), packagedChartPath
+	}
+}
+
+func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -209,8 +213,8 @@ func (s *Syncer) getMoverRequest(sourcePath, targetPath string) *mover.ChartMove
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
-				Registry:         s.target.GetContainerRegistry(),
-				RepositoryPrefix: s.target.GetContainerRepository(),
+				Registry:         containerRegistry,
+				RepositoryPrefix: containerRepository,
 				ForcePush:        true,
 			},
 			Chart: mover.ChartSpec{
@@ -223,7 +227,7 @@ func (s *Syncer) getMoverRequest(sourcePath, targetPath string) *mover.ChartMove
 	return req
 }
 
-func (s *Syncer) getBundleRequest(sourcePath, targetPath string) *mover.ChartMoveRequest {
+func relok8sBundleSaveReq(sourcePath, targetPath string) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -243,7 +247,7 @@ func (s *Syncer) getBundleRequest(sourcePath, targetPath string) *mover.ChartMov
 	return req
 }
 
-func (s *Syncer) loadBundleRequest(sourcePath, targetPath string) *mover.ChartMoveRequest {
+func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -254,8 +258,8 @@ func (s *Syncer) loadBundleRequest(sourcePath, targetPath string) *mover.ChartMo
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
-				Registry:         s.target.GetContainerRegistry(),
-				RepositoryPrefix: s.target.GetContainerRepository(),
+				Registry:         containerRegistry,
+				RepositoryPrefix: containerRepository,
 				ForcePush:        true,
 			},
 			Chart: mover.ChartSpec{

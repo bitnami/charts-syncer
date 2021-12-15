@@ -77,8 +77,8 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	}
 
 	return &Syncer{
-		source: &api.SourceRepo{},
-		target: &api.TargetRepo{},
+		source: &api.Source{},
+		target: &api.Target{},
 		cli: &Clients{
 			src: srcCli,
 			dst: dstCli,

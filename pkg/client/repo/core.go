@@ -18,10 +18,7 @@ import (
 )
 
 // NewClient returns a Client object
-//
-// The func is exposed as a var to allow tests to temporarily replace its
-// implementation, e.g. to return a fake.
-var NewClient = func(repo *api.Repo, opts ...types.Option) (client.ReadWriter, error) {
+func NewClient(repo *api.Repo, opts ...types.Option) (client.ReaderWriter, error) {
 	copts := &types.ClientOpts{}
 	for _, o := range opts {
 		o(copts)

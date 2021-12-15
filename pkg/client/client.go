@@ -5,7 +5,10 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 )
 
-// Reader defines the methods that a ReadOnly chart client should implement.
+// This package defines the interfaces that clients needs to satisfy in order to work with chart repositories or
+// intermediate bundles directories.
+
+// Reader defines the methods that a ReadOnly chart or bundle client should implement.
 type Reader interface {
 	Fetch(name string, version string) (string, error)
 	List() ([]string, error)
@@ -17,13 +20,13 @@ type Reader interface {
 	Reload() error
 }
 
-// Writer defines the methods that a WriteOnly chart client should implement.
+// Writer defines the methods that a WriteOnly chart or bundle client should implement.
 type Writer interface {
 	Upload(filepath string, metadata *chart.Metadata) error
 }
 
-// ReadWriter defines the methods that a chart client should implement.
-type ReadWriter interface {
+// ReaderWriter defines the methods that a chart or bundle client should implement
+type ReaderWriter interface {
 	Reader
 	Writer
 }

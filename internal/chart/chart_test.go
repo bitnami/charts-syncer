@@ -10,16 +10,16 @@ import (
 )
 
 var (
-	source = &api.SourceRepo{
-		Spec: &api.SourceRepo_Repo{
+	source = &api.Source{
+		Spec: &api.Source_Repo{
 			Repo: &api.Repo{
 				Url:  "https://charts.bitnami.com/bitnami",
 				Kind: api.Kind_HELM,
 			},
 		},
 	}
-	target = &api.TargetRepo{
-		Spec: &api.TargetRepo_Repo{
+	target = &api.Target{
+		Spec: &api.Target_Repo{
 			Repo: &api.Repo{
 				Url:  "http://fake.target.com",
 				Kind: api.Kind_CHARTMUSEUM,

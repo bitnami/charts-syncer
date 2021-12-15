@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	source = &api.SourceRepo{
-		Spec: &api.SourceRepo_Repo{
+	source = &api.Source{
+		Spec: &api.Source_Repo{
 			Repo: &api.Repo{
 				Url: "https://charts.bitnami.com/bitnami",
 			},

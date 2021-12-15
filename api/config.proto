@@ -5,14 +5,14 @@ option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
 
 // Config file structure
 message Config {
-    SourceRepo source = 1;
-    TargetRepo target = 2;
+    Source source = 1;
+    Target target = 2;
     repeated string charts = 3;
     bool relocate_container_images = 4;
 }
 
 // SourceRepo contains the required information of the source chart repository
-message SourceRepo {
+message Source {
     oneof spec {
         Repo repo = 1;
         string intermediate_bundles_path = 2;
@@ -20,7 +20,7 @@ message SourceRepo {
 }
 
 // TargetRepo contains the required information of the target chart repository
-message TargetRepo {
+message Target {
     oneof spec {
         Repo repo = 1;
         string intermediate_bundles_path = 5;

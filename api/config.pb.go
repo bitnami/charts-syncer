@@ -89,10 +89,10 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Source                  *SourceRepo `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	Target                  *TargetRepo `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
-	Charts                  []string    `protobuf:"bytes,3,rep,name=charts,proto3" json:"charts,omitempty"`
-	RelocateContainerImages bool        `protobuf:"varint,4,opt,name=relocate_container_images,json=relocateContainerImages,proto3" json:"relocate_container_images,omitempty"`
+	Source                  *Source  `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	Target                  *Target  `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	Charts                  []string `protobuf:"bytes,3,rep,name=charts,proto3" json:"charts,omitempty"`
+	RelocateContainerImages bool     `protobuf:"varint,4,opt,name=relocate_container_images,json=relocateContainerImages,proto3" json:"relocate_container_images,omitempty"`
 }
 
 func (x *Config) Reset() {
@@ -127,14 +127,14 @@ func (*Config) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Config) GetSource() *SourceRepo {
+func (x *Config) GetSource() *Source {
 	if x != nil {
 		return x.Source
 	}
 	return nil
 }
 
-func (x *Config) GetTarget() *TargetRepo {
+func (x *Config) GetTarget() *Target {
 	if x != nil {
 		return x.Target
 	}
@@ -156,19 +156,19 @@ func (x *Config) GetRelocateContainerImages() bool {
 }
 
 // SourceRepo contains the required information of the source chart repository
-type SourceRepo struct {
+type Source struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Spec:
-	//	*SourceRepo_Repo
-	//	*SourceRepo_IntermediateBundlesPath
-	Spec isSourceRepo_Spec `protobuf_oneof:"spec"`
+	//	*Source_Repo
+	//	*Source_IntermediateBundlesPath
+	Spec isSource_Spec `protobuf_oneof:"spec"`
 }
 
-func (x *SourceRepo) Reset() {
-	*x = SourceRepo{}
+func (x *Source) Reset() {
+	*x = Source{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_config_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -176,13 +176,13 @@ func (x *SourceRepo) Reset() {
 	}
 }
 
-func (x *SourceRepo) String() string {
+func (x *Source) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SourceRepo) ProtoMessage() {}
+func (*Source) ProtoMessage() {}
 
-func (x *SourceRepo) ProtoReflect() protoreflect.Message {
+func (x *Source) ProtoReflect() protoreflect.Message {
 	mi := &file_config_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -194,65 +194,65 @@ func (x *SourceRepo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SourceRepo.ProtoReflect.Descriptor instead.
-func (*SourceRepo) Descriptor() ([]byte, []int) {
+// Deprecated: Use Source.ProtoReflect.Descriptor instead.
+func (*Source) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{1}
 }
 
-func (m *SourceRepo) GetSpec() isSourceRepo_Spec {
+func (m *Source) GetSpec() isSource_Spec {
 	if m != nil {
 		return m.Spec
 	}
 	return nil
 }
 
-func (x *SourceRepo) GetRepo() *Repo {
-	if x, ok := x.GetSpec().(*SourceRepo_Repo); ok {
+func (x *Source) GetRepo() *Repo {
+	if x, ok := x.GetSpec().(*Source_Repo); ok {
 		return x.Repo
 	}
 	return nil
 }
 
-func (x *SourceRepo) GetIntermediateBundlesPath() string {
-	if x, ok := x.GetSpec().(*SourceRepo_IntermediateBundlesPath); ok {
+func (x *Source) GetIntermediateBundlesPath() string {
+	if x, ok := x.GetSpec().(*Source_IntermediateBundlesPath); ok {
 		return x.IntermediateBundlesPath
 	}
 	return ""
 }
 
-type isSourceRepo_Spec interface {
-	isSourceRepo_Spec()
+type isSource_Spec interface {
+	isSource_Spec()
 }
 
-type SourceRepo_Repo struct {
+type Source_Repo struct {
 	Repo *Repo `protobuf:"bytes,1,opt,name=repo,proto3,oneof"`
 }
 
-type SourceRepo_IntermediateBundlesPath struct {
+type Source_IntermediateBundlesPath struct {
 	IntermediateBundlesPath string `protobuf:"bytes,2,opt,name=intermediate_bundles_path,json=intermediateBundlesPath,proto3,oneof"`
 }
 
-func (*SourceRepo_Repo) isSourceRepo_Spec() {}
+func (*Source_Repo) isSource_Spec() {}
 
-func (*SourceRepo_IntermediateBundlesPath) isSourceRepo_Spec() {}
+func (*Source_IntermediateBundlesPath) isSource_Spec() {}
 
 // TargetRepo contains the required information of the target chart repository
-type TargetRepo struct {
+type Target struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Spec:
-	//	*TargetRepo_Repo
-	//	*TargetRepo_IntermediateBundlesPath
-	Spec                isTargetRepo_Spec `protobuf_oneof:"spec"`
-	ContainerRegistry   string            `protobuf:"bytes,2,opt,name=container_registry,json=containerRegistry,proto3" json:"container_registry,omitempty"`
-	ContainerRepository string            `protobuf:"bytes,3,opt,name=container_repository,json=containerRepository,proto3" json:"container_repository,omitempty"`
-	RepoName            string            `protobuf:"bytes,4,opt,name=repo_name,json=repoName,proto3" json:"repo_name,omitempty"`
+	//	*Target_Repo
+	//	*Target_IntermediateBundlesPath
+	Spec                isTarget_Spec `protobuf_oneof:"spec"`
+	ContainerRegistry   string        `protobuf:"bytes,2,opt,name=container_registry,json=containerRegistry,proto3" json:"container_registry,omitempty"`
+	ContainerRepository string        `protobuf:"bytes,3,opt,name=container_repository,json=containerRepository,proto3" json:"container_repository,omitempty"`
+	RepoName            string        `protobuf:"bytes,4,opt,name=repo_name,json=repoName,proto3" json:"repo_name,omitempty"`
 }
 
-func (x *TargetRepo) Reset() {
-	*x = TargetRepo{}
+func (x *Target) Reset() {
+	*x = Target{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_config_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -260,13 +260,13 @@ func (x *TargetRepo) Reset() {
 	}
 }
 
-func (x *TargetRepo) String() string {
+func (x *Target) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TargetRepo) ProtoMessage() {}
+func (*Target) ProtoMessage() {}
 
-func (x *TargetRepo) ProtoReflect() protoreflect.Message {
+func (x *Target) ProtoReflect() protoreflect.Message {
 	mi := &file_config_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -278,68 +278,68 @@ func (x *TargetRepo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TargetRepo.ProtoReflect.Descriptor instead.
-func (*TargetRepo) Descriptor() ([]byte, []int) {
+// Deprecated: Use Target.ProtoReflect.Descriptor instead.
+func (*Target) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{2}
 }
 
-func (m *TargetRepo) GetSpec() isTargetRepo_Spec {
+func (m *Target) GetSpec() isTarget_Spec {
 	if m != nil {
 		return m.Spec
 	}
 	return nil
 }
 
-func (x *TargetRepo) GetRepo() *Repo {
-	if x, ok := x.GetSpec().(*TargetRepo_Repo); ok {
+func (x *Target) GetRepo() *Repo {
+	if x, ok := x.GetSpec().(*Target_Repo); ok {
 		return x.Repo
 	}
 	return nil
 }
 
-func (x *TargetRepo) GetIntermediateBundlesPath() string {
-	if x, ok := x.GetSpec().(*TargetRepo_IntermediateBundlesPath); ok {
+func (x *Target) GetIntermediateBundlesPath() string {
+	if x, ok := x.GetSpec().(*Target_IntermediateBundlesPath); ok {
 		return x.IntermediateBundlesPath
 	}
 	return ""
 }
 
-func (x *TargetRepo) GetContainerRegistry() string {
+func (x *Target) GetContainerRegistry() string {
 	if x != nil {
 		return x.ContainerRegistry
 	}
 	return ""
 }
 
-func (x *TargetRepo) GetContainerRepository() string {
+func (x *Target) GetContainerRepository() string {
 	if x != nil {
 		return x.ContainerRepository
 	}
 	return ""
 }
 
-func (x *TargetRepo) GetRepoName() string {
+func (x *Target) GetRepoName() string {
 	if x != nil {
 		return x.RepoName
 	}
 	return ""
 }
 
-type isTargetRepo_Spec interface {
-	isTargetRepo_Spec()
+type isTarget_Spec interface {
+	isTarget_Spec()
 }
 
-type TargetRepo_Repo struct {
+type Target_Repo struct {
 	Repo *Repo `protobuf:"bytes,1,opt,name=repo,proto3,oneof"`
 }
 
-type TargetRepo_IntermediateBundlesPath struct {
+type Target_IntermediateBundlesPath struct {
 	IntermediateBundlesPath string `protobuf:"bytes,5,opt,name=intermediate_bundles_path,json=intermediateBundlesPath,proto3,oneof"`
 }
 
-func (*TargetRepo_Repo) isTargetRepo_Spec() {}
+func (*Target_Repo) isTarget_Spec() {}
 
-func (*TargetRepo_IntermediateBundlesPath) isTargetRepo_Spec() {}
+func (*Target_IntermediateBundlesPath) isTarget_Spec() {}
 
 // Generic repo representation
 type Repo struct {
@@ -493,26 +493,25 @@ var File_config_proto protoreflect.FileDescriptor
 
 var file_config_proto_rawDesc = []byte{
 	0x0a, 0x0c, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x03,
-	0x61, 0x70, 0x69, 0x22, 0xae, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x27,
-	0x0a, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f,
-	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x52,
-	0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x27, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x54, 0x61,
-	0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x52, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74,
-	0x12, 0x16, 0x0a, 0x06, 0x63, 0x68, 0x61, 0x72, 0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09,
-	0x52, 0x06, 0x63, 0x68, 0x61, 0x72, 0x74, 0x73, 0x12, 0x3a, 0x0a, 0x19, 0x72, 0x65, 0x6c, 0x6f,
-	0x63, 0x61, 0x74, 0x65, 0x5f, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x5f, 0x69,
-	0x6d, 0x61, 0x67, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x17, 0x72, 0x65, 0x6c,
-	0x6f, 0x63, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x49, 0x6d,
-	0x61, 0x67, 0x65, 0x73, 0x22, 0x73, 0x0a, 0x0a, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65,
-	0x70, 0x6f, 0x12, 0x1f, 0x0a, 0x04, 0x72, 0x65, 0x70, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x09, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x48, 0x00, 0x52, 0x04, 0x72,
-	0x65, 0x70, 0x6f, 0x12, 0x3c, 0x0a, 0x19, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6d, 0x65, 0x64, 0x69,
-	0x61, 0x74, 0x65, 0x5f, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x73, 0x5f, 0x70, 0x61, 0x74, 0x68,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x17, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6d,
-	0x65, 0x64, 0x69, 0x61, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x73, 0x50, 0x61, 0x74,
-	0x68, 0x42, 0x06, 0x0a, 0x04, 0x73, 0x70, 0x65, 0x63, 0x22, 0xf2, 0x01, 0x0a, 0x0a, 0x54, 0x61,
-	0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x12, 0x1f, 0x0a, 0x04, 0x72, 0x65, 0x70, 0x6f,
+	0x61, 0x70, 0x69, 0x22, 0xa6, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x23,
+	0x0a, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x06, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x12, 0x23, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74,
+	0x52, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x63, 0x68, 0x61, 0x72,
+	0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x63, 0x68, 0x61, 0x72, 0x74, 0x73,
+	0x12, 0x3a, 0x0a, 0x19, 0x72, 0x65, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65, 0x5f, 0x63, 0x6f, 0x6e,
+	0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x5f, 0x69, 0x6d, 0x61, 0x67, 0x65, 0x73, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x17, 0x72, 0x65, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e,
+	0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x49, 0x6d, 0x61, 0x67, 0x65, 0x73, 0x22, 0x6f, 0x0a, 0x06,
+	0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x1f, 0x0a, 0x04, 0x72, 0x65, 0x70, 0x6f, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x48,
+	0x00, 0x52, 0x04, 0x72, 0x65, 0x70, 0x6f, 0x12, 0x3c, 0x0a, 0x19, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6d, 0x65, 0x64, 0x69, 0x61, 0x74, 0x65, 0x5f, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x73, 0x5f,
+	0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x17, 0x69, 0x6e,
+	0x74, 0x65, 0x72, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x73, 0x50, 0x61, 0x74, 0x68, 0x42, 0x06, 0x0a, 0x04, 0x73, 0x70, 0x65, 0x63, 0x22, 0xee, 0x01,
+	0x0a, 0x06, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x1f, 0x0a, 0x04, 0x72, 0x65, 0x70, 0x6f,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x70,
 	0x6f, 0x48, 0x00, 0x52, 0x04, 0x72, 0x65, 0x70, 0x6f, 0x12, 0x3c, 0x0a, 0x19, 0x69, 0x6e, 0x74,
 	0x65, 0x72, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x74, 0x65, 0x5f, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
@@ -568,18 +567,18 @@ func file_config_proto_rawDescGZIP() []byte {
 var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_config_proto_goTypes = []interface{}{
-	(Kind)(0),          // 0: api.Kind
-	(*Config)(nil),     // 1: api.Config
-	(*SourceRepo)(nil), // 2: api.SourceRepo
-	(*TargetRepo)(nil), // 3: api.TargetRepo
-	(*Repo)(nil),       // 4: api.Repo
-	(*Auth)(nil),       // 5: api.Auth
+	(Kind)(0),      // 0: api.Kind
+	(*Config)(nil), // 1: api.Config
+	(*Source)(nil), // 2: api.Source
+	(*Target)(nil), // 3: api.Target
+	(*Repo)(nil),   // 4: api.Repo
+	(*Auth)(nil),   // 5: api.Auth
 }
 var file_config_proto_depIdxs = []int32{
-	2, // 0: api.Config.source:type_name -> api.SourceRepo
-	3, // 1: api.Config.target:type_name -> api.TargetRepo
-	4, // 2: api.SourceRepo.repo:type_name -> api.Repo
-	4, // 3: api.TargetRepo.repo:type_name -> api.Repo
+	2, // 0: api.Config.source:type_name -> api.Source
+	3, // 1: api.Config.target:type_name -> api.Target
+	4, // 2: api.Source.repo:type_name -> api.Repo
+	4, // 3: api.Target.repo:type_name -> api.Repo
 	0, // 4: api.Repo.kind:type_name -> api.Kind
 	5, // 5: api.Repo.auth:type_name -> api.Auth
 	6, // [6:6] is the sub-list for method output_type
@@ -608,7 +607,7 @@ func file_config_proto_init() {
 			}
 		}
 		file_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SourceRepo); i {
+			switch v := v.(*Source); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -620,7 +619,7 @@ func file_config_proto_init() {
 			}
 		}
 		file_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TargetRepo); i {
+			switch v := v.(*Target); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -657,12 +656,12 @@ func file_config_proto_init() {
 		}
 	}
 	file_config_proto_msgTypes[1].OneofWrappers = []interface{}{
-		(*SourceRepo_Repo)(nil),
-		(*SourceRepo_IntermediateBundlesPath)(nil),
+		(*Source_Repo)(nil),
+		(*Source_IntermediateBundlesPath)(nil),
 	}
 	file_config_proto_msgTypes[2].OneofWrappers = []interface{}{
-		(*TargetRepo_Repo)(nil),
-		(*TargetRepo_IntermediateBundlesPath)(nil),
+		(*Target_Repo)(nil),
+		(*Target_IntermediateBundlesPath)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
