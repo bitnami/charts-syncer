@@ -23,14 +23,14 @@ var (
 type chartVersions []string
 
 // BundlesDir allows to operate a chart bundles directory
-// It should implement pkg/client ReaderWriter interface
+// It should implement pkg/client ChartsReaderWriter interface
 type BundlesDir struct {
 	dir     string
 	entries map[string]chartVersions
 }
 
-// NewIntermediateClient returns a ReaderWriter object
-func NewIntermediateClient(intermediateBundlesPath string) (client.ReaderWriter, error) {
+// NewIntermediateClient returns a ChartsReaderWriter object
+func NewIntermediateClient(intermediateBundlesPath string) (client.ChartsReaderWriter, error) {
 	return New(intermediateBundlesPath)
 }
 

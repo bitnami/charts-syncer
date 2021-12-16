@@ -114,7 +114,7 @@ func GetLockAPIVersion(chartPath string) (string, error) {
 //
 // It reads the lock file to download the versions from the target
 // chart repository (it assumes all charts are stored in a single repo).
-func BuildDependencies(chartPath string, r client.Reader, sourceRepo, targetRepo *api.Repo) error {
+func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targetRepo *api.Repo) error {
 	// Build deps manually for OCI as helm does not support it yet
 	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
 		return errors.Trace(err)

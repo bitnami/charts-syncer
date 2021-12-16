@@ -14,8 +14,8 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src client.ReaderWriter
-	dst client.ReaderWriter
+	src client.ChartsReaderWriter
+	dst client.ChartsReaderWriter
 }
 
 // A Syncer can be used to sync a source and target chart repos.

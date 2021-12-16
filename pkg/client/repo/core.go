@@ -18,7 +18,7 @@ import (
 )
 
 // NewClient returns a Client object
-func NewClient(repo *api.Repo, opts ...types.Option) (client.ReaderWriter, error) {
+func NewClient(repo *api.Repo, opts ...types.Option) (client.ChartsReaderWriter, error) {
 	copts := &types.ClientOpts{}
 	for _, o := range opts {
 		o(copts)

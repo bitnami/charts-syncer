@@ -8,8 +8,8 @@ import (
 // This package defines the interfaces that clients needs to satisfy in order to work with chart repositories or
 // intermediate bundles directories.
 
-// Reader defines the methods that a ReadOnly chart or bundle client should implement.
-type Reader interface {
+// ChartsReader defines the methods that a ReadOnly chart or bundle client should implement.
+type ChartsReader interface {
 	Fetch(name string, version string) (string, error)
 	List() ([]string, error)
 	ListChartVersions(name string) ([]string, error)
@@ -20,13 +20,13 @@ type Reader interface {
 	Reload() error
 }
 
-// Writer defines the methods that a WriteOnly chart or bundle client should implement.
-type Writer interface {
+// ChartsWriter defines the methods that a WriteOnly chart or bundle client should implement.
+type ChartsWriter interface {
 	Upload(filepath string, metadata *chart.Metadata) error
 }
 
-// ReaderWriter defines the methods that a chart or bundle client should implement
-type ReaderWriter interface {
-	Reader
-	Writer
+// ChartsReaderWriter defines the methods that a chart or bundle client should implement
+type ChartsReaderWriter interface {
+	ChartsReader
+	ChartsWriter
 }
