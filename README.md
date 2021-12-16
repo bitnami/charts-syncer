@@ -10,6 +10,9 @@ Sync chart packages between chart repositories
 - [Usage](#usage)
     + [Sync all charts](#sync-all-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
+- [Advanced Usage](#advanced-usage)
+    + [Sync charts and container images](#sync-charts-and-container-images)
+    + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
 - [Configuration](#configuration)
   * [Harbor example](#harbor-example)
   * [OCI example](#oci-example)
@@ -42,6 +45,28 @@ $ charts-syncer sync --from-date 2020-05-15
 ~~~
 
  > Date should be in format YYYY-MM-DD
+
+## Advanced Usage
+
+#### Sync charts and container images
+
+By default, charts-syncer only sync charts packages, but it does not sync the container images used by the chart. This
+feature can be enabled by setting the `relocateContainerImages: true` property in the config file.
+
+~~~yaml
+relocateContainerImages: true
+source:
+   ...
+target:
+   ...
+~~~
+
+In order to sync container images it is mandatory that the source charts includes a `.relok8s-images.yaml` file with information
+about where to find the images inside chart. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
+
+#### Sync charts between repositories without direct connectivity
+
+> Check the [air gap docs](docs/airgap.md).
 
 ----
 
