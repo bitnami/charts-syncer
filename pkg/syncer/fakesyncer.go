@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/local"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/local"
 )
 
 // FakeSyncerOpts allows to configure a Fake syncer.
@@ -77,8 +77,8 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	}
 
 	return &Syncer{
-		source: &api.SourceRepo{},
-		target: &api.TargetRepo{},
+		source: &api.Source{},
+		target: &api.Target{},
 		cli: &Clients{
 			src: srcCli,
 			dst: dstCli,

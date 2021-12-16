@@ -1,4 +1,4 @@
-package harbor
+package chartmuseum
 
 import (
 	"bytes"
@@ -9,7 +9,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 
 	"github.com/juju/errors"
 	"k8s.io/klog"
@@ -17,7 +18,6 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 )
@@ -57,11 +57,11 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool)
 // GetUploadURL returns the URL to upload a chart
 func (r *Repo) GetUploadURL() string {
 	u := *r.url
-	u.Path = strings.Replace(u.Path, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
+	u.Path = "/api/charts"
 	return u.String()
 }
 
-// Upload uploads a chart to the repo
+// Upload uploads a chart to the repo.
 func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 	f, err := os.Open(file)
 	if err != nil {
@@ -124,11 +124,12 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 		return errors.Annotatef(err, "uploading %q chart", file)
 	}
 	defer res.Body.Close()
+
+	bodyStr := utils.HTTPResponseBody(res)
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
-		bodyStr := utils.HTTPResponseBody(res)
-		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+		return errors.Errorf("unable to upload %q chart, got HTTP Status: %s, Resp: %v", file, res.Status, bodyStr)
 	}
-	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
+	klog.V(4).Infof("[%s] HTTP Status: %s, Resp: %v", reqID, res.Status, bodyStr)
 
 	return nil
 }

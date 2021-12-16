@@ -10,19 +10,23 @@ import (
 )
 
 var (
-	source = &api.SourceRepo{
-		Repo: &api.Repo{
-			Url:  "https://charts.bitnami.com/bitnami",
-			Kind: api.Kind_HELM,
+	source = &api.Source{
+		Spec: &api.Source_Repo{
+			Repo: &api.Repo{
+				Url:  "https://charts.bitnami.com/bitnami",
+				Kind: api.Kind_HELM,
+			},
 		},
 	}
-	target = &api.TargetRepo{
-		Repo: &api.Repo{
-			Url:  "http://fake.target.com",
-			Kind: api.Kind_CHARTMUSEUM,
-			Auth: &api.Auth{
-				Username: "user",
-				Password: "password",
+	target = &api.Target{
+		Spec: &api.Target_Repo{
+			Repo: &api.Repo{
+				Url:  "http://fake.target.com",
+				Kind: api.Kind_CHARTMUSEUM,
+				Auth: &api.Auth{
+					Username: "user",
+					Password: "password",
+				},
 			},
 		},
 		ContainerRegistry:   "test.registry.io",

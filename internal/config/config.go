@@ -47,21 +47,26 @@ func Load(config *api.Config) error {
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
 	}
+	if config.GetSource().GetRepo() != nil {
+		if config.GetSource().GetRepo().GetUseChartsIndex() && config.GetSource().GetRepo().GetChartsIndex() == "" {
+			if err := setDefaultChartsIndex(config); err != nil {
+				return err
+			}
+		}
+		if err := config.GetSource().GetRepo().SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
+			return err
+		}
+	}
+	if config.GetTarget() != nil {
+		if err := config.GetTarget().GetRepo().SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
+			return err
+		}
+	}
 	if config.GetTarget().GetRepoName() == "" {
 		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
 		config.GetTarget().RepoName = defaultRepoName
 	}
-	if config.GetSource().GetRepo().GetUseChartsIndex() && config.GetSource().GetRepo().GetChartsIndex() == "" {
-		if err := setDefaultChartsIndex(config); err != nil {
-			return err
-		}
-	}
-	if err := config.Source.Repo.SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
-		return err
-	}
-	if err := config.Target.Repo.SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
-		return err
-	}
+
 	return nil
 }
 

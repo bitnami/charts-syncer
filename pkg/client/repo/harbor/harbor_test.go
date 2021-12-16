@@ -1,8 +1,11 @@
-package helmclassic_test
+package harbor_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -13,14 +16,15 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/harbor"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
 
 var (
-	cmRepo = &api.Repo{
-		Kind: api.Kind_HELM,
+	harborRepo = &api.Repo{
+		Kind: api.Kind_HARBOR,
 		Auth: &api.Auth{
 			Username: "user",
 			Password: "password",
@@ -28,7 +32,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
+func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -38,17 +42,16 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	}
 	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 	dstIndex := filepath.Join(dstTmp, "index.yaml")
-	srcIndex := filepath.Join("../../../testdata", indexFileName)
-	if err := utils.CopyFile(dstIndex, srcIndex); err != nil {
+	if err := utils.CopyFile(dstIndex, "../../../../testdata/index.yaml"); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create tester
-	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex, true)
-	cmRepo.Url = tester.GetURL()
+	tester := harbor.NewTester(t, harborRepo, false, dstIndex)
+	harborRepo.Url = fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library")
 
 	// Replace placeholder
-	u := fmt.Sprintf("%s%s", tester.GetURL(), "/charts")
+	u := fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library/charts")
 	index, err := ioutil.ReadFile(dstIndex)
 	if err != nil {
 		t.Fatal(err)
@@ -63,22 +66,24 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cache, err := cache.New(cacheDir, cmRepo.GetUrl())
+	cache, err := cache.New(cacheDir, harborRepo.GetUrl())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
-	// Create chartmuseum client
-	client, err := helmclassic.New(cmRepo, cache, false)
+	// Create harbor client
+	client, err := harbor.New(harborRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return client
+	return client, nil
 }
 
 func TestFetch(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 	chartPath, err := c.Fetch("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -89,7 +94,10 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 	has, err := c.Has("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +108,10 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := []string{"common", "etcd", "nginx"}
 	got, err := c.List()
 	if err != nil {
@@ -114,7 +125,10 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := []string{"4.8.0", "4.7.4", "4.7.3", "4.7.2", "4.7.1", "4.7.0"}
 	got, err := c.ListChartVersions("etcd")
 	if err != nil {
@@ -128,7 +142,10 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := types.ChartDetails{
 		PublishedAt: time.Now().Time,
 		Digest:      "d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867",
@@ -142,67 +159,59 @@ func TestGetChartDetails(t *testing.T) {
 	}
 }
 
-func TestReload(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
-	if err := c.Reload(); err != nil {
+func TestGetUploadURL(t *testing.T) {
+	c, err := prepareTest(t)
+	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"common", "etcd", "nginx"}
-	indexFile := c.Index
-	got := []string{}
-	for chart := range indexFile.Entries {
-		got = append(got, chart)
+	u, err := url.Parse(harborRepo.Url)
+	if err != nil {
+		t.Fatal(err)
 	}
-	sort.Strings(want)
-	sort.Strings(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("unexpected list of charts. got: %v, want: %v", got, want)
-	}
-}
+	oldPath := u.Path
+	u.Path = fmt.Sprintf("%s%s%s", "/api", oldPath, "/charts")
 
-func TestGetDownloadURL(t *testing.T) {
-	tests := []struct {
-		desc          string
-		indexFileName string
-	}{
-		{
-			"full url index",
-			"index.yaml",
-		},
-		{
-			"relative url index",
-			"index-relative.yaml",
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.desc, func(t *testing.T) {
-			c := prepareTest(t, tc.indexFileName)
-			want := fmt.Sprintf("%s%s", cmRepo.Url, "/charts/etcd-4.8.0.tgz")
-			got, err := c.GetDownloadURL("etcd", "4.8.0")
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != want {
-				t.Errorf("wrong download URL. got: %v, want: %v", got, want)
-			}
-		})
-	}
-}
-
-func TestGetIndexURL(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
-	want := fmt.Sprintf("%s%s", cmRepo.Url, "/index.yaml")
-	got := c.GetIndexURL()
+	want := u.String()
+	got := c.GetUploadURL()
 	if got != want {
-		t.Errorf("wrong index URL. got: %v, want: %v", got, want)
+		t.Errorf("wrong upload URL. got: %v, want: %v", got, want)
 	}
 }
 
 func TestUpload(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
-	expectedError := "upload method is not supported yet"
-	err := c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
-	if err.Error() != expectedError {
-		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
+	c, err := prepareTest(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Upload("../../../../testdata/apache-7.3.15.tgz", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Check the chart really was added to the service's index.
+	req, err := http.NewRequest("GET", harborRepo.Url+"/apache", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(harborRepo.Auth.Username, harborRepo.Auth.Password)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	charts := []*helmclassic.ChartVersion{}
+	if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := len(charts), 1; got != want {
+		t.Fatalf("got: %q, want: %q", got, want)
+	}
+	if got, want := charts[0].Name, "apache"; got != want {
+		t.Errorf("got: %q, want: %q", got, want)
+	}
+	if got, want := charts[0].Version, "7.3.15"; got != want {
+		t.Errorf("got: %q, want: %q", got, want)
 	}
 }

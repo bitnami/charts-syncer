@@ -177,7 +177,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error unmarshaling %s file", chartFile)
 	}
-	want := target.Repo.Url
+	want := target.GetRepo().GetUrl()
 	if got := chartMetadata.Dependencies[0].Repository; got != want {
 		t.Errorf("incorrect modification, got: %s, want: %s", got, want)
 	}

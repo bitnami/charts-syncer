@@ -1,10 +1,8 @@
-package chartmuseum_test
+package helmclassic_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,15 +13,14 @@ import (
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/chartmuseum"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/time"
 )
 
 var (
 	cmRepo = &api.Repo{
-		Kind: api.Kind_CHARTMUSEUM,
+		Kind: api.Kind_HELM,
 		Auth: &api.Auth{
 			Username: "user",
 			Password: "password",
@@ -31,7 +28,7 @@ var (
 	}
 )
 
-func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
+func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
@@ -41,12 +38,13 @@ func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
 	}
 	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 	dstIndex := filepath.Join(dstTmp, "index.yaml")
-	if err := utils.CopyFile(dstIndex, "../../../testdata/index.yaml"); err != nil {
+	srcIndex := filepath.Join("../../../../testdata", indexFileName)
+	if err := utils.CopyFile(dstIndex, srcIndex); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create tester
-	tester := chartmuseum.NewTester(t, cmRepo, false, dstIndex)
+	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex, true)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
@@ -69,20 +67,18 @@ func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create chartmuseum client
-	client, err := chartmuseum.New(cmRepo, cache, false)
+	client, err := helmclassic.New(cmRepo, cache, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return client, nil
+	return client
 }
 
 func TestFetch(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t, "index.yaml")
 	chartPath, err := c.Fetch("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -93,10 +89,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t, "index.yaml")
 	has, err := c.Has("etcd", "4.8.0")
 	if err != nil {
 		t.Fatal(err)
@@ -107,10 +100,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t, "index.yaml")
 	want := []string{"common", "etcd", "nginx"}
 	got, err := c.List()
 	if err != nil {
@@ -124,10 +114,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t, "index.yaml")
 	want := []string{"4.8.0", "4.7.4", "4.7.3", "4.7.2", "4.7.1", "4.7.0"}
 	got, err := c.ListChartVersions("etcd")
 	if err != nil {
@@ -141,10 +128,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := prepareTest(t, "index.yaml")
 	want := types.ChartDetails{
 		PublishedAt: time.Now().Time,
 		Digest:      "d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867",
@@ -158,52 +142,67 @@ func TestGetChartDetails(t *testing.T) {
 	}
 }
 
-func TestGetUploadURL(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
+func TestReload(t *testing.T) {
+	c := prepareTest(t, "index.yaml")
+	if err := c.Reload(); err != nil {
 		t.Fatal(err)
 	}
-	want := fmt.Sprintf("%s%s", cmRepo.Url, "/api/charts")
-	got := c.GetUploadURL()
+	want := []string{"common", "etcd", "nginx"}
+	indexFile := c.Index
+	got := []string{}
+	for chart := range indexFile.Entries {
+		got = append(got, chart)
+	}
+	sort.Strings(want)
+	sort.Strings(got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected list of charts. got: %v, want: %v", got, want)
+	}
+}
+
+func TestGetDownloadURL(t *testing.T) {
+	tests := []struct {
+		desc          string
+		indexFileName string
+	}{
+		{
+			"full url index",
+			"index.yaml",
+		},
+		{
+			"relative url index",
+			"index-relative.yaml",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			c := prepareTest(t, tc.indexFileName)
+			want := fmt.Sprintf("%s%s", cmRepo.Url, "/charts/etcd-4.8.0.tgz")
+			got, err := c.GetDownloadURL("etcd", "4.8.0")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != want {
+				t.Errorf("wrong download URL. got: %v, want: %v", got, want)
+			}
+		})
+	}
+}
+
+func TestGetIndexURL(t *testing.T) {
+	c := prepareTest(t, "index.yaml")
+	want := fmt.Sprintf("%s%s", cmRepo.Url, "/index.yaml")
+	got := c.GetIndexURL()
 	if got != want {
-		t.Errorf("wrong upload URL. got: %v, want: %v", got, want)
+		t.Errorf("wrong index URL. got: %v, want: %v", got, want)
 	}
 }
 
 func TestUpload(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Check the chart really was added to the service's index.
-	req, err := http.NewRequest("GET", cmRepo.Url+"/api/charts/apache", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth(cmRepo.Auth.Username, cmRepo.Auth.Password)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	charts := []*helmclassic.ChartVersion{}
-	if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
-		t.Fatal(err)
-	}
-	if got, want := len(charts), 1; got != want {
-		t.Fatalf("got: %q, want: %q", got, want)
-	}
-	if got, want := charts[0].Name, "apache"; got != want {
-		t.Errorf("got: %q, want: %q", got, want)
-	}
-	if got, want := charts[0].Version, "7.3.15"; got != want {
-		t.Errorf("got: %q, want: %q", got, want)
+	c := prepareTest(t, "index.yaml")
+	expectedError := "upload method is not supported yet"
+	err := c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
+	if err.Error() != expectedError {
+		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
 	}
 }

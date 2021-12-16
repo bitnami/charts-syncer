@@ -17,7 +17,7 @@ var (
 )
 
 // updateValuesFile performs some substitutions to a given values.yaml file.
-func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
+func updateValuesFile(valuesFile string, targetRepo *api.Target) error {
 	if err := updateContainerImageRegistry(valuesFile, targetRepo); err != nil {
 		return errors.Annotatef(err, "error updating %s file", valuesFile)
 	}
@@ -28,14 +28,14 @@ func updateValuesFile(valuesFile string, targetRepo *api.TargetRepo) error {
 }
 
 // updateContainerImageRepository updates the container repository in a values.yaml file.
-func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRepo) error {
+func updateContainerImageRepository(valuesFile string, target *api.Target) error {
 	values, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	submatch := repositoryRegex.FindStringSubmatch(string(values))
 	if len(submatch) > 0 {
-		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], targetRepo.ContainerRepository, submatch[3])
+		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], target.ContainerRepository, submatch[3])
 		newContents := repositoryRegex.ReplaceAllString(string(values), replaceLine)
 		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {
@@ -46,14 +46,14 @@ func updateContainerImageRepository(valuesFile string, targetRepo *api.TargetRep
 }
 
 // updateContainerImageRegistry updates the container registry in a values.yaml file.
-func updateContainerImageRegistry(valuesFile string, targetRepo *api.TargetRepo) error {
+func updateContainerImageRegistry(valuesFile string, target *api.Target) error {
 	values, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	submatch := registryRegex.FindStringSubmatch(string(values))
 	if len(submatch) > 0 {
-		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], targetRepo.ContainerRegistry, submatch[3])
+		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], target.ContainerRegistry, submatch[3])
 		newContents := registryRegex.ReplaceAllString(string(values), replaceLine)
 		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {

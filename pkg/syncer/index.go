@@ -2,13 +2,14 @@ package syncer
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"github.com/philopon/go-toposort"
 	"k8s.io/klog"
-	"sort"
 )
 
 // Chart describes a chart, including dependencies
@@ -175,27 +176,32 @@ func (s *Syncer) loadChart(name string, version string) error {
 		TgzPath: tgz,
 	}
 
-	deps, err := chart.GetChartDependencies(tgz, name)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	if len(deps) == 0 {
-		klog.V(4).Infof("Indexing %q chart", id)
-		return errors.Trace(s.getIndex().Add(id, ch))
-	}
-
-	var errs error
-	for _, dep := range deps {
-		depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
-		if err := s.loadChart(dep.Name, dep.Version); err != nil {
-			errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
-			continue
+	// We may want to ignore the dependency check if we are in the middle of an air gap syncing
+	// In that case, the source path contains self-contained tarballs for each of the chart
+	skipDependenciesCheck := s.source.GetIntermediateBundlesPath() != ""
+	if !skipDependenciesCheck {
+		deps, err := chart.GetChartDependencies(tgz, name)
+		if err != nil {
+			return errors.Trace(err)
 		}
-		ch.Dependencies = append(ch.Dependencies, depID)
-	}
-	if errs != nil {
-		return errors.Trace(errs)
+
+		if len(deps) == 0 {
+			klog.V(4).Infof("Indexing %q chart", id)
+			return errors.Trace(s.getIndex().Add(id, ch))
+		}
+
+		var errs error
+		for _, dep := range deps {
+			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
+			if err := s.loadChart(dep.Name, dep.Version); err != nil {
+				errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
+				continue
+			}
+			ch.Dependencies = append(ch.Dependencies, depID)
+		}
+		if errs != nil {
+			return errors.Trace(errs)
+		}
 	}
 
 	klog.V(4).Infof("Indexing %q chart", id)

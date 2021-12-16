@@ -13,8 +13,8 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/core"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/helmclassic"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
 
@@ -69,28 +69,32 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	testCases := []struct {
 		desc       string
-		sourceRepo *api.SourceRepo
-		targetRepo *api.TargetRepo
+		sourceRepo *api.Source
+		targetRepo *api.Target
 		entries    []string
 		want       []string
 	}{
 		{
 			desc: "sync etcd and common",
-			sourceRepo: &api.SourceRepo{
-				Repo: &api.Repo{
-					Kind: api.Kind_CHARTMUSEUM,
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
 					},
 				},
 			},
-			targetRepo: &api.TargetRepo{
-				Repo: &api.Repo{
-					Kind: api.Kind_CHARTMUSEUM,
-					Auth: &api.Auth{
-						Username: "user",
-						Password: "password",
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
 					},
 				},
 			},
@@ -113,8 +117,8 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 
 			// Create source and target testers
-			sTester := core.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
-			tTester := core.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
+			sTester := repo.NewClientTester(t, tc.sourceRepo.GetRepo(), false, dstIndex)
+			tTester := repo.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
 
 			// Replace placeholder URL with source url
 			index, err := ioutil.ReadFile(dstIndex)
@@ -127,9 +131,9 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 
 			// Update source repo url
-			tc.sourceRepo.Repo.Url = sTester.GetURL()
+			tc.sourceRepo.GetRepo().Url = sTester.GetURL()
 			// Update target repo url
-			tc.targetRepo.Repo.Url = tTester.GetURL()
+			tc.targetRepo.GetRepo().Url = tTester.GetURL()
 
 			// Create new syncer
 			s, err := syncer.New(tc.sourceRepo, tc.targetRepo)
@@ -147,7 +151,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			req.SetBasicAuth(tc.targetRepo.Repo.Auth.Username, tc.targetRepo.Repo.Auth.Password)
+			req.SetBasicAuth(tc.targetRepo.GetRepo().GetAuth().GetUsername(), tc.targetRepo.GetRepo().GetAuth().GetPassword())
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {

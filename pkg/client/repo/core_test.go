@@ -1,4 +1,4 @@
-package core
+package repo
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
 )
 
 // Creates an HTTP server that knows how to reply to all OCI related requests

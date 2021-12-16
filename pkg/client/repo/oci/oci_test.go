@@ -11,7 +11,7 @@ import (
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/oci"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 	"helm.sh/helm/v3/pkg/chart"
@@ -33,7 +33,6 @@ func TestFetch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("ChartPath is %q", chartPath)
 	if _, err := os.Stat(chartPath); err != nil {
 		t.Errorf("chart package does not exist")
 	}
@@ -133,7 +132,7 @@ func TestUpload(t *testing.T) {
 		Name:    "apache",
 		Version: "7.3.15",
 	}
-	if err := c.Upload("../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
+	if err := c.Upload("../../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
 		t.Fatal(err)
 	}
 	chartPath, err := c.Fetch("apache", "7.3.15")

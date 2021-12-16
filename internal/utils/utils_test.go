@@ -14,16 +14,18 @@ import (
 )
 
 var (
-	source = &api.SourceRepo{
-		Repo: &api.Repo{
-			Url: "https://charts.bitnami.com/bitnami",
+	source = &api.Source{
+		Spec: &api.Source_Repo{
+			Repo: &api.Repo{
+				Url: "https://charts.bitnami.com/bitnami",
+			},
 		},
 	}
 )
 
 func TestLoadIndexFromRepo(t *testing.T) {
 	// Load index.yaml info into index object
-	sourceIndex, err := LoadIndexFromRepo(source.Repo)
+	sourceIndex, err := LoadIndexFromRepo(source.GetRepo())
 	if err != nil {
 		t.Fatalf("error loading index.yaml: %v", err)
 	}
@@ -49,7 +51,7 @@ func TestChartExistInIndex(t *testing.T) {
 }
 
 func TestDownloadIndex(t *testing.T) {
-	indexFile, err := downloadIndex(source.Repo)
+	indexFile, err := downloadIndex(source.GetRepo())
 	if err != nil {
 		t.Fatalf("error downloading index.yaml: %v ", err)
 	}
