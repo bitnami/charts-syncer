@@ -48,7 +48,7 @@ func TestList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"common", "etcd"}
+	want := []string{"common", "etcd", "kafka", "zookeeper"}
 	got, err := c.List()
 	if err != nil {
 		t.Fatal(err)

@@ -1,0 +1,149 @@
+apiVersion: v1
+entries:
+  common:
+  - annotations:
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 1.10.0
+    created: "2021-10-27T15:39:18.298869736Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: d13f6834adeb4d8d9cf94d2149680b08006543ab88944192f236decebd6313ae
+    home: https://github.com/bitnami/charts/tree/master/bitnami/common
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+      - common
+      - helper
+      - template
+      - function
+      - bitnami
+    maintainers:
+      - email: containers@bitnami.com
+        name: Bitnami
+    name: common
+    sources:
+      - https://github.com/bitnami/charts
+      - http://www.bitnami.com/
+    type: library
+    urls:
+      - TEST_PLACEHOLDER/common-1.10.1.tgz
+    version: 1.10.1
+  - annotations:
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 1.10.0
+    created: "2021-09-30T14:18:10.42975593Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: 32e06dfce9f787d85ddc4b5232ca9f407b40b44b5080182764063ec1f5b9d0a7
+    home: https://github.com/bitnami/charts/tree/master/bitnami/common
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+      - common
+      - helper
+      - template
+      - function
+      - bitnami
+    maintainers:
+      - email: containers@bitnami.com
+        name: Bitnami
+    name: common
+    sources:
+      - https://github.com/bitnami/charts
+      - http://www.bitnami.com/
+    type: library
+    urls:
+      - TEST_PLACEHOLDER/common-1.10.0.tgz
+    version: 1.10.0
+  etcd:
+  - apiVersion: v1
+    appVersion: 3.4.7
+    created: "2020-05-11T21:18:22.551739626Z"
+    description: etcd is a distributed key value store that provides a reliable way
+      to store data across a cluster of machines
+    digest: d47d94c52aff1fbb92235f0753c691072db1d19ec43fa9a438ab6736dfa7f867
+    engine: gotpl
+    home: https://coreos.com/etcd/
+    icon: https://bitnami.com/assets/stacks/etcd/img/etcd-stack-110x117.png
+    keywords:
+    - etcd
+    - cluster
+    - database
+    - cache
+    - key-value
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: etcd
+    sources:
+    - https://github.com/bitnami/bitnami-docker-etcd
+    urls:
+    - TEST_PLACEHOLDER/etcd-4.8.0.tgz
+    version: 4.8.0
+  kafka:
+    - annotations:
+        category: Infrastructure
+      apiVersion: v2
+      appVersion: 2.8.1
+      created: "2021-12-14T08:42:24.813495981Z"
+      dependencies:
+        - name: common
+          repository: https://charts.bitnami.com/bitnami
+          tags:
+            - bitnami-common
+          version: 1.x.x
+        - condition: zookeeper.enabled
+          name: zookeeper
+          repository: https://charts.bitnami.com/bitnami
+          version: 7.x.x
+      description: Apache Kafka is a distributed streaming platform.
+      digest: 62af29d15a4b1675ea70ac8076381d4d674a6dac7f0eaf60a3222919d627f2a7
+      home: https://github.com/bitnami/charts/tree/master/bitnami/kafka
+      icon: https://bitnami.com/assets/stacks/kafka/img/kafka-stack-220x234.png
+      keywords:
+        - kafka
+        - zookeeper
+        - streaming
+        - producer
+        - consumer
+      maintainers:
+        - email: containers@bitnami.com
+          name: Bitnami
+      name: kafka
+      sources:
+        - https://github.com/bitnami/bitnami-docker-kafka
+        - https://kafka.apache.org/
+      urls:
+        - TEST_PLACEHOLDER/kafka-14.7.0.tgz
+      version: 14.7.0
+  zookeeper:
+    - annotations:
+        category: Infrastructure
+      apiVersion: v2
+      appVersion: 3.7.0
+      created: "2021-11-03T19:13:44.30620313Z"
+      dependencies:
+        - name: common
+          repository: https://charts.bitnami.com/bitnami
+          tags:
+            - bitnami-common
+          version: 1.x.x
+      description: A centralized service for maintaining configuration information,
+        naming, providing distributed synchronization, and providing group services
+        for distributed applications.
+      digest: e63527f81539ae7bf62647e719e5dcc86e446762eef9f640a2fee88ea5df6a1f
+      home: https://github.com/bitnami/charts/tree/master/bitnami/zookeeper
+      icon: https://bitnami.com/assets/stacks/zookeeper/img/zookeeper-stack-220x234.png
+      keywords:
+        - zookeeper
+      maintainers:
+        - email: containers@bitnami.com
+          name: Bitnami
+      name: zookeeper
+      sources:
+        - https://github.com/bitnami/bitnami-docker-zookeeper
+        - https://zookeeper.apache.org/
+      urls:
+        - TEST_PLACEHOLDER/zookeeper-7.4.11.tgz
+      version: 7.4.11
+

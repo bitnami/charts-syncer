@@ -176,10 +176,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 		TgzPath: tgz,
 	}
 
-	// We may want to ignore the dependency check if we are in the middle of an air gap syncing
-	// In that case, the source path contains self-contained tarballs for each of the chart
-	skipDependenciesCheck := s.source.GetIntermediateBundlesPath() != ""
-	if !skipDependenciesCheck {
+	if !s.skipDependencies {
 		deps, err := chart.GetChartDependencies(tgz, name)
 		if err != nil {
 			return errors.Trace(err)

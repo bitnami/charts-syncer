@@ -30,6 +30,7 @@ type Syncer struct {
 	fromDate                string
 	insecure                bool
 	relocateContainerImages bool
+	skipDependencies        bool
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -87,6 +88,13 @@ func WithContainerImageRelocation(enable bool) Option {
 	}
 }
 
+// WithSkipDependencies configures the syncer to skip dependencies sync
+func WithSkipDependencies(skipDependencies bool) Option {
+	return func(s *Syncer) {
+		s.skipDependencies = skipDependencies
+	}
+}
+
 // New creates a new syncer using Client
 func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error) {
 	s := &Syncer{
@@ -117,6 +125,8 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 		}
 		s.cli.src = srcCli
 	} else if source.GetIntermediateBundlesPath() != "" {
+		// Specifically disable dependencies sync for intermediate scenarios
+		s.skipDependencies = true
 		// Create new intermediate bundles client
 		srcCli, err := intermediate.NewIntermediateClient(source.GetIntermediateBundlesPath())
 		if err != nil {
@@ -134,6 +144,8 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 		}
 		s.cli.dst = dstCli
 	} else if target.GetIntermediateBundlesPath() != "" {
+		// Specifically disable dependencies sync for intermediate scenarios
+		s.skipDependencies = true
 		// Create new intermediate bundles client
 		dstCli, err := intermediate.NewIntermediateClient(target.GetIntermediateBundlesPath())
 		if err != nil {
