@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	syncFromDate string
-	syncWorkdir  string
+	syncFromDate         string
+	syncWorkdir          string
+	syncSkipDependencies bool
 )
 
 var (
@@ -78,6 +79,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithWorkdir(syncWorkdir),
 				syncer.WithInsecure(rootInsecure),
 				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
+				syncer.WithSkipDependencies(syncSkipDependencies),
 			)
 			if err != nil {
 				return errors.Trace(err)
@@ -89,6 +91,7 @@ func newSyncCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
+	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
 
 	return cmd
 }

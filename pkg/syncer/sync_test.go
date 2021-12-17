@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -17,6 +18,28 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
 )
+
+func getChartIndex(t *testing.T, name string, targetRepo *api.Target, tester repo.ClientTester) []*helmclassic.ChartVersion {
+	// Check the chart really was added to the service's index.
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/charts/%s", tester.GetURL(), name), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(targetRepo.GetRepo().GetAuth().GetUsername(), targetRepo.GetRepo().GetAuth().GetPassword())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	charts := []*helmclassic.ChartVersion{}
+	if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
+		t.Fatal(err)
+	}
+	return charts
+}
 
 func TestFakeSyncPendingCharts(t *testing.T) {
 	testCases := []struct {
@@ -68,11 +91,13 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 
 func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	testCases := []struct {
-		desc       string
-		sourceRepo *api.Source
-		targetRepo *api.Target
-		entries    []string
-		want       []string
+		desc             string
+		sourceRepo       *api.Source
+		targetRepo       *api.Target
+		skipDependencies bool
+		entries          []string
+		requiredCharts   []string
+		want             []*helmclassic.ChartVersion
 	}{
 		{
 			desc: "sync etcd and common",
@@ -98,8 +123,110 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 					},
 				},
 			},
-			entries: []string{"etcd", "common"},
-			want:    []string{"common-0.2.1.tgz", "etcd-4.8.0.tgz"},
+			skipDependencies: false,
+			entries:          []string{"common", "etcd"},
+			requiredCharts:   []string{"common", "etcd"},
+			want: []*helmclassic.ChartVersion{
+				{
+					Name:    "common",
+					Version: "1.10.1",
+					URLs:    []string{"charts/common-1.10.1.tgz"},
+				},
+				{
+					Name:    "common",
+					Version: "1.10.0",
+					URLs:    []string{"charts/common-1.10.0.tgz"},
+				},
+				{
+					Name:    "etcd",
+					Version: "4.8.0",
+					URLs:    []string{"charts/etcd-4.8.0.tgz"},
+				},
+			},
+		},
+		{
+			desc: "sync kafka plus dependencies",
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			skipDependencies: false,
+			entries:          []string{"kafka"},
+			requiredCharts:   []string{"common", "kafka", "zookeeper"},
+			want: []*helmclassic.ChartVersion{
+				{
+					Name:    "common",
+					Version: "1.10.1",
+					URLs:    []string{"charts/common-1.10.1.tgz"},
+				},
+				{
+					Name:    "common",
+					Version: "1.10.0",
+					URLs:    []string{"charts/common-1.10.0.tgz"},
+				},
+				{
+					Name:    "kafka",
+					Version: "14.7.0",
+					URLs:    []string{"charts/kafka-14.7.0.tgz"},
+				},
+				{
+					Name:    "zookeeper",
+					Version: "7.4.11",
+					URLs:    []string{"charts/zookeeper-7.4.11.tgz"},
+				},
+			},
+		}, {
+			desc: "sync kafka (skipping dependencies)",
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			skipDependencies: true,
+			entries:          []string{"kafka"},
+			requiredCharts:   []string{"common", "kafka", "zookeeper"},
+			want: []*helmclassic.ChartVersion{
+				{
+					Name:    "kafka",
+					Version: "14.7.0",
+					URLs:    []string{"charts/kafka-14.7.0.tgz"},
+				},
+			},
 		},
 	}
 
@@ -112,7 +239,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			}
 			defer os.RemoveAll(dstTmp)
 			dstIndex := filepath.Join(dstTmp, "index.yaml")
-			if err := utils.CopyFile(dstIndex, "../../testdata/etcd-index.yaml"); err != nil {
+			if err := utils.CopyFile(dstIndex, "../../testdata/test-index.yaml"); err != nil {
 				t.Fatal(err)
 			}
 
@@ -136,7 +263,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			tc.targetRepo.GetRepo().Url = tTester.GetURL()
 
 			// Create new syncer
-			s, err := syncer.New(tc.sourceRepo, tc.targetRepo)
+			s, err := syncer.New(tc.sourceRepo, tc.targetRepo, syncer.WithSkipDependencies(tc.skipDependencies))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -145,32 +272,25 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 				t.Error(err)
 			}
 
-			// Check the chart really was added to the service's index.
-			req, err := http.NewRequest("GET", tTester.GetURL()+"/api/charts/etcd", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			req.Header.Set("Content-Type", "application/json")
-			req.SetBasicAuth(tc.targetRepo.GetRepo().GetAuth().GetUsername(), tc.targetRepo.GetRepo().GetAuth().GetPassword())
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer resp.Body.Close()
-
+			// Get charts indexes
 			charts := []*helmclassic.ChartVersion{}
-			if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
-				t.Fatal(err)
+			for _, chart := range tc.requiredCharts {
+				chartIndex := getChartIndex(t, chart, tc.targetRepo, tTester)
+				for _, index := range chartIndex {
+					charts = append(charts, index)
+				}
 			}
-			if got, want := len(charts), 1; got != want {
-				t.Fatalf("got: %q, want: %q", got, want)
-			}
-			if got, want := charts[0].Name, "etcd"; got != want {
-				t.Errorf("got: %q, want: %q", got, want)
-			}
-			if got, want := charts[0].Version, "4.8.0"; got != want {
-				t.Errorf("got: %q, want: %q", got, want)
+
+			// Sort structs
+			sort.SliceStable(charts, func(i, j int) bool {
+				return charts[i].Version < charts[j].Version
+			})
+			sort.SliceStable(tc.want, func(i, j int) bool {
+				return tc.want[i].Version < tc.want[j].Version
+			})
+
+			if !reflect.DeepEqual(tc.want, charts) {
+				t.Errorf("unexpected list of charts. got: %v, want: %v", charts, tc.want)
 			}
 		})
 	}
