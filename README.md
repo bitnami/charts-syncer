@@ -10,6 +10,9 @@ Sync chart packages between chart repositories
 - [Usage](#usage)
     + [Sync all charts](#sync-all-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
+- [Advanced Usage](#advanced-usage)
+    + [Sync charts and container images](#sync-charts-and-container-images)
+    + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
 - [Configuration](#configuration)
   * [Harbor example](#harbor-example)
   * [OCI example](#oci-example)
@@ -29,19 +32,44 @@ Sync chart packages between chart repositories
 
 ## Usage
 
-#### Sync all charts
+### Sync all charts
 
 ~~~bash
 $ charts-syncer sync
 ~~~
 
-#### Sync all charts from specific date
+### Sync all charts from specific date
 
 ~~~bash
 $ charts-syncer sync --from-date 2020-05-15
 ~~~
 
  > Date should be in format YYYY-MM-DD
+
+## Advanced Usage
+
+### Sync Helm Charts and Container Images
+
+By default, charts-syncer only sync Helm Charts packages, it does not copy the container images referenced by the chart. This
+feature can be enabled by setting the `relocateContainerImages: true` property in the config file i.e
+
+~~~yaml
+# leverage .relok8s-images.yaml file inside the Charts to move the container images too
+relocateContainerImages: true
+source:
+   ...
+target:
+   ...
+~~~
+
+In order for this option to work it is required that the source Helm Charts includes a `.relok8s-images.yaml` file with information
+about where to find the images inside chart. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
+
+### Sync Helm Charts and associated container images between disconnected environments
+
+There are scenarios where the source and target Helm Charts repositories are not reachable at the same time from the same location.
+
+For those cases, charts-syncer supports a two steps relocation for offline Chart and container images transport, check the [air gap docs](docs/airgap.md).
 
 ----
 

@@ -39,8 +39,13 @@ target:
       # `TARGET_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
 # charts is an OPTIONAL list to specify a subset of charts to be synchronized
-# It is mandatory iff the source repo is OCI as autodiscovery is not supported
-# for that kind of repositories
+# It is mandatory if the source repo is OCI and not autodiscovery is supported in that repository
+# More info here https://github.com/bitnami-labs/charts-syncer#charts-index-for-oci-based-repositories
 charts:
   - redis
   - etcd
+
+# Whether to also relocate the container images referenced by the Helm Chart
+# Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file
+# More info about the file here https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file
+relocateContainerImages: false
