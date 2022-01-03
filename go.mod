@@ -7,6 +7,7 @@ go 1.16
 replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d16ab90
 
 require (
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/containerd/containerd v1.5.8
 	github.com/distribution/distribution/v3 v3.0.0-20210804104954-38ab4c606ee3
