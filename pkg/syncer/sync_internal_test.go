@@ -59,12 +59,12 @@ func TestGetRelok8sMoveRequest(t *testing.T) {
 					},
 					Chart: mover.ChartSpec{
 						Local: &mover.LocalChart{
-							Path: "/tmp/output-dir/%s-%s.relocated.tgz",
+							Path: "/tmp/output-dir/%s-%s.tgz",
 						},
 					},
 				},
 			},
-			wantChartPath: "/tmp/output-dir/chart-A-1.2.3.relocated.tgz",
+			wantChartPath: "/tmp/output-dir/chart-A-1.2.3.tgz",
 		}, {
 			desc: "save bundles with relok8s",
 			source: &api.Source{
