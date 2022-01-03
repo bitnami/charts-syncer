@@ -196,8 +196,8 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		// Direct syncing
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
 		// specify the name we want for the output file. Until then, we should keep using this template thing
-		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
-		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
+		outputChartPath := filepath.Join(outdir, "%s-%s.tgz")
+		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.tgz", chart.Name, chart.Version))
 		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository()), packagedChartPath
 	}
 }
