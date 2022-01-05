@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	syncFromDate         string
-	syncWorkdir          string
-	syncSkipDependencies bool
+	syncFromDate          string
+	syncWorkdir           string
+	syncSkipDependencies  bool
+	syncLatestVersionOnly bool
 )
 
 var (
@@ -71,7 +72,7 @@ func newSyncCmd() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			s, err := syncer.New(c.GetSource(), c.GetTarget(),
+			syncerOptions := []syncer.Option{
 				// TODO(jdrios): Some backends may not support discovery
 				syncer.WithAutoDiscovery(true),
 				syncer.WithDryRun(rootDryRun),
@@ -80,7 +81,9 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithInsecure(rootInsecure),
 				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 				syncer.WithSkipDependencies(syncSkipDependencies),
-			)
+				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
+			}
+			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
 				return errors.Trace(err)
 			}
@@ -92,6 +95,7 @@ func newSyncCmd() *cobra.Command {
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
 	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
+	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
 
 	return cmd
 }

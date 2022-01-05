@@ -91,13 +91,14 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 
 func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	testCases := []struct {
-		desc             string
-		sourceRepo       *api.Source
-		targetRepo       *api.Target
-		skipDependencies bool
-		entries          []string
-		requiredCharts   []string
-		want             []*helmclassic.ChartVersion
+		desc              string
+		sourceRepo        *api.Source
+		targetRepo        *api.Target
+		skipDependencies  bool
+		latestVersionOnly bool
+		entries           []string
+		requiredCharts    []string
+		want              []*helmclassic.ChartVersion
 	}{
 		{
 			desc: "sync etcd and common",
@@ -227,6 +228,78 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 					URLs:    []string{"charts/kafka-14.7.0.tgz"},
 				},
 			},
+		}, {
+			desc: "sync common (all versions)",
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			entries:        []string{"common"},
+			requiredCharts: []string{"common"},
+			want: []*helmclassic.ChartVersion{
+				{
+					Name:    "common",
+					Version: "1.10.0",
+					URLs:    []string{"charts/common-1.10.0.tgz"},
+				},
+				{
+					Name:    "common",
+					Version: "1.10.1",
+					URLs:    []string{"charts/common-1.10.1.tgz"},
+				},
+			},
+		}, {
+			desc: "sync common (latest version only)",
+			sourceRepo: &api.Source{
+				Spec: &api.Source_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			targetRepo: &api.Target{
+				Spec: &api.Target_Repo{
+					Repo: &api.Repo{
+						Kind: api.Kind_CHARTMUSEUM,
+						Auth: &api.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			entries:           []string{"common"},
+			requiredCharts:    []string{"common"},
+			latestVersionOnly: true,
+			want: []*helmclassic.ChartVersion{
+				{
+					Name:    "common",
+					Version: "1.10.1",
+					URLs:    []string{"charts/common-1.10.1.tgz"},
+				},
+			},
 		},
 	}
 
@@ -263,7 +336,11 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			tc.targetRepo.GetRepo().Url = tTester.GetURL()
 
 			// Create new syncer
-			s, err := syncer.New(tc.sourceRepo, tc.targetRepo, syncer.WithSkipDependencies(tc.skipDependencies))
+			syncerOptions := []syncer.Option{
+				syncer.WithSkipDependencies(tc.skipDependencies),
+				syncer.WithLatestVersionOnly(tc.latestVersionOnly),
+			}
+			s, err := syncer.New(tc.sourceRepo, tc.targetRepo, syncerOptions...)
 			if err != nil {
 				t.Fatal(err)
 			}

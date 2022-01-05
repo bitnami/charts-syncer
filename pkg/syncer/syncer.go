@@ -31,6 +31,7 @@ type Syncer struct {
 	insecure                bool
 	relocateContainerImages bool
 	skipDependencies        bool
+	latestVersionOnly       bool
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -92,6 +93,13 @@ func WithContainerImageRelocation(enable bool) Option {
 func WithSkipDependencies(skipDependencies bool) Option {
 	return func(s *Syncer) {
 		s.skipDependencies = skipDependencies
+	}
+}
+
+// WithLatestVersionOnly configures the syncer to sync only the latest version
+func WithLatestVersionOnly(latestVersionOnly bool) Option {
+	return func(s *Syncer) {
+		s.latestVersionOnly = latestVersionOnly
 	}
 }
 

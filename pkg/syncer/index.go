@@ -3,6 +3,9 @@ package syncer
 import (
 	"fmt"
 	"sort"
+	"time"
+
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
@@ -96,43 +99,67 @@ func (s *Syncer) loadCharts(charts ...string) error {
 
 		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
 		klog.V(3).Infof("Indexing %q charts...", name)
-		for _, version := range versions {
-			details, err := s.cli.src.GetChartDetails(name, version)
-			if err != nil {
+		if s.latestVersionOnly {
+			vs := make([]*semver.Version, len(versions))
+			for i, r := range versions {
+				v, err := semver.NewVersion(r)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				vs[i] = v
+			}
+			sort.Sort(semver.Collection(vs))
+			// The last element of the array is the latest version
+			version := vs[len(vs)-1].String()
+			if err := s.processVersion(name, version, publishingThreshold); err != nil {
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
 			}
-
-			id := fmt.Sprintf("%s-%s", name, version)
-			klog.V(5).Infof("Details for %q chart: %+v", id, details)
-			if details.PublishedAt.Before(publishingThreshold) {
-				klog.V(5).Infof("Skipping %q chart: Published before %q", id, publishingThreshold.String())
-				continue
-			}
-
-			if ok, err := s.cli.dst.Has(name, version); err != nil {
-				klog.Errorf("unable to explore target repo to check %q chart: %v", id, err)
-				errs = multierror.Append(errs, errors.Trace(err))
-				continue
-			} else if ok {
-				klog.V(5).Infof("Skipping %q chart: Already synced", id)
-				continue
-			}
-
-			if ch := s.getIndex().Get(id); ch != nil {
-				klog.V(5).Infof("Skipping %q chart: Already indexed", id)
-				continue
-			}
-
-			if err := s.loadChart(name, version); err != nil {
-				klog.Errorf("unable to load %q chart: %v", id, err)
-				errs = multierror.Append(errs, errors.Trace(err))
-				continue
+		} else {
+			for _, version := range versions {
+				if err := s.processVersion(name, version, publishingThreshold); err != nil {
+					errs = multierror.Append(errs, errors.Trace(err))
+					continue
+				}
 			}
 		}
 	}
 
 	return errors.Trace(errs)
+}
+
+// processVersion takes care of loading a specific version of the chart into the index
+func (s *Syncer) processVersion(name, version string, publishingThreshold time.Time) error {
+	details, err := s.cli.src.GetChartDetails(name, version)
+	if err != nil {
+		return err
+	}
+
+	id := fmt.Sprintf("%s-%s", name, version)
+	klog.V(5).Infof("Details for %q chart: %+v", id, details)
+	if details.PublishedAt.Before(publishingThreshold) {
+		klog.V(5).Infof("Skipping %q chart: Published before %q", id, publishingThreshold.String())
+		return nil
+	}
+
+	if ok, err := s.cli.dst.Has(name, version); err != nil {
+		klog.Errorf("unable to explore target repo to check %q chart: %v", id, err)
+		return err
+	} else if ok {
+		klog.V(5).Infof("Skipping %q chart: Already synced", id)
+		return nil
+	}
+
+	if ch := s.getIndex().Get(id); ch != nil {
+		klog.V(5).Infof("Skipping %q chart: Already indexed", id)
+		return nil
+	}
+
+	if err := s.loadChart(name, version); err != nil {
+		klog.Errorf("unable to load %q chart: %v", id, err)
+		return err
+	}
+	return nil
 }
 
 // loadChart loads a chart in the chart index map
