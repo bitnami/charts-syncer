@@ -72,7 +72,7 @@ func newSyncCmd() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			s, err := syncer.New(c.GetSource(), c.GetTarget(),
+			syncerOptions := []syncer.Option{
 				// TODO(jdrios): Some backends may not support discovery
 				syncer.WithAutoDiscovery(true),
 				syncer.WithDryRun(rootDryRun),
@@ -82,7 +82,8 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
-			)
+			}
+			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
 				return errors.Trace(err)
 			}

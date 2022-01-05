@@ -336,7 +336,11 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			tc.targetRepo.GetRepo().Url = tTester.GetURL()
 
 			// Create new syncer
-			s, err := syncer.New(tc.sourceRepo, tc.targetRepo, syncer.WithSkipDependencies(tc.skipDependencies), syncer.WithLatestVersionOnly(tc.latestVersionOnly))
+			syncerOptions := []syncer.Option{
+				syncer.WithSkipDependencies(tc.skipDependencies),
+				syncer.WithLatestVersionOnly(tc.latestVersionOnly),
+			}
+			s, err := syncer.New(tc.sourceRepo, tc.targetRepo, syncerOptions...)
 			if err != nil {
 				t.Fatal(err)
 			}
