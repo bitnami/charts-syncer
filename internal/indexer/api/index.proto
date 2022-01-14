@@ -3,46 +3,56 @@ syntax = "proto3";
 package api;
 option go_package = "github.com/bitnami-labs/charts-syncer/internal/indexer/api;api";
 
-// Charts describes the releases of a chart
-message Charts {
-    // ChartVersion describes a chart version
-    message ChartVersion {
-        string version = 1;
-        string digest = 2;
-        string uri = 3;
-    }
-    string name = 1;
-    repeated ChartVersion versions = 2;
+// ChartMetadata contains relevant information about the released chart
+message ChartMetadata {
+    string version = 1;
+    string appVersion = 2;
+    string name = 3;
+    repeated string urls = 4;
+    string digest = 5;
 }
 
 // Index describes a chart releases index
 message Index {
-    repeated Charts charts = 2;
+    message ChartEntries {
+        repeated ChartMetadata versions = 1;
+    }
+    map<string, ChartEntries> entries = 1;
+    string api_version = 2;
 }
 
 // Example of valid JSON
 //
-//{
-//  "charts": [
-//    {
-//      "name": "asset-1",
-//      "versions": [
-//        {
-//          "version": "1.0.0",
-//          "digest": "sha256:vbgc4a39804b5fe02051d562d29f0ad34dec96d49e099cc0ee14c316663cayue",
-//          "uri": "my-oci-registry.io/my-project/charts/asset-1:9.1.1"
-//        }
-//      ]
-//    },
-//    {
-//      "name": "asset-2",
-//      "versions": [
-//        {
-//          "version": "2.2.2",
-//          "digest": "sha256:jki0ea2a722b455851ff4688ea5bed2bac1992b7c72aece178bd12e3a70cetra",
-//          "uri": "my-oci-registry.io/my-project/charts/asset-2:2.2.2"
-//        }
-//      ]
-//    }
-//  ]
-//}
+// {
+//     "apiVersion": "v1",
+//     "entries": {
+//         "apache": {
+//             "versions": [
+//                 {
+//                     "version": "8.10.1",
+//                     "appVersion": "2.4.51",
+//                     "name": "apache",
+//                     "urls": [
+//                         "my.registry.io/my-project/charts/apache:8.10.1"
+//                     ],
+//                     "digest": "sha256:34d7e5e1fd652066aa1583a89f3823d355696f2df2953fca987df49fffa962d5",
+//                     "releasedAt": "2022-01-12T12:49:54.381313Z"
+//                 }
+//             ]
+//         },
+//         "etcd": {
+//             "versions": [
+//                 {
+//                     "version": "6.10.7",
+//                     "appVersion": "3.5.1",
+//                     "name": "etcd",
+//                     "urls": [
+//                         "my.registry.io/my-project/charts/etcd:6.10.7"
+//                     ],
+//                     "digest": "sha256:064f2ba762218181de07cc42cd79e1589a0bc1b8df5705f05b3184bc22cef8c8",
+//                     "releasedAt": "2022-01-12T12:46:08.995184Z"
+//                 }
+//             ]
+//         }
+//     }
+// }

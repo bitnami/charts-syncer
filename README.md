@@ -195,7 +195,7 @@ source:
    useChartsIndex: true
 ~~~
 
-By default, the library will look up for an "index:latest" charts index artifact within the source OCI repository.
+By default, the library will look up for a "charts-index:latest" charts index artifact within the source OCI repository.
 
 However, this can be customized using the `chartsIndex` field using the format `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`.
 
@@ -210,7 +210,7 @@ source:
 ~~~
 
 For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
-`my-oci-registry.io/my-project/subpath/index:latest` asset as index if it exists.
+`my-oci-registry.io/my-project/subpath/charts-index:latest` asset as index if it exists.
 
 An example of the valid index format can be seen directly in its [protobuffer definition](internal/indexer/api/oci.proto). Worth to mention 
 that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.

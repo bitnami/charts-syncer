@@ -3,17 +3,18 @@ package indexer
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
+	"net/url"
+	"os"
+
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
 	"github.com/pkg/errors"
-	"io/ioutil"
 	"k8s.io/klog"
-	"net/url"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
-	"os"
 )
 
 // ociIndexerOpts are the options to configure the ociIndexer
@@ -97,15 +98,15 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 	return ind, nil
 }
 
-// VacAssetIndexLayerMediaType is a media type used in VAC to store a JSON containing the index of
-// charts and containers in a repository
-const VacAssetIndexLayerMediaType = "application/vnd.vmware.tac.asset-index.layer.v1.json"
+// chartsIndexLayerMediaType is a media type used to store a JSON containing the index of
+// charts in a repository
+const chartsIndexLayerMediaType = "application/vnd.vmware.charts.index.layer.v1+json"
 
-// VacAssetIndexConfigMediaType is a media type used in VAC for the configuration of the layer above
-const VacAssetIndexConfigMediaType = "application/vnd.vmware.tac.index.config.v1+json"
+// chartsIndexConfigMediaType is a media type used for the configuration of the layer above
+const chartsIndexConfigMediaType = "application/vnd.vmware.charts.index.config.v1+json"
 
-// DefaultIndexFilename is the default filename used by the library to upload the index
-const DefaultIndexFilename = "asset-index.json"
+// defaultIndexFilename is the default filename used by the library to upload the index
+const defaultIndexFilename = "charts-index.json"
 
 // Get implements Indexer
 func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
@@ -154,11 +155,11 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	// Append key prefix for the known media types to the context
 	// These prefixes are used for internal purposes in the ORAS library.
 	// Otherwise, the library will print warnings.
-	ctx = remotes.WithMediaTypeKeyPrefix(ctx, VacAssetIndexLayerMediaType, "layer-")
-	ctx = remotes.WithMediaTypeKeyPrefix(ctx, VacAssetIndexConfigMediaType, "config-")
+	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexLayerMediaType, "layer-")
+	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexConfigMediaType, "config-")
 
 	opts := []oras.PullOpt{
-		oras.WithAllowedMediaType(VacAssetIndexLayerMediaType, VacAssetIndexConfigMediaType),
+		oras.WithAllowedMediaType(chartsIndexLayerMediaType, chartsIndexConfigMediaType),
 		// The index artifact has no title
 		oras.WithPullEmptyNameAllowed(),
 	}
@@ -175,14 +176,14 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	for _, layer := range layers {
 		//nolint:gocritic
 		switch layer.MediaType {
-		case VacAssetIndexLayerMediaType:
+		case chartsIndexLayerMediaType:
 			indexFilename = layer.Annotations["org.opencontainers.image.title"]
 		}
 	}
 	// Fallback to the default index filename if the layers don't specify it
 	if indexFilename == "" {
 		klog.Infof("Unable to find index filename: using default")
-		indexFilename = DefaultIndexFilename
+		indexFilename = defaultIndexFilename
 	}
 
 	return store.ResolvePath(indexFilename), nil

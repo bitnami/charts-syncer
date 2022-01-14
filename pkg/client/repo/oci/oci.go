@@ -254,7 +254,6 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	if err != nil {
 		return "", errors.Trace(err)
 	}
-
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return "", errors.Trace(err)
@@ -446,10 +445,10 @@ func populateEntries(repo *api.Repo) (map[string][]string, error) {
 		return nil, errors.Trace(err)
 	}
 
-	entries := make(map[string][]string, len(ociIndex.Charts))
-	for _, c := range ociIndex.Charts {
-		for _, version := range c.Versions {
-			entries[c.Name] = append(entries[c.Name], version.Version)
+	entries := make(map[string][]string, len(ociIndex.GetEntries()))
+	for _, c := range ociIndex.GetEntries() {
+		for _, v := range c.GetVersions() {
+			entries[v.Name] = append(entries[v.Name], v.Version)
 		}
 	}
 	return entries, nil

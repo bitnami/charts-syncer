@@ -22,7 +22,7 @@ const (
 )
 
 // DefaultIndexName is the name for the OCI artifact with the index
-const DefaultIndexName = "index"
+const DefaultIndexName = "charts-index"
 
 // DefaultIndexTag is the tag for the OCI artifact with the index
 const DefaultIndexTag = "latest"
