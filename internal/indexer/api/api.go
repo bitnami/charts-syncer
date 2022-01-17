@@ -5,11 +5,8 @@ package api
 
 // Has returns whether the index has the requested chart name and version
 func (x *Index) Has(name, version string) bool {
-	for _, c := range x.GetCharts() {
-		if c.GetName() != name {
-			continue
-		}
-		for _, v := range c.GetVersions() {
+	if x.Entries[name] != nil {
+		for _, v := range x.Entries[name].GetVersions() {
 			if v.GetVersion() == version {
 				return true
 			}
