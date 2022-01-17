@@ -43,6 +43,7 @@ func setDefaultChartsIndex(config *api.Config) error {
 
 // Load unmarshall config file into Config struct.
 func Load(config *api.Config) error {
+	// TODO: Use Viper to load the config file instead
 	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
@@ -53,6 +54,7 @@ func Load(config *api.Config) error {
 				return err
 			}
 		}
+		// TODO: Move env variable handling to VIPER, see container authentication below
 		if err := config.GetSource().GetRepo().SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
 			return err
 		}
@@ -65,6 +67,38 @@ func Load(config *api.Config) error {
 	if config.GetTarget().GetRepoName() == "" {
 		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
 		config.GetTarget().RepoName = defaultRepoName
+	}
+
+	// Container registry authentication override
+	if err := loadContainerAuthFromEnv(config); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sets the authentication configuration for container images
+// It reads the configuration from the viper config repository which values might have come from the config file, env vars or flags
+func loadContainerAuthFromEnv(c *api.Config) error {
+	// Set the source OCI repository authentication
+	// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_CONTAINERAUTH_REGISTRY
+	username, password, registry := viper.GetString("source.containerauth.username"), viper.GetString("source.containerauth.password"), viper.GetString("source.containerauth.registry")
+	if username != "" && password != "" && registry != "" && c.GetSource() != nil {
+		c.GetSource().ContainerAuth = &api.ContainerAuth{
+			Username: username,
+			Password: password,
+			Registry: registry,
+		}
+	}
+
+	// Target OCI repository
+	username, password, registry = viper.GetString("target.containerauth.username"), viper.GetString("target.containerauth.password"), viper.GetString("target.containerauth.registry")
+	if username != "" && password != "" && registry != "" && c.GetTarget() != nil {
+		c.GetTarget().ContainerAuth = &api.ContainerAuth{
+			Username: username,
+			Password: password,
+			Registry: registry,
+		}
 	}
 
 	return nil
