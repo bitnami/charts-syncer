@@ -90,18 +90,20 @@ source:
     #   username: "USERNAME"
     #   password: "PASSWORD"
   # Container images registry authn
-  # containerAuth:
-  #  registry: 'REGISTRY'
-  #  username: "USERNAME"
-  #  password: "PASSWORD"
+  # containers:
+  #  auth:
+  #     registry: 'REGISTRY'
+  #     username: "USERNAME"
+  #     password: "PASSWORD"
 target:
   repoName: myrepo
   containerRegistry: k8s.container.registry.io
   containerRepository: repository/demo/k8s
   # Container images registry authn
-  # containerAuth:
-  #  username: "USERNAME"
-  #  password: "PASSWORD"
+  # containers:
+  #   auth:
+  #     username: "USERNAME"
+  #     password: "PASSWORD"
   repo:
     kind: CHARTMUSEUM
     url: http://localhost:9090
