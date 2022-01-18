@@ -7,6 +7,9 @@ source:
     url: http://localhost:8080 # local test source repo
     auth:
       username: sourceUserFile
+  containerAuth:
+    registry: sRegistry
+    username: user123
 target:
   containerRegistry: test.registry.io
   containerRepository: user/demo
@@ -15,3 +18,5 @@ target:
     url: http://localhost:9090 # local test target repo
     auth:
       username: targetUserFile
+  containerAuth:
+    username: user456

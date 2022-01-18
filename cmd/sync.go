@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
-	"strings"
 )
 
 var (
@@ -51,25 +50,6 @@ func initConfigFile() error {
 	return errors.Trace(viper.ReadInConfig())
 }
 
-func initEnvBindings() error {
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	// Keys allowed to be overridden by env variables
-	// i.e source.containerzauth.registry => SOURCE_CONTAINERAUTH_REGISTRY
-	boundKeys := []string{
-		"source.containerauth.registry", "source.containerauth.username", "source.containerauth.password",
-		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
-		// where the images are going to be pushed to so duplication is not needed
-		"target.containerauth.username", "target.containerauth.password",
-	}
-
-	for _, k := range boundKeys {
-		if err := viper.BindEnv(k); err != nil {
-			return errors.Trace(err)
-		}
-	}
-	return nil
-}
-
 func newSyncCmd() *cobra.Command {
 	var c api.Config
 
@@ -83,7 +63,7 @@ func newSyncCmd() *cobra.Command {
 			}
 
 			// Env variables bindings for viper
-			if err := initEnvBindings(); err != nil {
+			if err := config.InitEnvBindings(); err != nil {
 				return errors.Trace(err)
 			}
 

@@ -8,6 +8,10 @@ source:
     auth:
       username: user123
       password: password123
+  containerAuth:
+    registry: sRegistry
+    username: user123
+    password: password123
 target:
   containerRegistry: test.registry.io
   containerRepository: user/demo
@@ -17,3 +21,6 @@ target:
     auth:
       username: user456
       password: password456
+  containerAuth:
+    username: user456
+    password: password456

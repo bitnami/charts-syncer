@@ -121,3 +121,24 @@ func yamlToProto(path string, v proto.Message) error {
 	err = pbjson.NewDecoder(r).Decode(v)
 	return errors.Trace(err)
 }
+
+// InitEnvBindings defines the env variables bindings enabled to override viper settings
+func InitEnvBindings() error {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	// Keys allowed to be overridden by env variables
+	// i.e source.containerzauth.registry => SOURCE_CONTAINERAUTH_REGISTRY
+	boundKeys := []string{
+		"source.containerauth.registry", "source.containerauth.username", "source.containerauth.password",
+		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
+		// where the images are going to be pushed to so duplication is not needed
+		"target.containerauth.username", "target.containerauth.password",
+	}
+
+	for _, k := range boundKeys {
+		if err := viper.BindEnv(k); err != nil {
+			return errors.Trace(err)
+		}
+	}
+
+	return nil
+}
