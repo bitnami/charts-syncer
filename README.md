@@ -122,12 +122,12 @@ Credentials for the Helm Chart repositories and container images registries can 
 
 Helm Chart repositories
 
-- `SOURCE_AUTH_USERNAME`
-- `SOURCE_AUTH_PASSWORD`
+- `SOURCE_REPO_AUTH_USERNAME`
+- `SOURCE_REPO_AUTH_PASSWORD`
 
 
-- `TARGET_AUTH_USERNAME`
-- `TARGET_AUTH_PASSWORD`
+- `TARGET_REPO_AUTH_USERNAME`
+- `TARGET_REPO_AUTH_PASSWORD`
 
 Container images registries
 
@@ -486,22 +486,22 @@ Example credentials for only Helm Chart repositories
   - name: charts-syncer
     image: IMAGE_NAME:TAG
     env:
-      - name: SOURCE_AUTH_USERNAME
+      - name: SOURCE_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-username
-      - name: SOURCE_AUTH_PASSWORD
+      - name: SOURCE_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-password
-      - name: TARGET_AUTH_USERNAME
+      - name: TARGET_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: target-username
-      - name: TARGET_AUTH_PASSWORD
+      - name: TARGET_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
@@ -514,27 +514,27 @@ Example credentials for both Helm Chart repositories and container registries
     image: IMAGE_NAME:TAG
     env:
       # Helm Chart repositories credentials
-      - name: SOURCE_AUTH_USERNAME
+      - name: SOURCE_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-username
-      - name: SOURCE_AUTH_PASSWORD
+      - name: SOURCE_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-password
-      - name: TARGET_AUTH_USERNAME
+      - name: TARGET_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: target-username
-      - name: TARGET_AUTH_PASSWORD
+      - name: TARGET_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: target-password
-      - name: SOURCE_AUTH_USERNAME
+      - name: SOURCE_REPO_AUTH_USERNAME
           valueFrom:
             secretKeyRef:
               name: charts-syncer-credentials
