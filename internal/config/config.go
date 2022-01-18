@@ -92,7 +92,10 @@ func loadContainerAuthFromEnv(c *api.Config) error {
 	}
 
 	// Target OCI repository
-	username, password, registry = viper.GetString("target.containerauth.username"), viper.GetString("target.containerauth.password"), viper.GetString("target.containerauth.registry")
+	// NOTE: the registry value is retrieved from target.ContainerRegistry instead of target.ContainerAuth.
+	// This is because as part of the target definition the registry is set to indicate where the images
+	// should be pushed to, so the authentication must match this registry
+	username, password, registry = viper.GetString("target.containerauth.username"), viper.GetString("target.containerauth.password"), viper.GetString("target.containerregistry")
 	if username != "" && password != "" && registry != "" && c.GetTarget() != nil {
 		c.GetTarget().ContainerAuth = &api.ContainerAuth{
 			Username: username,

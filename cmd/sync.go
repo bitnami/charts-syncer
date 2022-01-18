@@ -54,10 +54,12 @@ func initConfigFile() error {
 func initEnvBindings() error {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	// Keys allowed to be overridden by env variables
-	// i.e target.containerzauth.registry => TARGET_CONTAINERAUTH_REGISTRY
+	// i.e source.containerzauth.registry => SOURCE_CONTAINERAUTH_REGISTRY
 	boundKeys := []string{
 		"source.containerauth.registry", "source.containerauth.username", "source.containerauth.password",
-		"target.containerauth.registry", "target.containerauth.username", "target.containerauth.password",
+		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
+		// where the images are going to be pushed to so duplication is not needed
+		"target.containerauth.username", "target.containerauth.password",
 	}
 
 	for _, k := range boundKeys {
