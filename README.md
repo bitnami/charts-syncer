@@ -131,13 +131,13 @@ Helm Chart repositories
 
 Container images registries
 
-- `SOURCE_CONTAINERAUTH_REGISTRY`
-- `SOURCE_CONTAINERAUTH_USERNAME`
-- `SOURCE_CONTAINERAUTH_PASSWORD`
+- `SOURCE_CONTAINERS_AUTH_REGISTRY`
+- `SOURCE_CONTAINERS_AUTH_USERNAME`
+- `SOURCE_CONTAINERS_AUTH_PASSWORD`
 
 
-- `TARGET_CONTAINERAUTH_USERNAME`
-- `TARGET_CONTAINERAUTH_PASSWORD`
+- `TARGET_CONTAINERS_AUTH_USERNAME`
+- `TARGET_CONTAINERS_AUTH_PASSWORD`
 
 Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix between source and targets repositories.
 
@@ -541,27 +541,27 @@ Example credentials for both Helm Chart repositories and container registries
               key: source-username
 
       # Container images registry credentials
-      - name: SOURCE_CONTAINERAUTH_REGISTRY
+      - name: SOURCE_CONTAINERS_AUTH_REGISTRY
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-containerauth-registry
-      - name: SOURCE_CONTAINERAUTH_USERNAME
+      - name: SOURCE_CONTAINERS_AUTH_USERNAME
           valueFrom:
             secretKeyRef:
               name: charts-syncer-credentials
               key: source-containerauth-username
-      - name: SOURCE_CONTAINERAUTH_PASSWORD
+      - name: SOURCE_CONTAINERS_AUTH_PASSWORD
           valueFrom:
             secretKeyRef:
               name: charts-syncer-credentials
               key: source-containerauth-password
-      - name: TARGET_CONTAINERAUTH_USERNAME
+      - name: TARGET_CONTAINERS_AUTH_USERNAME
           valueFrom:
             secretKeyRef:
               name: charts-syncer-credentials
               key: target-containerauth-username
-      - name: TARGET_CONTAINERAUTH_PASSWORD
+      - name: TARGET_CONTAINERS_AUTH_PASSWORD
           valueFrom:
             secretKeyRef:
               name: charts-syncer-credentials

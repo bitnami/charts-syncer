@@ -47,26 +47,26 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 		expectedSourceAuth *api.Auth
 		expectedTargetAuth *api.Auth
 		// Container registry authentication
-		expectedSourceContainerAuth *api.ContainerAuth
-		expectedTargetContainerAuth *api.ContainerAuth
+		expectedSourceContainerAuth *api.Containers_ContainerAuth
+		expectedTargetContainerAuth *api.Containers_ContainerAuth
 	}{
 		"full-env-vars": {
 			"example-config-no-auth.yaml",
 			map[string]string{
-				"SOURCE_REPO_AUTH_USERNAME":     "sUsername",
-				"SOURCE_REPO_AUTH_PASSWORD":     "sPassword",
-				"TARGET_REPO_AUTH_USERNAME":     "tUsername",
-				"TARGET_REPO_AUTH_PASSWORD":     "tPassword",
-				"SOURCE_CONTAINERAUTH_REGISTRY": "sRegistry",
-				"SOURCE_CONTAINERAUTH_USERNAME": "sUsername",
-				"SOURCE_CONTAINERAUTH_PASSWORD": "sPassword",
-				"TARGET_CONTAINERAUTH_USERNAME": "tUsername",
-				"TARGET_CONTAINERAUTH_PASSWORD": "tPassword",
+				"SOURCE_REPO_AUTH_USERNAME":       "sUsername",
+				"SOURCE_REPO_AUTH_PASSWORD":       "sPassword",
+				"TARGET_REPO_AUTH_USERNAME":       "tUsername",
+				"TARGET_REPO_AUTH_PASSWORD":       "tPassword",
+				"SOURCE_CONTAINERS_AUTH_REGISTRY": "sRegistry",
+				"SOURCE_CONTAINERS_AUTH_USERNAME": "sUsername",
+				"SOURCE_CONTAINERS_AUTH_PASSWORD": "sPassword",
+				"TARGET_CONTAINERS_AUTH_USERNAME": "tUsername",
+				"TARGET_CONTAINERS_AUTH_PASSWORD": "tPassword",
 			},
 			&api.Auth{Username: "sUsername", Password: "sPassword"},
 			&api.Auth{Username: "tUsername", Password: "tPassword"},
-			&api.ContainerAuth{Username: "sUsername", Password: "sPassword", Registry: "sRegistry"},
-			&api.ContainerAuth{Username: "tUsername", Password: "tPassword", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "sUsername", Password: "sPassword", Registry: "sRegistry"},
+			&api.Containers_ContainerAuth{Username: "tUsername", Password: "tPassword", Registry: "test.registry.io"},
 		},
 		"legacy-full-env-vars": {
 			"example-config-no-auth.yaml",
@@ -86,52 +86,52 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			map[string]string{},
 			&api.Auth{Username: "user123", Password: "password123"},
 			&api.Auth{Username: "user456", Password: "password456"},
-			&api.ContainerAuth{Username: "user123", Password: "password123", Registry: "sRegistry"},
-			&api.ContainerAuth{Username: "user456", Password: "password456", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "user123", Password: "password123", Registry: "sRegistry"},
+			&api.Containers_ContainerAuth{Username: "user456", Password: "password456", Registry: "test.registry.io"},
 		},
 		"user-file-pass-env": {
 			"example-config-user-file.yaml",
 			map[string]string{
-				"SOURCE_REPO_AUTH_PASSWORD":     "sourcePassEnv",
-				"TARGET_REPO_AUTH_PASSWORD":     "targetPassEnv",
-				"SOURCE_CONTAINERAUTH_PASSWORD": "sPasswordEnv",
-				"TARGET_CONTAINERAUTH_PASSWORD": "tPasswordEnv",
+				"SOURCE_REPO_AUTH_PASSWORD":       "sourcePassEnv",
+				"TARGET_REPO_AUTH_PASSWORD":       "targetPassEnv",
+				"SOURCE_CONTAINERS_AUTH_PASSWORD": "sPasswordEnv",
+				"TARGET_CONTAINERS_AUTH_PASSWORD": "tPasswordEnv",
 			},
 			&api.Auth{Username: "sourceUserFile", Password: "sourcePassEnv"},
 			&api.Auth{Username: "targetUserFile", Password: "targetPassEnv"},
-			&api.ContainerAuth{Username: "user123", Password: "sPasswordEnv", Registry: "sRegistry"},
-			&api.ContainerAuth{Username: "user456", Password: "tPasswordEnv", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "user123", Password: "sPasswordEnv", Registry: "sRegistry"},
+			&api.Containers_ContainerAuth{Username: "user456", Password: "tPasswordEnv", Registry: "test.registry.io"},
 		},
 		"full-file-existing-empty-env-vars": {
 			"example-config.yaml",
 			map[string]string{
-				"SOURCE_REPO_AUTH_USERNAME":     "",
-				"SOURCE_REPO_AUTH_PASSWORD":     "",
-				"TARGET_REPO_AUTH_USERNAME":     "",
-				"TARGET_REPO_AUTH_PASSWORD":     "",
-				"SOURCE_CONTAINERAUTH_REGISTRY": "",
-				"SOURCE_CONTAINERAUTH_USERNAME": "",
-				"SOURCE_CONTAINERAUTH_PASSWORD": "",
-				"TARGET_CONTAINERAUTH_USERNAME": "",
-				"TARGET_CONTAINERAUTH_PASSWORD": "",
+				"SOURCE_REPO_AUTH_USERNAME":       "",
+				"SOURCE_REPO_AUTH_PASSWORD":       "",
+				"TARGET_REPO_AUTH_USERNAME":       "",
+				"TARGET_REPO_AUTH_PASSWORD":       "",
+				"SOURCE_CONTAINERS_AUTH_REGISTRY": "",
+				"SOURCE_CONTAINERS_AUTH_USERNAME": "",
+				"SOURCE_CONTAINERS_AUTH_PASSWORD": "",
+				"TARGET_CONTAINERS_AUTH_USERNAME": "",
+				"TARGET_CONTAINERS_AUTH_PASSWORD": "",
 			},
 			&api.Auth{Username: "user123", Password: "password123"},
 			&api.Auth{Username: "user456", Password: "password456"},
-			&api.ContainerAuth{Username: "user123", Password: "password123", Registry: "sRegistry"},
-			&api.ContainerAuth{Username: "user456", Password: "password456", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "user123", Password: "password123", Registry: "sRegistry"},
+			&api.Containers_ContainerAuth{Username: "user456", Password: "password456", Registry: "test.registry.io"},
 		},
 		"overwrite-user-with-env-var": {
 			"example-config.yaml",
 			map[string]string{
-				"SOURCE_REPO_AUTH_USERNAME":     "newSourceUserFromEnvVar",
-				"TARGET_REPO_AUTH_USERNAME":     "newTargetUserFromEnvVar",
-				"SOURCE_CONTAINERAUTH_USERNAME": "newSourceUserFromEnvVar",
-				"TARGET_CONTAINERAUTH_USERNAME": "newSourceUserFromEnvVar",
+				"SOURCE_REPO_AUTH_USERNAME":       "newSourceUserFromEnvVar",
+				"TARGET_REPO_AUTH_USERNAME":       "newTargetUserFromEnvVar",
+				"SOURCE_CONTAINERS_AUTH_USERNAME": "newSourceUserFromEnvVar",
+				"TARGET_CONTAINERS_AUTH_USERNAME": "newSourceUserFromEnvVar",
 			},
 			&api.Auth{Username: "newSourceUserFromEnvVar", Password: "password123"},
 			&api.Auth{Username: "newTargetUserFromEnvVar", Password: "password456"},
-			&api.ContainerAuth{Username: "newSourceUserFromEnvVar", Password: "password123", Registry: "sRegistry"},
-			&api.ContainerAuth{Username: "newSourceUserFromEnvVar", Password: "password456", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "newSourceUserFromEnvVar", Password: "password123", Registry: "sRegistry"},
+			&api.Containers_ContainerAuth{Username: "newSourceUserFromEnvVar", Password: "password456", Registry: "test.registry.io"},
 		},
 	}
 
@@ -170,10 +170,10 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			}
 
 			// Check container registry auth
-			if got, want := source.GetContainerAuth(), tc.expectedSourceContainerAuth; !proto.Equal(got, want) {
+			if got, want := source.GetContainers().GetAuth(), tc.expectedSourceContainerAuth; !proto.Equal(got, want) {
 				t.Errorf("got: %+v, want %+v", got, want)
 			}
-			if got, want := target.GetContainerAuth(), tc.expectedTargetContainerAuth; !proto.Equal(got, want) {
+			if got, want := target.GetContainers().GetAuth(), tc.expectedTargetContainerAuth; !proto.Equal(got, want) {
 				t.Errorf("got: %+v, want %+v", got, want)
 			}
 		})

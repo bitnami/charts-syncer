@@ -74,16 +74,16 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 	// Source authentication for Helm and container registries
 	if source != nil {
 		// Helm Chart authentication
-		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_CONTAINERAUTH_REGISTRY
+		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
 		username, password := viper.GetString("source.repo.auth.username"), viper.GetString("source.repo.auth.password")
 		if username != "" && password != "" {
 			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
 		}
 
 		// Set the source OCI repository authentication
-		username, password, registry := viper.GetString("source.containerauth.username"), viper.GetString("source.containerauth.password"), viper.GetString("source.containerauth.registry")
+		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
 		if username != "" && password != "" && registry != "" {
-			source.ContainerAuth = &api.ContainerAuth{Username: username, Password: password, Registry: registry}
+			source.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
 	}
 
@@ -95,12 +95,12 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		}
 
 		// Target OCI repository
-		// NOTE: the registry value is retrieved from target.ContainerRegistry instead of target.ContainerAuth.
+		// NOTE: the registry value is retrieved from target.ContainerRegistry instead of target.containers.auth.
 		// This is because as part of the target definition the registry is set to indicate where the images
 		// should be pushed to, so the authentication must match this registry
-		username, password, registry := viper.GetString("target.containerauth.username"), viper.GetString("target.containerauth.password"), viper.GetString("target.containerregistry")
+		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containerregistry")
 		if username != "" && password != "" && registry != "" {
-			target.ContainerAuth = &api.ContainerAuth{Username: username, Password: password, Registry: registry}
+			target.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
 	}
 
@@ -126,15 +126,15 @@ func yamlToProto(path string, v proto.Message) error {
 func InitEnvBindings() error {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	// Keys allowed to be overridden by env variables
-	// i.e source.containerzauth.registry => SOURCE_CONTAINERAUTH_REGISTRY
+	// i.e source.containerzauth.registry => SOURCE_containers.auth_REGISTRY
 	boundKeys := []struct {
 		key, envNameFallback string
 	}{
 		// Container Authentication
-		{key: "source.containerauth.registry"}, {key: "source.containerauth.username"}, {key: "source.containerauth.password"},
+		{key: "source.containers.auth.registry"}, {key: "source.containers.auth.username"}, {key: "source.containers.auth.password"},
 		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
 		// where the images are going to be pushed to so duplication is not needed
-		{key: "target.containerauth.username"}, {key: "target.containerauth.password"},
+		{key: "target.containers.auth.username"}, {key: "target.containers.auth.password"},
 
 		// Helm Chart repository authentication. Maintaining previous name for compabitility reasons
 		{key: "source.repo.auth.username", envNameFallback: "SOURCE_AUTH_USERNAME"}, {key: "source.repo.auth.password", envNameFallback: "SOURCE_AUTH_PASSWORD"},
