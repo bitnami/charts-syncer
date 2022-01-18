@@ -185,7 +185,7 @@ func TestRelok8sMoveReq(t *testing.T) {
 			},
 		},
 	}
-	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers")
+	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", nil, nil)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s request. got: %v, want: %v", got, want)
 	}
@@ -208,7 +208,7 @@ func TestRelok8sBundleSaveReq(t *testing.T) {
 			},
 		},
 	}
-	got := relok8sBundleSaveReq("/tmp/source-dir", "/tmp/target-dir")
+	got := relok8sBundleSaveReq("/tmp/source-dir", "/tmp/target-dir", nil)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s bundle save request. got: %v, want: %v", got, want)
 	}
@@ -236,7 +236,7 @@ func TestRelok8sBundleLoadReq(t *testing.T) {
 			},
 		},
 	}
-	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers")
+	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", nil)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s bundle load request. got: %v, want: %v", got, want)
 	}

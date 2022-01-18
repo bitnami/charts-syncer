@@ -184,7 +184,7 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 	if target.GetIntermediateBundlesPath() != "" {
 		// airgap scenario step 1: SOURCE REPO => Intermediate bundles path
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.bundle.tar", chart.Name, chart.Version))
-		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath, source.GetContainerAuth()), packagedChartPath
+		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath, source.GetContainers().GetAuth()), packagedChartPath
 	} else if source.GetIntermediateBundlesPath() != "" {
 		// airgap scenario step 2: Intermediate bundles path => TARGET REPO
 		// Second step of intermediate process
@@ -195,7 +195,7 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		return relok8sBundleLoadReq(
 			chart.TgzPath, outputChartPath,
 			target.GetContainerRegistry(), target.GetContainerRepository(),
-			target.GetContainerAuth()), packagedChartPath
+			target.GetContainers().GetAuth()), packagedChartPath
 	} else {
 		// Direct syncing, SOURCE_REPO => TARGET_REPO
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
@@ -203,11 +203,11 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		outputChartPath := filepath.Join(outdir, "%s-%s.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.tgz", chart.Name, chart.Version))
 		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository(),
-			source.GetContainerAuth(), target.GetContainerAuth()), packagedChartPath
+			source.GetContainers().GetAuth(), target.GetContainers().GetAuth()), packagedChartPath
 	}
 }
 
-func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.ContainerAuth) *mover.ChartMoveRequest {
+func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -235,7 +235,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 	return req
 }
 
-func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *api.ContainerAuth) *mover.ChartMoveRequest {
+func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -256,7 +256,7 @@ func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *ap
 	return req
 }
 
-func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string, containerTargetAuth *api.ContainerAuth) *mover.ChartMoveRequest {
+func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -283,7 +283,7 @@ func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRe
 }
 
 // Translates charts syncer authentication settings into relok8s configuration
-func chartsSyncerToRelok8sAuth(containerAuth *api.ContainerAuth) (relok8sAuth mover.Containers) {
+func chartsSyncerToRelok8sAuth(containerAuth *api.Containers_ContainerAuth) (relok8sAuth mover.Containers) {
 	if containerAuth != nil {
 		relok8sAuth = mover.Containers{
 			ContainerRepository: mover.ContainerRepository{
