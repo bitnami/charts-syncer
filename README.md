@@ -91,7 +91,7 @@ source:
     #   password: "PASSWORD"
   # Container images registry authn
   # containerAuth:
-  #  registry: 'registry.io'
+  #  registry: 'REGISTRY'
   #  username: "USERNAME"
   #  password: "PASSWORD"
 target:
