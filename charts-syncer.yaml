@@ -17,6 +17,7 @@ source:
       # password is the password used to authenticate against the source chart repo
       # `SOURCE_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
+    disableChartsIndex: false # Disable the OCI-based Helm Chart repository index lookup
 # target includes relevant information about the target chart repository
 target:
   # repoName is used to modify the README of the chart. Default value: `myrepo`
@@ -48,4 +49,4 @@ charts:
 # Whether to also relocate the container images referenced by the Helm Chart
 # Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file
 # More info about the file here https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file
-relocateContainerImages: false
+disableContainerImagesRelocation: false

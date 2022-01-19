@@ -50,12 +50,12 @@ $ charts-syncer sync --from-date 2020-05-15
 
 ### Sync Helm Charts and Container Images
 
-By default, charts-syncer only sync Helm Charts packages, it does not copy the container images referenced by the chart. This
-feature can be enabled by setting the `relocateContainerImages: true` property in the config file i.e
+By default, charts-syncer will try to sync Helm Charts and their dependent container images. This
+feature can be disabled by setting the `disableContainerImagesRelocation: true` property in the config file i.e
 
 ~~~yaml
-# leverage .relok8s-images.yaml file inside the Charts to move the container images too
-relocateContainerImages: true
+# leverage .relok8s-images.yaml file inside the Charts to relocate the container images
+disableContainerImagesRelocation: false
 source:
    ...
 target:
@@ -213,15 +213,6 @@ or a pointer to a [charts index file](#charts-index-for-oci-based-repositories) 
 By using a charts index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
 charts-syncer will be able to auto-discover what charts need to be synchronized.
 
-~~~yaml
-source:
- repo:
-   kind: OCI
-   url: https://my-oci-registry.io/my-project/subpath
-   # Enable charts index lookup
-   useChartsIndex: true
-~~~
-
 By default, the library will look up for a "charts-index:latest" charts index artifact within the source OCI repository.
 
 However, this can be customized using the `chartsIndex` field using the format `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`.
@@ -231,8 +222,8 @@ source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   # Enable charts index lookup
-   useChartsIndex: true
+   # disableChartsIndex: false # set to true to disable lookup
+   # Charts index location override, charts-index:latest by default
    chartsIndex: my-oci-registry.io/my-project/index:prod
 ~~~
 

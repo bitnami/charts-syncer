@@ -417,7 +417,7 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 
 // populateEntries populates the entries map with the info from the charts index
 func populateEntries(repo *api.Repo) (map[string][]string, error) {
-	if !repo.GetUseChartsIndex() {
+	if repo.GetDisableChartsIndex() {
 		return make(map[string][]string), nil
 	}
 

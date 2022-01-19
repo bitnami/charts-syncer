@@ -42,20 +42,32 @@ func setDefaultChartsIndex(config *api.Config) error {
 
 // Load unmarshall config file into Config struct.
 func Load(config *api.Config) error {
-	// TODO: Use Viper to load the config file instead
-	err := yamlToProto(viper.ConfigFileUsed(), config)
-	if err != nil {
+	// Load the config file
+	if err := yamlToProto(viper.ConfigFileUsed(), config); err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
 	}
-	if config.GetSource().GetRepo() != nil {
-		if config.GetSource().GetRepo().GetUseChartsIndex() && config.GetSource().GetRepo().GetChartsIndex() == "" {
+
+	if err := setDefaultOverrides(config); err != nil {
+		return errors.Trace(err)
+	}
+
+	return nil
+}
+
+func setDefaultOverrides(config *api.Config) error {
+	if repo := config.GetSource().GetRepo(); repo != nil {
+		if !repo.GetDisableChartsIndex() && repo.GetChartsIndex() == "" {
 			if err := setDefaultChartsIndex(config); err != nil {
 				return err
 			}
 		}
 	}
 
-	if config.GetTarget().GetRepoName() == "" {
+	if config.RelocateContainerImages {
+		klog.Infoln("'relocateContainerImages' option is deprecated, use disableContainerImagesRelocation instead")
+	}
+
+	if config.GetTarget() != nil && config.GetTarget().GetRepoName() == "" {
 		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
 		config.GetTarget().RepoName = defaultRepoName
 	}
