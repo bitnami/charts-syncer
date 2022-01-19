@@ -82,7 +82,9 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 
 		// Container images OCI repository authentication
 		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
-		if username != "" && password != "" && registry != "" {
+		// Validation will happen in a later stage config.Validate()
+		// For now we set the struct value if any of the properties is available
+		if username != "" || password != "" || registry != "" {
 			source.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
 	}
@@ -99,7 +101,7 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		// This is because as part of the target definition the registry is set to indicate where the images
 		// should be pushed to, so the authentication must match this registry
 		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containerregistry")
-		if username != "" && password != "" && registry != "" {
+		if username != "" || password != "" || registry != "" {
 			target.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
 	}
