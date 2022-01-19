@@ -28,9 +28,9 @@ message Containers {
     // ContainerAuth defines the authentication parameters required to access the source/target
     // OCI registries during container image relocation
     message ContainerAuth {
-        string username = 2;
-        string password = 3;
-        string registry = 4;
+        string username = 1;
+        string password = 2;
+        string registry = 3;
     }
 }
 

@@ -171,6 +171,7 @@ func TestRelok8sMoveReq(t *testing.T) {
 					Path: "/tmp/source-dir",
 				},
 			},
+			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "sreg", Username: "suser", Password: "spass"}},
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
@@ -183,9 +184,12 @@ func TestRelok8sMoveReq(t *testing.T) {
 					Path: "/tmp/target-dir",
 				},
 			},
+			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "treg", Username: "tuser", Password: "tpass"}},
 		},
 	}
-	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", nil, nil)
+	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers",
+		&api.Containers_ContainerAuth{Username: "suser", Password: "spass", Registry: "sreg"}, &api.Containers_ContainerAuth{Username: "tuser", Password: "tpass", Registry: "treg"},
+	)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s request. got: %v, want: %v", got, want)
 	}
@@ -199,6 +203,7 @@ func TestRelok8sBundleSaveReq(t *testing.T) {
 					Path: "/tmp/source-dir",
 				},
 			},
+			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "reg", Username: "user", Password: "pass"}},
 		},
 		Target: mover.Target{
 			Chart: mover.ChartSpec{
@@ -208,7 +213,7 @@ func TestRelok8sBundleSaveReq(t *testing.T) {
 			},
 		},
 	}
-	got := relok8sBundleSaveReq("/tmp/source-dir", "/tmp/target-dir", nil)
+	got := relok8sBundleSaveReq("/tmp/source-dir", "/tmp/target-dir", &api.Containers_ContainerAuth{Username: "user", Password: "pass", Registry: "reg"})
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s bundle save request. got: %v, want: %v", got, want)
 	}
@@ -234,9 +239,10 @@ func TestRelok8sBundleLoadReq(t *testing.T) {
 					Path: "/tmp/target-dir",
 				},
 			},
+			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "reg", Username: "user", Password: "pass"}},
 		},
 	}
-	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", nil)
+	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", &api.Containers_ContainerAuth{Username: "user", Password: "pass", Registry: "reg"})
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s bundle load request. got: %v, want: %v", got, want)
 	}

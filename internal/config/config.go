@@ -68,10 +68,10 @@ func Load(config *api.Config) error {
 	return nil
 }
 
-// Sets the authentication configuration for container images
-// It reads the configuration from the viper config repository which values might have come from the config file, env vars or flags
+// Sets the authentication configuration for container images and Helm Chart repositories
+// It reads the configuration from the viper config repository which values might come from the config file, env vars or flags
 func setAuthentication(source *api.Source, target *api.Target) error {
-	// Source authentication for Helm and container registries
+	// Source Chart and container images authentication
 	if source != nil {
 		// Helm Chart authentication
 		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
@@ -80,22 +80,22 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
 		}
 
-		// Set the source OCI repository authentication
+		// Container images OCI repository authentication
 		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
 		if username != "" && password != "" && registry != "" {
 			source.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
 	}
 
-	// target Chart and container images authentication
+	// Target Chart and container images authentication
 	if target != nil {
 		username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
 		if username != "" && password != "" {
 			target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
 		}
 
-		// Target OCI repository
-		// NOTE: the registry value is retrieved from target.ContainerRegistry instead of target.containers.auth.
+		// Target container images OCI repository
+		// NOTE: the registry value is retrieved from target.Containerregistry instead of target.containers.auth.registry
 		// This is because as part of the target definition the registry is set to indicate where the images
 		// should be pushed to, so the authentication must match this registry
 		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containerregistry")
@@ -122,13 +122,16 @@ func yamlToProto(path string, v proto.Message) error {
 	return errors.Trace(err)
 }
 
-// InitEnvBindings defines the env variables bindings enabled to override viper settings
+// InitEnvBindings defines the env variables bindings associated with local viper keys
 func InitEnvBindings() error {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	// Keys allowed to be overridden by env variables
-	// i.e source.containerzauth.registry => SOURCE_containers.auth_REGISTRY
+
 	boundKeys := []struct {
-		key, envNameFallback string
+		// viper key associated with the env variable
+		key string
+		// name for the env variable in addition to the default one
+		// i.e source.containers.auth.registry => SOURCE_CONTAINERS_AUTH_REGISTRY
+		envNameFallback string
 	}{
 		// Container Authentication
 		{key: "source.containers.auth.registry"}, {key: "source.containers.auth.username"}, {key: "source.containers.auth.password"},
@@ -136,7 +139,7 @@ func InitEnvBindings() error {
 		// where the images are going to be pushed to so duplication is not needed
 		{key: "target.containers.auth.username"}, {key: "target.containers.auth.password"},
 
-		// Helm Chart repository authentication. Maintaining previous name for compabitility reasons
+		// Helm Chart repository authentication. Maintaining previous name for compatibility reasons
 		{key: "source.repo.auth.username", envNameFallback: "SOURCE_AUTH_USERNAME"}, {key: "source.repo.auth.password", envNameFallback: "SOURCE_AUTH_PASSWORD"},
 		{key: "target.repo.auth.username", envNameFallback: "TARGET_AUTH_USERNAME"}, {key: "target.repo.auth.password", envNameFallback: "TARGET_AUTH_PASSWORD"},
 	}

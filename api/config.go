@@ -28,5 +28,6 @@ func (c *Config) Validate() error {
 			return errors.Errorf(`"target.containerRepository" cannot be empty`)
 		}
 	}
+
 	return nil
 }
