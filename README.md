@@ -85,16 +85,29 @@ source:
   repo:
     kind: HELM
     url: http://localhost:8080
+    # Helm repository authentication, same for other repo types i.e OCI
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
+  # Container images registry authn
+  # containers:
+  #  auth:
+  #     registry: 'REGISTRY'
+  #     username: "USERNAME"
+  #     password: "PASSWORD"
 target:
   repoName: myrepo
   containerRegistry: k8s.container.registry.io
   containerRepository: repository/demo/k8s
+  # Container images registry authn
+  # containers:
+  #   auth:
+  #     username: "USERNAME"
+  #     password: "PASSWORD"
   repo:
     kind: CHARTMUSEUM
     url: http://localhost:9090
+    # Helm repository authentication
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
@@ -107,12 +120,26 @@ charts:
 >
 > Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
 
-Credentials can be provided using config file or the following environment variables:
+Credentials for the Helm Chart repositories and container images registries can be provided using config file or the following environment variables:
 
-- `SOURCE_AUTH_USERNAME`
-- `SOURCE_AUTH_PASSWORD`
-- `TARGET_AUTH_USERNAME`
-- `TARGET_AUTH_PASSWORD`
+Helm Chart repositories
+
+- `SOURCE_REPO_AUTH_USERNAME`
+- `SOURCE_REPO_AUTH_PASSWORD`
+
+
+- `TARGET_REPO_AUTH_USERNAME`
+- `TARGET_REPO_AUTH_PASSWORD`
+
+Container images registries
+
+- `SOURCE_CONTAINERS_AUTH_REGISTRY`
+- `SOURCE_CONTAINERS_AUTH_USERNAME`
+- `SOURCE_CONTAINERS_AUTH_PASSWORD`
+
+
+- `TARGET_CONTAINERS_AUTH_USERNAME`
+- `TARGET_CONTAINERS_AUTH_PASSWORD`
 
 Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix between source and targets repositories.
 
@@ -456,30 +483,90 @@ In order to ease and accelerate the deployment, basic Kubernetes templates have 
 
 The recommended way to specify credentials is using environment variables in the CronJob manifest.
 
+Example credentials for only Helm Chart repositories
 ~~~yaml
   - name: charts-syncer
     image: IMAGE_NAME:TAG
     env:
-      - name: SOURCE_AUTH_USERNAME
+      - name: SOURCE_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-username
-      - name: SOURCE_AUTH_PASSWORD
+      - name: SOURCE_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: source-password
-      - name: TARGET_AUTH_USERNAME
+      - name: TARGET_REPO_AUTH_USERNAME
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: target-username
-      - name: TARGET_AUTH_PASSWORD
+      - name: TARGET_REPO_AUTH_PASSWORD
         valueFrom:
           secretKeyRef:
             name: charts-syncer-credentials
             key: target-password
 ~~~
 
+Example credentials for both Helm Chart repositories and container registries
+~~~yaml
+  - name: charts-syncer
+    image: IMAGE_NAME:TAG
+    env:
+      # Helm Chart repositories credentials
+      - name: SOURCE_REPO_AUTH_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: charts-syncer-credentials
+            key: source-username
+      - name: SOURCE_REPO_AUTH_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: charts-syncer-credentials
+            key: source-password
+      - name: TARGET_REPO_AUTH_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: charts-syncer-credentials
+            key: target-username
+      - name: TARGET_REPO_AUTH_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: charts-syncer-credentials
+            key: target-password
+      - name: SOURCE_REPO_AUTH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: charts-syncer-credentials
+              key: source-username
+
+      # Container images registry credentials
+      - name: SOURCE_CONTAINERS_AUTH_REGISTRY
+        valueFrom:
+          secretKeyRef:
+            name: charts-syncer-credentials
+            key: source-containerauth-registry
+      - name: SOURCE_CONTAINERS_AUTH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: charts-syncer-credentials
+              key: source-containerauth-username
+      - name: SOURCE_CONTAINERS_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: charts-syncer-credentials
+              key: source-containerauth-password
+      - name: TARGET_CONTAINERS_AUTH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: charts-syncer-credentials
+              key: target-containerauth-username
+      - name: TARGET_CONTAINERS_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: charts-syncer-credentials
+              key: target-containerauth-password
+~~~
 The above environment variables are retrieved from a secret called `charts-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.

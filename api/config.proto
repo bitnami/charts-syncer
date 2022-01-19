@@ -17,6 +17,21 @@ message Source {
         Repo repo = 1;
         string intermediate_bundles_path = 2;
     }
+
+    // Ignored if the repo is an intermediate bundle since the images are inside the bundle
+    Containers containers = 3;
+}
+
+message Containers {
+    ContainerAuth auth = 1;
+
+    // ContainerAuth defines the authentication parameters required to access the source/target
+    // OCI registries during container image relocation
+    message ContainerAuth {
+        string username = 1;
+        string password = 2;
+        string registry = 3;
+    }
 }
 
 // TargetRepo contains the required information of the target chart repository
@@ -28,6 +43,8 @@ message Target {
     string container_registry = 2;
     string container_repository = 3;
     string repo_name = 4;
+
+    Containers containers = 6;
 }
 
 // Generic repo representation
@@ -43,6 +60,7 @@ message Repo {
     // Whether to use a charts index to find charts
     bool useChartsIndex = 6;
 }
+
 
 // Auth contains credentials to login to a chart repository
 message Auth {

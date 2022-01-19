@@ -25,3 +25,6 @@ dist
 ### Editors/IDEs ###
 .vscode
 .idea
+
+### Tests output
+pkg/syncer/workdir/

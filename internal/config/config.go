@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -43,6 +42,7 @@ func setDefaultChartsIndex(config *api.Config) error {
 
 // Load unmarshall config file into Config struct.
 func Load(config *api.Config) error {
+	// TODO: Use Viper to load the config file instead
 	err := yamlToProto(viper.ConfigFileUsed(), config)
 	if err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
@@ -53,18 +53,57 @@ func Load(config *api.Config) error {
 				return err
 			}
 		}
-		if err := config.GetSource().GetRepo().SetBasicAuth(os.Getenv("SOURCE_AUTH_USERNAME"), os.Getenv("SOURCE_AUTH_PASSWORD")); err != nil {
-			return err
-		}
 	}
-	if config.GetTarget() != nil {
-		if err := config.GetTarget().GetRepo().SetBasicAuth(os.Getenv("TARGET_AUTH_USERNAME"), os.Getenv("TARGET_AUTH_PASSWORD")); err != nil {
-			return err
-		}
-	}
+
 	if config.GetTarget().GetRepoName() == "" {
 		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
 		config.GetTarget().RepoName = defaultRepoName
+	}
+
+	// Container registry authentication override
+	if err := setAuthentication(config.GetSource(), config.GetTarget()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sets the authentication configuration for container images and Helm Chart repositories
+// It reads the configuration from the viper config repository which values might come from the config file, env vars or flags
+func setAuthentication(source *api.Source, target *api.Target) error {
+	// Source Chart and container images authentication
+	if source != nil {
+		// Helm Chart authentication
+		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
+		username, password := viper.GetString("source.repo.auth.username"), viper.GetString("source.repo.auth.password")
+		if username != "" && password != "" {
+			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+		}
+
+		// Container images OCI repository authentication
+		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
+		// Validation will happen in a later stage config.Validate()
+		// For now we set the struct value if any of the properties is available
+		if username != "" || password != "" || registry != "" {
+			source.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
+		}
+	}
+
+	// Target Chart and container images authentication
+	if target != nil {
+		username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
+		if username != "" && password != "" {
+			target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+		}
+
+		// Target container images OCI repository
+		// NOTE: the registry value is retrieved from target.Containerregistry instead of target.containers.auth.registry
+		// This is because as part of the target definition the registry is set to indicate where the images
+		// should be pushed to, so the authentication must match this registry
+		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containerregistry")
+		if username != "" || password != "" {
+			target.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
+		}
 	}
 
 	return nil
@@ -83,4 +122,44 @@ func yamlToProto(path string, v proto.Message) error {
 	r := bytes.NewReader(jsonBytes)
 	err = pbjson.NewDecoder(r).Decode(v)
 	return errors.Trace(err)
+}
+
+// InitEnvBindings defines the env variables bindings associated with local viper keys
+func InitEnvBindings() error {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	boundKeys := []struct {
+		// viper key associated with the env variable
+		key string
+		// name for the env variable in addition to the default one
+		// i.e source.containers.auth.registry => SOURCE_CONTAINERS_AUTH_REGISTRY
+		envNameFallback string
+	}{
+		// Container Authentication
+		{key: "source.containers.auth.registry"}, {key: "source.containers.auth.username"}, {key: "source.containers.auth.password"},
+		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
+		// where the images are going to be pushed to so duplication is not needed
+		{key: "target.containers.auth.username"}, {key: "target.containers.auth.password"},
+
+		// Helm Chart repository authentication. Maintaining previous name for compatibility reasons
+		{key: "source.repo.auth.username", envNameFallback: "SOURCE_AUTH_USERNAME"}, {key: "source.repo.auth.password", envNameFallback: "SOURCE_AUTH_PASSWORD"},
+		{key: "target.repo.auth.username", envNameFallback: "TARGET_AUTH_USERNAME"}, {key: "target.repo.auth.password", envNameFallback: "TARGET_AUTH_PASSWORD"},
+	}
+
+	for _, k := range boundKeys {
+		if err := viper.BindEnv(k.key); err != nil {
+			return errors.Trace(err)
+		}
+
+		// If there is an environment name fallback name we also set it. This is for compatibility reasons
+		if k.envNameFallback == "" {
+			continue
+		}
+
+		if err := viper.BindEnv(k.key, k.envNameFallback); err != nil {
+			return errors.Trace(err)
+		}
+	}
+
+	return nil
 }

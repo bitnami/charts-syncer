@@ -62,13 +62,20 @@ func newSyncCmd() *cobra.Command {
 				return errors.Trace(err)
 			}
 
+			// Env variables bindings for viper
+			if err := config.InitEnvBindings(); err != nil {
+				return errors.Trace(err)
+			}
+
 			// Load config file relying on viper to find it
 			if err := config.Load(&c); err != nil {
 				return errors.Trace(err)
 			}
+
 			if err := c.Validate(); err != nil {
 				return errors.Trace(err)
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

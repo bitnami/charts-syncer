@@ -182,31 +182,85 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 
 func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart, outdir string) (*mover.ChartMoveRequest, string) {
 	if target.GetIntermediateBundlesPath() != "" {
-		// First step of intermediate process
+		// airgap scenario step 1: SOURCE REPO => Intermediate bundles path
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.bundle.tar", chart.Name, chart.Version))
-		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath), packagedChartPath
+		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath, source.GetContainers().GetAuth()), packagedChartPath
 	} else if source.GetIntermediateBundlesPath() != "" {
+		// airgap scenario step 2: Intermediate bundles path => TARGET REPO
 		// Second step of intermediate process
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
 		// specify the name we want for the output file. Until then, we should keep using this template thing
 		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
-		return relok8sBundleLoadReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository()), packagedChartPath
+		return relok8sBundleLoadReq(
+			chart.TgzPath, outputChartPath,
+			target.GetContainerRegistry(), target.GetContainerRepository(),
+			target.GetContainers().GetAuth()), packagedChartPath
 	} else {
-		// Direct syncing
+		// Direct syncing, SOURCE_REPO => TARGET_REPO
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
 		// specify the name we want for the output file. Until then, we should keep using this template thing
 		outputChartPath := filepath.Join(outdir, "%s-%s.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.tgz", chart.Name, chart.Version))
-		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository()), packagedChartPath
+		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository(),
+			source.GetContainers().GetAuth(), target.GetContainers().GetAuth()), packagedChartPath
 	}
 }
 
-func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string) *mover.ChartMoveRequest {
+func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
 				Local: &mover.LocalChart{
+					Path: sourcePath,
+				},
+			},
+			Containers: chartsSyncerToRelok8sAuth(sourceAuth),
+		},
+		Target: mover.Target{
+			Rules: mover.RewriteRules{
+				Registry:         containerRegistry,
+				RepositoryPrefix: containerRepository,
+				ForcePush:        true,
+			},
+			Chart: mover.ChartSpec{
+				Local: &mover.LocalChart{
+					Path: targetPath,
+				},
+			},
+			Containers: chartsSyncerToRelok8sAuth(targetAuth),
+		},
+	}
+
+	return req
+}
+
+func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+	req := &mover.ChartMoveRequest{
+		Source: mover.Source{
+			Chart: mover.ChartSpec{
+				Local: &mover.LocalChart{
+					Path: sourcePath,
+				},
+			},
+			Containers: chartsSyncerToRelok8sAuth(containerSourceAuth),
+		},
+		Target: mover.Target{
+			Chart: mover.ChartSpec{
+				IntermediateBundle: &mover.IntermediateBundle{
+					Path: targetPath,
+				},
+			},
+		},
+	}
+	return req
+}
+
+func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+	req := &mover.ChartMoveRequest{
+		Source: mover.Source{
+			Chart: mover.ChartSpec{
+				IntermediateBundle: &mover.IntermediateBundle{
 					Path: sourcePath,
 				},
 			},
@@ -222,52 +276,21 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 					Path: targetPath,
 				},
 			},
+			Containers: chartsSyncerToRelok8sAuth(containerTargetAuth),
 		},
 	}
 	return req
 }
 
-func relok8sBundleSaveReq(sourcePath, targetPath string) *mover.ChartMoveRequest {
-	req := &mover.ChartMoveRequest{
-		Source: mover.Source{
-			Chart: mover.ChartSpec{
-				Local: &mover.LocalChart{
-					Path: sourcePath,
-				},
+// Translates charts syncer authentication settings into relok8s configuration
+func chartsSyncerToRelok8sAuth(containerAuth *api.Containers_ContainerAuth) (relok8sAuth mover.Containers) {
+	if containerAuth != nil {
+		relok8sAuth = mover.Containers{
+			ContainerRepository: mover.ContainerRepository{
+				Username: containerAuth.Username, Password: containerAuth.Password, Server: containerAuth.Registry,
 			},
-		},
-		Target: mover.Target{
-			Chart: mover.ChartSpec{
-				IntermediateBundle: &mover.IntermediateBundle{
-					Path: targetPath,
-				},
-			},
-		},
+		}
 	}
-	return req
-}
 
-func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string) *mover.ChartMoveRequest {
-	req := &mover.ChartMoveRequest{
-		Source: mover.Source{
-			Chart: mover.ChartSpec{
-				IntermediateBundle: &mover.IntermediateBundle{
-					Path: sourcePath,
-				},
-			},
-		},
-		Target: mover.Target{
-			Rules: mover.RewriteRules{
-				Registry:         containerRegistry,
-				RepositoryPrefix: containerRepository,
-				ForcePush:        true,
-			},
-			Chart: mover.ChartSpec{
-				Local: &mover.LocalChart{
-					Path: targetPath,
-				},
-			},
-		},
-	}
-	return req
+	return
 }
