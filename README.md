@@ -32,7 +32,7 @@ Sync chart packages between chart repositories
 
 ## Usage
 
-### Sync all Helm Charts and Container Images
+### Sync all Helm Charts
 
 ~~~bash
 $ charts-syncer sync
@@ -54,9 +54,20 @@ $ charts-syncer sync --latest-version-only
 
 ### Sync Helm Charts and Container Images
 
-charts-syncer will try to sync Helm Charts and their dependent container images. Copying container images requires that the Helm Charts being copied includes a `.relok8s-images.yaml` file inside. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
+By default, charts-syncer only sync Helm Charts packages, it does not copy the container images referenced by the chart. This
+feature can be enabled by setting the `relocateContainerImages: true` property in the config file i.e
 
-If you prefer to just copy the Helm Chart, set `disableContainerImagesRelocation: true` property in the config file
+~~~yaml
+# leverage .relok8s-images.yaml file inside the Charts to move the container images too
+relocateContainerImages: true
+source:
+   ...
+target:
+   ...
+~~~
+
+In order for this option to work it is required that the source Helm Charts includes a `.relok8s-images.yaml` file with information
+about where to find the images inside chart. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
 
 ### Sync Helm Charts and associated container images between disconnected environments
 
