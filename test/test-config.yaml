@@ -1,6 +1,7 @@
 #
 # Test config file
 #
+disableContainerImagesRelocation: true
 source:
   repo:
     kind: "HELM"
