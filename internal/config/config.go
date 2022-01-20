@@ -63,6 +63,13 @@ func setDefaultOverrides(config *api.Config) error {
 		}
 	}
 
+	// Target OCI Chart repositories do not use the custom index
+	if repo := config.GetTarget().GetRepo(); repo != nil {
+		if repo.Kind == api.Kind_OCI {
+			repo.DisableChartsIndex = true
+		}
+	}
+
 	if config.RelocateContainerImages {
 		klog.Infoln("'relocateContainerImages' option is deprecated, use disableContainerImagesRelocation instead")
 	}
