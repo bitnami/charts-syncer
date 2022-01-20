@@ -58,6 +58,7 @@ func TestNewClient(t *testing.T) {
 					Username: "user",
 					Password: "password",
 				},
+				DisableChartsIndex: true,
 			},
 			"*oci.Repo",
 			"",

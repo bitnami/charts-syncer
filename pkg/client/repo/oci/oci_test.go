@@ -24,6 +24,7 @@ var (
 			Username: "user",
 			Password: "password",
 		},
+		DisableChartsIndex: true,
 	}
 )
 
