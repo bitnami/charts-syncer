@@ -76,7 +76,7 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		// Helm Chart authentication
 		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
 		username, password := viper.GetString("source.repo.auth.username"), viper.GetString("source.repo.auth.password")
-		if username != "" && password != "" {
+		if username != "" && password != "" && source.GetRepo() != nil {
 			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
 		}
 
@@ -92,7 +92,7 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 	// Target Chart and container images authentication
 	if target != nil {
 		username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
-		if username != "" && password != "" {
+		if username != "" && password != "" && target.GetRepo() != nil {
 			target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
 		}
 
