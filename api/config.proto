@@ -8,8 +8,7 @@ message Config {
     Source source = 1;
     Target target = 2;
     repeated string charts = 3;
-    bool relocate_container_images = 4 [deprecated=true];
-    bool disable_container_images_relocation = 5;
+    bool relocate_container_images = 4;
 }
 
 // SourceRepo contains the required information of the source chart repository

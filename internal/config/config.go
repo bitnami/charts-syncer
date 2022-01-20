@@ -70,10 +70,6 @@ func setDefaultOverrides(config *api.Config) error {
 		}
 	}
 
-	if config.RelocateContainerImages {
-		klog.Infoln("'relocateContainerImages' option is deprecated, use disableContainerImagesRelocation instead")
-	}
-
 	if config.GetTarget() != nil && config.GetTarget().GetRepoName() == "" {
 		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
 		config.GetTarget().RepoName = defaultRepoName

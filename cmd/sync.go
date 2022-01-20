@@ -86,7 +86,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithFromDate(syncFromDate),
 				syncer.WithWorkdir(syncWorkdir),
 				syncer.WithInsecure(rootInsecure),
-				syncer.WithContainerImageRelocation(!c.DisableContainerImagesRelocation),
+				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 			}

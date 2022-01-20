@@ -51,4 +51,4 @@ charts:
 # Whether to also relocate the container images referenced by the Helm Chart
 # Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file
 # More info about the file here https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file
-disableContainerImagesRelocation: false
+relocateContainerImages: false
