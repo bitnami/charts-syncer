@@ -245,7 +245,7 @@ source:
     kind: OCI
     url: https://my-oci-registry.io/my-project/subpath
 ...
-# Required If not index is provided or found
+# Required if no index is provided or found
 charts:
   - redis
   - mariadb
