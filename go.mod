@@ -23,7 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
-	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.3.60
+	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.4.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.7.0
