@@ -232,7 +232,7 @@ source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   # disableChartsIndex: true # 
+   # disableChartsIndex: true
    # Charts index location override, charts-index:latest by default
    chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 ~~~
