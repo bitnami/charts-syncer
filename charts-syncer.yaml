@@ -17,6 +17,9 @@ source:
       # password is the password used to authenticate against the source chart repo
       # `SOURCE_AUTH_PASSWORD` env var can be used instead of this entry
       password: "PASSWORD"
+    # Options for repositories of kind=OCI
+    # disableChartsIndex: false
+    # chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 # target includes relevant information about the target chart repository
 target:
   # repoName is used to modify the README of the chart. Default value: `myrepo`

@@ -56,9 +56,10 @@ message Repo {
     string path = 4;
     // The OCI reference where the index of charts is located
     // Example: my.oci.domain/index:latest
-    string chartsIndex = 5;
+    string charts_index = 5;
     // Whether to use a charts index to find charts
-    bool useChartsIndex = 6;
+    bool use_charts_index = 6 [deprecated=true];
+    bool disable_charts_index = 7;
 }
 
 

@@ -32,19 +32,23 @@ Sync chart packages between chart repositories
 
 ## Usage
 
-### Sync all charts
+### Sync all Helm Charts
 
 ~~~bash
 $ charts-syncer sync
 ~~~
 
-### Sync all charts from specific date
+### Sync Helm Charts from a specific date
 
 ~~~bash
 $ charts-syncer sync --from-date 2020-05-15
 ~~~
 
- > Date should be in format YYYY-MM-DD
+### Sync latest version of each Helm Chart
+
+~~~bash
+$ charts-syncer sync --latest-version-only
+~~~
 
 ## Advanced Usage
 
@@ -213,46 +217,35 @@ or a pointer to a [charts index file](#charts-index-for-oci-based-repositories) 
 By using a charts index file for OCI-Based repository you won't need to maintain a hardcoded list of chart names in the config file.
 charts-syncer will be able to auto-discover what charts need to be synchronized.
 
-~~~yaml
-source:
- repo:
-   kind: OCI
-   url: https://my-oci-registry.io/my-project/subpath
-   # Enable charts index lookup
-   useChartsIndex: true
-~~~
-
 By default, the library will look up for a "charts-index:latest" charts index artifact within the source OCI repository.
 
 However, this can be customized using the `chartsIndex` field using the format `REGISTRY/PROJECT/[SUBPATH][:TAG|@sha256:DIGEST]`.
 
+For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
+`my-oci-registry.io/my-project/subpath/charts-index:latest` asset as index if it exists.
+
+An example of the valid index format can be seen directly in its [Protobuf definition](internal/indexer/api/index.proto). Worth to mention 
+that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
+
 ~~~yaml
 source:
  repo:
    kind: OCI
    url: https://my-oci-registry.io/my-project/subpath
-   # Enable charts index lookup
-   useChartsIndex: true
-   chartsIndex: my-oci-registry.io/my-project/index:prod
+   # disableChartsIndex: true
+   # Charts index location override, charts-index:latest by default
+   chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 ~~~
-
-For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
-`my-oci-registry.io/my-project/subpath/charts-index:latest` asset as index if it exists.
-
-An example of the valid index format can be seen directly in its [protobuffer definition](internal/indexer/api/oci.proto). Worth to mention 
-that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
 
 Finally, if no charts index is found, charts-syncer will require the list of charts in the config file:
 
 ~~~yaml
-#
-# Example config file
-#
 source:
   repo:
     kind: OCI
     url: https://my-oci-registry.io/my-project/subpath
 ...
+# Required if no index is provided or found
 charts:
   - redis
   - mariadb
