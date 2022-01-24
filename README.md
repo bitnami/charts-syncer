@@ -224,7 +224,7 @@ However, this can be customized using the `chartsIndex` field using the format `
 For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and no `chartsIndex` is specified, charts-syncer will try to use 
 `my-oci-registry.io/my-project/subpath/charts-index:latest` asset as index if it exists.
 
-An example of the valid index format can be seen directly in its [protobuffer definition](internal/indexer/api/index.proto). Worth to mention 
+An example of the valid index format can be seen directly in its [Protobuf definition](internal/indexer/api/index.proto). Worth to mention 
 that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
 
 ~~~yaml
