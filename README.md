@@ -8,7 +8,7 @@ Sync chart packages between chart repositories
 # Table of Contents
 
 - [Usage](#usage)
-    + [Sync all charts](#sync-all-charts)
+    + [Sync all charts](#sync-all-helm-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
     + [Sync charts and container images](#sync-charts-and-container-images)
@@ -118,6 +118,10 @@ target:
 charts:
   - redis
   - mariadb
+# opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped 
+# either "charts" or "skipCharts" can be used at once
+# skipCharts:
+#  - mariadb
 ~~~
 
 > Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.

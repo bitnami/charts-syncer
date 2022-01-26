@@ -47,6 +47,10 @@ target:
 charts:
   - redis
   - etcd
+# opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped
+# either "charts" or "skipCharts" can be used at once
+# skipCharts:
+#  - mariadb
 
 # Whether to also relocate the container images referenced by the Helm Chart
 # Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file

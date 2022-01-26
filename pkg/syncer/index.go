@@ -91,6 +91,11 @@ func (s *Syncer) loadCharts(charts ...string) error {
 	// Iterate over charts in source index
 	var errs error
 	for _, name := range charts {
+		if shouldSkipChart(name, s.skipCharts) {
+			klog.V(3).Infof("Indexing %q charts SKIPPED...", name)
+			continue
+		}
+
 		versions, err := s.cli.src.ListChartVersions(name)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Trace(err))
@@ -254,4 +259,13 @@ func (s *Syncer) topologicalSortCharts() ([]*Chart, error) {
 		charts[i] = s.getIndex().Get(id)
 	}
 	return charts, nil
+}
+
+func shouldSkipChart(chartName string, skippedCharts []string) bool {
+	for _, s := range skippedCharts {
+		if s == chartName {
+			return true
+		}
+	}
+	return false
 }
