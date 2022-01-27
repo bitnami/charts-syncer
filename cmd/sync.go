@@ -89,6 +89,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
+				syncer.WithSkipCharts(c.SkipCharts),
 			}
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {

@@ -43,14 +43,22 @@ func getChartIndex(t *testing.T, name string, targetRepo *api.Target, tester rep
 
 func TestFakeSyncPendingCharts(t *testing.T) {
 	testCases := []struct {
-		desc    string
-		entries []string
-		want    []string
+		desc           string
+		entries        []string
+		skippedEntries []string
+		want           []string
 	}{
 		{
 			desc:    "load apache and kafka",
 			entries: []string{"apache", "kafka"},
-			want:    []string{"apache-7.3.15.tgz", "kafka-10.3.3.tgz", "zookeeper-5.14.3.tgz"},
+			// zookeeper is a dependency
+			want: []string{"apache-7.3.15.tgz", "kafka-10.3.3.tgz", "zookeeper-5.14.3.tgz"},
+		},
+		{
+			desc:           "skip apache",
+			entries:        []string{"apache", "kafka"},
+			skippedEntries: []string{"apache"},
+			want:           []string{"kafka-10.3.3.tgz", "zookeeper-5.14.3.tgz"},
 		},
 	}
 
@@ -62,7 +70,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 			}
 			defer os.RemoveAll(dstTmp)
 
-			s := syncer.NewFake(t, syncer.WithFakeSyncerDestination(dstTmp))
+			s := syncer.NewFake(t, syncer.WithFakeSyncerDestination(dstTmp), syncer.WithFakeSkipCharts(tc.skippedEntries))
 
 			if err := s.SyncPendingCharts(tc.entries...); err != nil {
 				t.Error(err)

@@ -7,7 +7,10 @@ option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
 message Config {
     Source source = 1;
     Target target = 2;
+    // Helm Charts to include during sync
     repeated string charts = 3;
+    // Opposite of charts property. It indicates the list of charts to skip during sync
+    repeated string skip_charts = 5;
     bool relocate_container_images = 4;
 }
 

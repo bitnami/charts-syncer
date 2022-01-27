@@ -32,6 +32,8 @@ type Syncer struct {
 	relocateContainerImages bool
 	skipDependencies        bool
 	latestVersionOnly       bool
+	// list of charts to skip
+	skipCharts []string
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -169,6 +171,14 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 		disableDependencySync(s)
 	}
 	return s, nil
+}
+
+// WithSkipCharts configures the syncer to skip an explicit list of chart names
+// from the source chart repos.
+func WithSkipCharts(charts []string) Option {
+	return func(s *Syncer) {
+		s.skipCharts = charts
+	}
 }
 
 func disableDependencySync(syncer *Syncer) {

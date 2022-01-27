@@ -14,6 +14,7 @@ import (
 // FakeSyncerOpts allows to configure a Fake syncer.
 type FakeSyncerOpts struct {
 	Destination string
+	skipCharts  []string
 }
 
 // FakeSyncerOption is an option value used to create a new fake syncer instance.
@@ -23,6 +24,12 @@ type FakeSyncerOption func(*FakeSyncerOpts)
 func WithFakeSyncerDestination(dir string) FakeSyncerOption {
 	return func(s *FakeSyncerOpts) {
 		s.Destination = dir
+	}
+}
+
+func WithFakeSkipCharts(charts []string) FakeSyncerOption {
+	return func(s *FakeSyncerOpts) {
+		s.skipCharts = charts
 	}
 }
 
@@ -83,5 +90,6 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 			src: srcCli,
 			dst: dstCli,
 		},
+		skipCharts: sopts.skipCharts,
 	}
 }

@@ -51,6 +51,10 @@ func Load(config *api.Config) error {
 		return errors.Trace(err)
 	}
 
+	if len(config.GetCharts()) > 0 && len(config.GetSkipCharts()) > 0 {
+		return errors.New("\"charts\" and \"skipCharts\" properties can not be set at the same time")
+	}
+
 	return nil
 }
 

@@ -14,9 +14,10 @@ func removeTgzPath(i ChartIndex) {
 
 func TestLoadCharts(t *testing.T) {
 	testCases := []struct {
-		desc    string
-		entries []string
-		want    ChartIndex
+		desc           string
+		entries        []string
+		skippedEntries []string
+		want           ChartIndex
 	}{
 		{
 			desc:    "load apache and kafka",
@@ -27,11 +28,19 @@ func TestLoadCharts(t *testing.T) {
 				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
 			},
 		},
+		{
+			desc:           "skip apache and kafka",
+			entries:        []string{"apache", "kafka", "zookeeper"},
+			skippedEntries: []string{"apache", "kafka"},
+			want: ChartIndex{
+				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			s := NewFake(t)
+			s := NewFake(t, WithFakeSkipCharts(tc.skippedEntries))
 			if err := s.loadCharts(tc.entries...); err != nil {
 				t.Fatalf("unable to load charts: %v", err)
 			}
