@@ -1,0 +1,16 @@
+# Charts syncer config file https://github.com/bitnami-labs/charts-syncer/blob/master/charts-syncer.yaml
+
+# Relocate also container images https://github.com/bitnami-labs/charts-syncer#sync-helm-charts-and-container-images
+# relocateContainerImages: true
+source:
+  repo:
+    kind: HELM
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+  containerRegistry: "k8s.container.registry.io"
+  containerRepository: "repository/demo/k8s"
+# skipCharts:
+#  - common

@@ -1,0 +1,76 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: charts-syncer
+spec:
+  schedule: "*/30 * * * *"
+  # If a job is scheduled wait for it to finish
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: c3styncer
+            imagePullPolicy: Always
+            image: gcr.io/bitnami-labs/charts-syncer:v0.14.0
+            args: ["sync", "--config", "/charts-syncer.yaml", "-v", "4", "--latest-version-only"]
+            env:
+              # Helm Chart source repository credentials
+              - name: SOURCE_REPO_AUTH_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: source-username
+              - name: SOURCE_REPO_AUTH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: source-password
+              # Helm Chart target repository credentials
+              - name: TARGET_REPO_AUTH_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: target-username
+              - name: TARGET_REPO_AUTH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: target-password
+              # Container images source registry credentials
+              - name: SOURCE_CONTAINERS_AUTH_REGISTRY
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: source-containers-auth-registry
+              - name: SOURCE_CONTAINERS_AUTH_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: source-containers-auth-username
+              - name: SOURCE_CONTAINERS_AUTH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: source-containers-auth-password
+              # Container images target registry credentials
+              - name: TARGET_CONTAINERS_AUTH_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: target-containers-auth-username
+              - name: TARGET_CONTAINERS_AUTH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: target-containers-auth-password
+            volumeMounts:
+              - name: config
+                mountPath: /charts-syncer.yaml
+                subPath: charts-syncer.yaml
+          restartPolicy: OnFailure
+          volumes:
+            - name: config
+              configMap:
+                name: charts-syncer-config

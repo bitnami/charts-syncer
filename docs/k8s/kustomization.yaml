@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Namespace where the job and associated resources will be deployed
+namespace: charts-syncer
+commonLabels:
+  app: charts-syncer
+images:
+  - name: gcr.io/bitnami-labs/charts-syncer
+    # Set this value to the latest release
+    # https://github.com/bitnami-labs/charts-syncer/releases
+    newTag: v0.14.0
+
+resources:
+  - cronjob.yaml
+configMapGenerator:
+  - name: charts-syncer-config
+    options:
+      disableNameSuffixHash: true
+    files:
+      - charts-syncer.yaml=overlays/config.yaml
+# Generate the credentials required to interact with private registries
+secretGenerator:
+  - name: charts-syncer-credentials
+    options:
+      disableNameSuffixHash: true
+    envs:
+      - overlays/secrets.env
+    # You can also generate credentials from a file using files: directive
+    # useful if you are loading creds from a GCR/ACR service account p12/json file
+    # files:
+    #  - target-password=overlays/my_gcr_creds.json
