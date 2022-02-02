@@ -1,8 +1,8 @@
-# Deploying Charts-syncer in Kubernetes
+# Deploying charts-syncer in Kubernetes
 
 A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-The [deployment/](/deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
+The [deployment/](/deployment) directory contains a set of Kubernetes templates that must be used to follow the guide below.
 
 ### Step 0: Retrieve git repository
 
@@ -20,20 +20,48 @@ You can find a reference example [here](https://github.com/bitnami-labs/charts-s
 
 ### Step 2 (optional): Update deployment options
 
-Edit [deployment/kustomization.yaml](/deployment/kustomization.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
+Edit [deployment/kustomization.yaml](/deployment/kustomization.yaml) and replace `images.NewTag` to point to the latest available release version. For example `v0.14.0`
 
 You can also change the frequency of execution of the cron job by editing the schedule property in [deployment/cronjob.yaml](/deployment/cronjob.yaml). By default, it will be run each 30 minutes.
 
-### Step 3: Configure Helm Chart/Container registries credentials
 
-If any of your Helm Chart or Container repositories require authentication
-you need to specify the credentials.
+### Step 3 - Deploy the manifests to your Kubernetes cluster
 
-The list of available credentials related keys and their meaning can be found [here](https://github.com/bitnami-labs/charts-syncer#configuration)
+Charts-syncer will be deployed by default to the `charts-syncer` namespace, so the first step is to create it
 
-The generation of the Kubernetes secrete can be achieved two different ways, by either
+```bash
+$ kubectl create namespace charts-syncer
+```
 
-#### a - Updating [deployment/config/secrets.env](/deployment/config/secrets.env)
+If none of your Helm Chart or Container repositories require authentication, deploying charts syncer is as simple as executing
+
+```bash
+$ kubectl apply -k ./deployment
+```
+
+If AuthN is required, a set of credentials need to be provided via one of the following two methods
+
+#### a - Through environment variables
+
+You can provide the desired credentials as environment variables to the `kubectl apply -k` command
+
+```bash
+$ SOURCE_REPO_AUTH_USERNAME='my_chart_repo_username' \
+SOURCE_REPO_AUTH_PASSWORD='my_chart_repo_password' \
+SOURCE_CONTAINERS_AUTH_REGISTRY='registry.test.io' \
+SOURCE_CONTAINERS_AUTH_USERNAME='my_container_registry_username' \
+SOURCE_CONTAINERS_AUTH_PASSWORD='my_container_registry_password' \
+TARGET_REPO_AUTH_USERNAME='my_target_chart_repo_username' \
+TARGET_REPO_AUTH_PASSWORD='my_target_chart_repo_password' \
+TARGET_CONTAINERS_AUTH_USERNAME='my_target_container_registry_username' \
+TARGET_CONTAINERS_AUTH_PASSWORD='my_target_container_registry_password' \
+kubectl apply -k ./deployment
+```
+The full list of credentials and env variables can be found [here](https://github.com/bitnami-labs/charts-syncer#configuration)
+
+#### b - Updating secrets template
+
+Alternatively, you can modify [deployment/config/secrets.env](/deployment/config/secrets.env) 
 
 ```diff
  # Source repositories credentials
@@ -51,44 +79,15 @@ The generation of the Kubernetes secrete can be achieved two different ways, by 
 +SOURCE_CONTAINERS_AUTH_PASSWORD=my_container_registry_password
 ```
 
-#### b - Providing environment variables at deployment time
-
-You can provide the desired credentials as environment variables to the `kubectl apply -k` command
-
-```bash
-$ SOURCE_REPO_AUTH_USERNAME='my_chart_repo_username' \
-SOURCE_REPO_AUTH_PASSWORD='my_chart_repo_password' \
-SOURCE_CONTAINERS_AUTH_REGISTRY='registry.test.io' \
-SOURCE_CONTAINERS_AUTH_USERNAME='my_container_registry_username' \
-SOURCE_CONTAINERS_AUTH_PASSWORD='my_container_registry_password' \
-TARGET_REPO_AUTH_USERNAME='my_target_chart_repo_username' \
-TARGET_REPO_AUTH_PASSWORD='my_target_chart_repo_password' \
-TARGET_CONTAINERS_AUTH_USERNAME='my_target_container_registry_username' \
-TARGET_CONTAINERS_AUTH_PASSWORD='my_target_container_registry_password' \
-kubectl apply -k ./deployment
-```
-
-### 3 - Deploy the manifests to your Kubernetes cluster
-
-Charts-syncer will be deployed by default to the `charts-syncer` namespace, so the first step is to create it
-
-```bash
-$ kubectl create namespace charts-syncer
-```
-
-Once the modifications are done, you can generate the templates and deploy it in your k8s cluster by executing
+once the file has been changed just execute
 
 ```bash
 $ kubectl apply -k ./deployment
 ```
 
-remember that you can provide credentials overrides as described in te section above i.e
+### Step 4 - Try and debug an initial sync
 
-```bash
-$ TARGET_REPO_AUTH_PASSWORD='my-password' kubectl apply -k ./deployment
-```
-
-The execution of that command will create three kubernetes resources, a cronjob, a secret and a config map
+After completing the previous step, a cronjob, a secret and a config map should have been created.
 
 ```bash
 $ kubectl get secret,configmap,cronjob -n charts-syncer -l app=charts-syncer
@@ -101,8 +100,6 @@ configmap/charts-syncer-config   1      65m
 NAME                          SCHEDULE       SUSPEND   ACTIVE   LAST SCHEDULE   AGE
 cronjob.batch/charts-syncer   */30 * * * *   False     0        23m             65m
 ```
-
-### 4 - Try and debug an initial sync
 
 The cronjob will be scheduled based on the schedule frequency, 30 minutes (by default) from now,
 but it's possible to run a job based on the cronjob template by executing
