@@ -2,7 +2,7 @@
 
 A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-The [deployment/](deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
+The [deployment/](/deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
 
 ### Step 0: Retrieve git repository
 
@@ -20,7 +20,7 @@ You can find a reference example [here](https://github.com/bitnami-labs/charts-s
 
 ### Step 2 (optional): Update deployment options
 
-Edit [deployment/kustomize.yaml](/deployment/kustomize.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
+Edit [deployment/kustomization.yaml](/deployment/kustomization.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
 
 You can also change the frequency of execution of the cron job by editing the schedule property in [deployment/cronjob.yaml](/deployment/cronjob.yaml). By default, it will be run each 30 minutes.
 
@@ -31,7 +31,7 @@ you need to specify the credentials.
 
 The list of available credentials related keys and their meaning can be found [here](https://github.com/bitnami-labs/charts-syncer#configuration)
 
-The generation of the Kubernetes secrete can be achieved two different ways:
+The generation of the Kubernetes secrete can be achieved two different ways, by either
 
 #### a - Updating [deployment/config/secrets.env](/deployment/config/secrets.env)
 
@@ -56,7 +56,7 @@ The generation of the Kubernetes secrete can be achieved two different ways:
 You can provide the desired credentials as environment variables to the `kubectl apply -k` command
 
 ```bash
-SOURCE_REPO_AUTH_USERNAME='my_chart_repo_username' \
+$ SOURCE_REPO_AUTH_USERNAME='my_chart_repo_username' \
 SOURCE_REPO_AUTH_PASSWORD='my_chart_repo_password' \
 SOURCE_CONTAINERS_AUTH_REGISTRY='registry.test.io' \
 SOURCE_CONTAINERS_AUTH_USERNAME='my_container_registry_username' \
@@ -70,7 +70,7 @@ kubectl apply -k ./deployment
 
 ### 3 - Deploy the manifests to your Kubernetes cluster
 
-Charts-syncer will be deployed by default to the `charts-syncer` k8s namespace, so the first step is to create it
+Charts-syncer will be deployed by default to the `charts-syncer` namespace, so the first step is to create it
 
 ```bash
 $ kubectl create namespace charts-syncer
