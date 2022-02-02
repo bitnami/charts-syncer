@@ -12,6 +12,7 @@ images:
 
 resources:
   - cronjob.yaml
+
 configMapGenerator:
   - name: charts-syncer-config
     options:
@@ -29,3 +30,4 @@ secretGenerator:
     # useful if you are loading creds from a GCR/ACR service account p12/json file
     # files:
     #  - target-password=config/my_gcr_creds.json
+  
