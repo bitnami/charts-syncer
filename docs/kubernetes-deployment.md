@@ -2,7 +2,7 @@
 
 A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-### Step 0: Retrieve deployment templates
+### Step 0 - Retrieve deployment templates
 
 The [deployment/](/deployment) directory in this repository contains a set of Kubernetes templates that must be used to complete this guide.
 
@@ -11,12 +11,12 @@ $ git clone https://github.com/bitnami-labs/charts-syncer.git
 $ cd charts-syncer
 ```
 
-### Step 1: Configure charts-syncer
+### Step 1 - Configure charts-syncer
 
 Edit the configuration file from [deployment/config/config.yaml](/deployment/config/config.yaml) and specify your source and target chart repositories. 
 You can find a reference example [here](https://github.com/bitnami-labs/charts-syncer/blob/master/charts-syncer.yaml).
 
-### Step 2 (optional): Update deployment options
+### Step 2 (optional) - Update deployment options
 
 Edit [deployment/kustomization.yaml](/deployment/kustomization.yaml) and replace `images.NewTag` to point to the latest available release version. For example `v0.14.0`
 
