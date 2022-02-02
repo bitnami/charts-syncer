@@ -2,7 +2,7 @@
 
 A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-The [/deployment](/deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
+The [deployment/](deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
 
 ### Step 0: Retrieve git repository
 
@@ -15,14 +15,14 @@ $ cd charts-syncer
 
 ### Step 1: Configure charts-syncer
 
-Edit the configuration file from [/deployment/config/config.yaml](/deployment/config/config.yaml) and specify your source and target chart repositories. 
+Edit the configuration file from [deployment/config/config.yaml](/deployment/config/config.yaml) and specify your source and target chart repositories. 
 You can find a reference example [here](https://github.com/bitnami-labs/charts-syncer/blob/master/charts-syncer.yaml).
 
 ### Step 2 (optional): Update deployment options
 
-Edit [/deployment/kustomize.yaml](/deployment/kustomize.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
+Edit [deployment/kustomize.yaml](/deployment/kustomize.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
 
-You can also change the frequency of execution of the cron job by editing the schedule property in [/deployment/cronjob.yaml](). By default, it will be run each 30 minutes.
+You can also change the frequency of execution of the cron job by editing the schedule property in [deployment/cronjob.yaml](/deployment/cronjob.yaml). By default, it will be run each 30 minutes.
 
 ### Step 3: Configure Helm Chart/Container registries credentials
 
@@ -33,7 +33,7 @@ The list of available credentials related keys and their meaning can be found [h
 
 The generation of the Kubernetes secrete can be achieved two different ways:
 
-#### a - Updating [/deployment/config/secrets.env](/deployment/config/secrets.env)
+#### a - Updating [deployment/config/secrets.env](/deployment/config/secrets.env)
 
 ```diff
  # Source repositories credentials
