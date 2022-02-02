@@ -2,7 +2,7 @@
 
 A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-### Step 0: Retrieve git repository
+### Step 0: Retrieve deployment templates
 
 The [deployment/](/deployment) directory in this repository contains a set of Kubernetes templates that must be used to complete this guide.
 
