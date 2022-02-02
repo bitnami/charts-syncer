@@ -1,10 +1,10 @@
 # Deploying Charts-syncer in Kubernetes
 
-A simple way of having two Helm Chart repositories synced is to run the tool periodically using a Kubernetes CronJob.
+A native way of having two Helm Chart repositories synced is to run charts-syncer periodically using a Kubernetes CronJob.
 
-The `/docs/k8s` folder contains a set of Kubernetes templates that can be used to follow the guide below.
+The [/deployment](/deployment) directory contains a set of Kubernetes templates that can be used to follow the guide below.
 
-## Step 0: Retrieve repository
+### Step 0: Retrieve git repository
 
 First step is to retrieve the repository where the k8s deployment templates are placed
 
@@ -15,14 +15,14 @@ $ cd charts-syncer
 
 ### Step 1: Configure charts-syncer
 
-Edit the configuration file from [/docs/k8s/overlays/config.yaml]() and specify your source and target chart repositories. 
+Edit the configuration file from [/deployment/config/config.yaml](/deployment/config/config.yaml) and specify your source and target chart repositories. 
 You can find a reference example [here](https://github.com/bitnami-labs/charts-syncer/blob/master/charts-syncer.yaml).
 
 ### Step 2 (optional): Update deployment options
 
-Edit [/docs/k8s/kustomize.yaml]() and replace images.NewTag to point to the latest available release version. For example v0.14.0
+Edit [/deployment/kustomize.yaml](/deployment/kustomize.yaml) and replace images.NewTag to point to the latest available release version. For example v0.14.0
 
-You can also change the frequency of execution of the cron job by editing the schedule property in [/docs/k8s/cronjob.yaml](). By default, it will be run each 30 minutes.
+You can also change the frequency of execution of the cron job by editing the schedule property in [/deployment/cronjob.yaml](). By default, it will be run each 30 minutes.
 
 ### Step 3: Configure Helm Chart/Container registries credentials
 
@@ -31,9 +31,9 @@ you need to specify the credentials.
 
 The list of available credentials related keys and their meaning can be found [here](https://github.com/bitnami-labs/charts-syncer#configuration)
 
-For k8s, this can be achieved via two different ways
+The generation of the Kubernetes secrete can be achieved two different ways:
 
-#### a - Updating [/docs/k8s/overlays/secrets.env]()
+#### a - Updating [/deployment/config/secrets.env](/deployment/config/secrets.env)
 
 ```diff
  # Source repositories credentials
@@ -65,7 +65,7 @@ TARGET_REPO_AUTH_USERNAME='my_target_chart_repo_username' \
 TARGET_REPO_AUTH_PASSWORD='my_target_chart_repo_password' \
 TARGET_CONTAINERS_AUTH_USERNAME='my_target_container_registry_username' \
 TARGET_CONTAINERS_AUTH_PASSWORD='my_target_container_registry_password' \
-kubectl apply -k ./docs/k8s
+kubectl apply -k ./deployment
 ```
 
 ### 3 - Deploy the manifests to your Kubernetes cluster
@@ -79,13 +79,13 @@ $ kubectl create namespace charts-syncer
 Once the modifications are done, you can generate the templates and deploy it in your k8s cluster by executing
 
 ```bash
-$ kubectl apply -k ./docs/k8s
+$ kubectl apply -k ./deployment
 ```
 
 remember that you can provide credentials overrides as described in te section above i.e
 
 ```bash
-$ TARGET_REPO_AUTH_PASSWORD='my-password' kubectl apply -k ./docs/k8s
+$ TARGET_REPO_AUTH_PASSWORD='my-password' kubectl apply -k ./deployment
 ```
 
 The execution of that command will create three kubernetes resources, a cronjob, a secret and a config map

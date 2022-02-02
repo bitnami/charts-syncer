@@ -1,0 +1,1 @@
+Refer to [this guide](/docs/kubernetes-deployment.md) for instructions
