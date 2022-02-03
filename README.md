@@ -3,7 +3,7 @@
 
 # charts-syncer
 
-Sync chart packages between chart repositories
+Sync chart packages and associated container images between chart repositories
 
 # Table of Contents
 
@@ -28,7 +28,6 @@ Sync chart packages between chart repositories
     + [README.md](#readmemd)
 - [How to build](#how-to-build)
 - [Deploy to Kubernetes](#deploy-to-kubernetes)
-  * [Manage credentials](#manage-credentials)
 
 ## Usage
 
@@ -452,118 +451,10 @@ index 3fa7d7b..504894e 100755
 
 > In order to obtain these diffs check the [developer docs](docs/development.md).
 
+## Deploy to Kubernetes
+
+Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob that will keep two Helm Chart repositories synced.
+
 ## How to build
 
 > Check the [developer docs](docs/development.md).
-
-## Deploy to Kubernetes
-
-A simple way of having both chart repositories synced is to run the tool periodically using a Kubernetes CronJob.
-
-In order to ease and accelerate the deployment, basic Kubernetes templates have been added to the `/deployment` folder. Follow the next steps to use them:
-
-1. Edit `deployment/cronjob.yaml` and replace the `TAG` placeholder by a valid tag. For example, `v0.6.2`
-
-1. Edit the frequency of execution by editing the `schedule` property. By default, it will be run each 30 minutes.
-
-1. Edit the configuration file from `deployment/configmap.yaml` and specify your source and target chart repositories.
-
-1. (optional) Configure credentials. If any of your source or target chart repository is using basic authentication you need to specify the credentials. See [Manage credentials](#manage-credentials) section to check current options.
-
-1. Deploy the manifests to your Kubernetes cluster.
-
-    ~~~bash
-    $ kubectl create -f deployment/
-    ~~~
-
-### Manage credentials
-
-The recommended way to specify credentials is using environment variables in the CronJob manifest.
-
-Example credentials for only Helm Chart repositories
-~~~yaml
-  - name: charts-syncer
-    image: IMAGE_NAME:TAG
-    env:
-      - name: SOURCE_REPO_AUTH_USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: source-username
-      - name: SOURCE_REPO_AUTH_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: source-password
-      - name: TARGET_REPO_AUTH_USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: target-username
-      - name: TARGET_REPO_AUTH_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: target-password
-~~~
-
-Example credentials for both Helm Chart repositories and container registries
-~~~yaml
-  - name: charts-syncer
-    image: IMAGE_NAME:TAG
-    env:
-      # Helm Chart repositories credentials
-      - name: SOURCE_REPO_AUTH_USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: source-username
-      - name: SOURCE_REPO_AUTH_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: source-password
-      - name: TARGET_REPO_AUTH_USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: target-username
-      - name: TARGET_REPO_AUTH_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: target-password
-      - name: SOURCE_REPO_AUTH_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: charts-syncer-credentials
-              key: source-username
-
-      # Container images registry credentials
-      - name: SOURCE_CONTAINERS_AUTH_REGISTRY
-        valueFrom:
-          secretKeyRef:
-            name: charts-syncer-credentials
-            key: source-containerauth-registry
-      - name: SOURCE_CONTAINERS_AUTH_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: charts-syncer-credentials
-              key: source-containerauth-username
-      - name: SOURCE_CONTAINERS_AUTH_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: charts-syncer-credentials
-              key: source-containerauth-password
-      - name: TARGET_CONTAINERS_AUTH_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: charts-syncer-credentials
-              key: target-containerauth-username
-      - name: TARGET_CONTAINERS_AUTH_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: charts-syncer-credentials
-              key: target-containerauth-password
-~~~
-The above environment variables are retrieved from a secret called `charts-syncer-credentials` that can be created however you prefer, either manually, using sealed-secrets, vault, or any other secrets management solution for Kubernetes.
