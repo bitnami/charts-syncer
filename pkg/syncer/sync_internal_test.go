@@ -171,7 +171,7 @@ func TestRelok8sMoveReq(t *testing.T) {
 					Path: "/tmp/source-dir",
 				},
 			},
-			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "sreg", Username: "suser", Password: "spass"}},
+			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "sreg", Username: "suser", Password: "spass"}},
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
@@ -184,7 +184,7 @@ func TestRelok8sMoveReq(t *testing.T) {
 					Path: "/tmp/target-dir",
 				},
 			},
-			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "treg", Username: "tuser", Password: "tpass"}},
+			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "treg", Username: "tuser", Password: "tpass"}},
 		},
 	}
 	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers",
@@ -203,7 +203,7 @@ func TestRelok8sBundleSaveReq(t *testing.T) {
 					Path: "/tmp/source-dir",
 				},
 			},
-			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "reg", Username: "user", Password: "pass"}},
+			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "reg", Username: "user", Password: "pass"}},
 		},
 		Target: mover.Target{
 			Chart: mover.ChartSpec{
@@ -239,7 +239,7 @@ func TestRelok8sBundleLoadReq(t *testing.T) {
 					Path: "/tmp/target-dir",
 				},
 			},
-			Containers: mover.Containers{ContainerRepository: mover.ContainerRepository{Server: "reg", Username: "user", Password: "pass"}},
+			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "reg", Username: "user", Password: "pass"}},
 		},
 	}
 	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", &api.Containers_ContainerAuth{Username: "user", Password: "pass", Registry: "reg"})
