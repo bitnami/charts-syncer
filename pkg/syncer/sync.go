@@ -215,7 +215,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 					Path: sourcePath,
 				},
 			},
-			Containers: chartsSyncerToRelok8sAuth(sourceAuth),
+			ContainersAuth: chartsSyncerToRelok8sAuth(sourceAuth),
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
@@ -228,7 +228,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 					Path: targetPath,
 				},
 			},
-			Containers: chartsSyncerToRelok8sAuth(targetAuth),
+			ContainersAuth: chartsSyncerToRelok8sAuth(targetAuth),
 		},
 	}
 
@@ -243,7 +243,7 @@ func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *ap
 					Path: sourcePath,
 				},
 			},
-			Containers: chartsSyncerToRelok8sAuth(containerSourceAuth),
+			ContainersAuth: chartsSyncerToRelok8sAuth(containerSourceAuth),
 		},
 		Target: mover.Target{
 			Chart: mover.ChartSpec{
@@ -276,21 +276,21 @@ func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRe
 					Path: targetPath,
 				},
 			},
-			Containers: chartsSyncerToRelok8sAuth(containerTargetAuth),
+			ContainersAuth: chartsSyncerToRelok8sAuth(containerTargetAuth),
 		},
 	}
 	return req
 }
 
-// Translates charts syncer authentication settings into relok8s configuration
-func chartsSyncerToRelok8sAuth(containerAuth *api.Containers_ContainerAuth) (relok8sAuth mover.Containers) {
-	if containerAuth != nil {
-		relok8sAuth = mover.Containers{
-			ContainerRepository: mover.ContainerRepository{
-				Username: containerAuth.Username, Password: containerAuth.Password, Server: containerAuth.Registry,
-			},
-		}
+// Translates charts syncer authentication settings into relok8s authentication
+func chartsSyncerToRelok8sAuth(containerAuth *api.Containers_ContainerAuth) (relok8sAuth *mover.ContainersAuth) {
+	if containerAuth == nil {
+		return nil
 	}
 
-	return
+	return &mover.ContainersAuth{
+		Credentials: &mover.OCICredentials{
+			Username: containerAuth.Username, Password: containerAuth.Password, Server: containerAuth.Registry,
+		},
+	}
 }
