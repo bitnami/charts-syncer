@@ -36,16 +36,18 @@ Create a config file like the following and save it to `config-save-bundles.yaml
 ```yaml
 source:
   repo:
-#   auth:    # Include auth if credentials for the registry are required.  Alternatively you can use environmental variables
-#     username: [USERNAME]
-#     password: [PASSWORD]  
     kind: HELM # or as any other supported Helm Chart repository kinds
     url: https://charts.trials.tac.bitnami.com/demo
-# containers:
-#   auth:
-#    registry: [URL]  # Do not include "https://" or trailing project and directory.  Eg. only include domain --> registry.pivotal.io
-#    username: [USERNAME]
-#    password: [PASSWORD]    
+    ## Helm repository credentials. Alternatively you can use environmental variables
+    # auth:
+    #   username: [USERNAME]
+    #   password: [PASSWORD]  
+  ## Container registry authentication
+  # containers:
+  #   auth:
+  #     registry: [URL] # i.e my.harbor.io
+  #     username: [USERNAME]
+  #     password: [PASSWORD]    
 target:
   # The important bit. This instructs charts-syncer to store intermediate bundles in the given directory
   intermediateBundlesPath: /tmp/chart-bundles-dir
@@ -85,9 +87,15 @@ target:
   repo:
     kind: OCI # or as any other supported Helm Chart repository kinds
     url: https://my.harbor.io/my-project/subpath
- #  auth:
- #    username: [USERNAME]
- #    password: [PASSWORD]
+    # auth:
+    #   username: [USERNAME]
+    #   password: [PASSWORD]
+  ## Container registry authentication
+  # containers:
+  #   auth: 
+  #     registry: [URL] # i.e my.harbor.io
+  #     username: [USERNAME]
+  #     password: [PASSWORD]   
 ```
 
 Execute charts-syncer as usual:
