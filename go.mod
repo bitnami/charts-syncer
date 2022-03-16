@@ -9,7 +9,7 @@ replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/bitnami-labs/pbjson v1.1.0
-	github.com/containerd/containerd v1.5.9
+	github.com/containerd/containerd v1.6.1
 	github.com/distribution/distribution/v3 v3.0.0-20210804104954-38ab4c606ee3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
