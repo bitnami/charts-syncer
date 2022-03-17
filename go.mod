@@ -10,7 +10,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/containerd/containerd v1.6.1
-	github.com/distribution/distribution/v3 v3.0.0-20210804104954-38ab4c606ee3
+	github.com/distribution/distribution/v3 v3.0.0-20211118083504-a29a3c99a684
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-containerregistry v0.7.0
@@ -21,13 +21,13 @@ require (
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.2.1
-	github.com/spf13/viper v1.8.1
+	github.com/spf13/cobra v1.3.0
+	github.com/spf13/viper v1.10.0
 	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.5.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
-	helm.sh/helm/v3 v3.7.0
+	helm.sh/helm/v3 v3.8.1
 	k8s.io/klog v1.0.0
-	oras.land/oras-go v0.4.0
-	sigs.k8s.io/yaml v1.2.0
+	oras.land/oras-go v1.1.0
+	sigs.k8s.io/yaml v1.3.0
 )
