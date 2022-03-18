@@ -1,6 +1,6 @@
 module github.com/bitnami-labs/charts-syncer
 
-go 1.16
+go 1.17
 
 // Needed so we can require asset-relocation-tool-for-kubernetes packages
 // https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/89
