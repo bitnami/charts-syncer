@@ -7,12 +7,11 @@ import (
 	"net/url"
 	"os"
 
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-
 	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 	"oras.land/oras-go/pkg/content"
