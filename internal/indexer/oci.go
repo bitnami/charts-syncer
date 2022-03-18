@@ -174,18 +174,18 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 			}
 		}),
 	}
-	// Fallback to the default index filename if the layers don't specify it
-	if indexFilename == "" {
-		klog.Infof("Unable to find index filename: using default")
-		indexFilename = defaultIndexFilename
-	}
-
 	_, err := oras.Copy(ctx, ind.resolver, ind.reference, store, ind.reference, opts...)
 	if err != nil {
 		if containerderrs.IsNotFound(err) {
 			return "", errors.Wrap(ErrNotFound, err.Error())
 		}
 		return "", err
+	}
+
+	// Fallback to the default index filename if the layers don't specify it
+	if indexFilename == "" {
+		klog.Infof("Unable to find index filename: using default")
+		indexFilename = defaultIndexFilename
 	}
 
 	return store.ResolvePath(indexFilename), nil
