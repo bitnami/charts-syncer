@@ -339,13 +339,13 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	resolver := r.dockerResolver
 
 	// Preparing layers
-	//fileName := filepath.Base(file)
+	fileName := filepath.Base(file)
 	fileMediaType := HelmChartContentLayerMediaType
 	fileBuffer, err := ioutil.ReadFile(file)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	blobDesc, err := memoryStore.Add("", fileMediaType, fileBuffer)
+	blobDesc, err := memoryStore.Add(fileName, fileMediaType, fileBuffer)
 	if err != nil {
 		return errors.Trace(err)
 	}
