@@ -23,7 +23,6 @@ import (
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/distribution/distribution/v3/configuration"
 	"github.com/distribution/distribution/v3/registry"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
 )
@@ -63,11 +62,22 @@ func PushFileToOCI(t *testing.T, filepath string, ref string) {
 	}
 	filename := path.Base(filepath)
 	customMediaType := "my.custom.media.type"
-	memoryStore := content.NewMemoryStore()
-	desc := memoryStore.Add(filename, customMediaType, fileContent)
-	pushContents := []ocispec.Descriptor{desc}
-	desc, err = oras.Push(ctx, resolver, ref, memoryStore, pushContents)
+	memoryStore := content.NewMemory()
+
+	blobDesc, err := memoryStore.Add(filename, customMediaType, fileContent)
 	if err != nil {
+		t.Fatal(err)
+	}
+	manifest, manifestDesc, config, configDesc, err := content.GenerateManifestAndConfig(nil, nil, blobDesc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	memoryStore.Set(configDesc, config)
+	if err := memoryStore.StoreManifest(ref, manifestDesc, manifest); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := oras.Copy(ctx, memoryStore, ref, resolver, ref, oras.WithNameValidation(nil)); err != nil {
 		t.Fatal(err)
 	}
 }

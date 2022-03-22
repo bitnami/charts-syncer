@@ -335,31 +335,47 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 		return errors.Trace(err)
 	}
 
-	memoryStore := content.NewMemoryStore()
+	memoryStore := content.NewMemory()
 	resolver := r.dockerResolver
 
 	// Preparing layers
-	var layers []ocispec.Descriptor
 	fileName := filepath.Base(file)
 	fileMediaType := HelmChartContentLayerMediaType
 	fileBuffer, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
-	layers = append(layers, memoryStore.Add(fileName, fileMediaType, fileBuffer))
+	blobDesc, err := memoryStore.Add(fileName, fileMediaType, fileBuffer)
+	if err != nil {
+		return errors.Trace(err)
+	}
 
 	// Preparing Oras config
 	configBytes, err := json.Marshal(metadata)
 	if err != nil {
 		return err
 	}
-	orasConfig := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
+	configDesc, err := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	manifest, manifestDesc, err := content.GenerateManifest(&configDesc, nil, blobDesc)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
+	if err := memoryStore.StoreManifest(chartRef, manifestDesc, manifest); err != nil {
+		return errors.Trace(err)
+	}
 
 	// Perform push
-	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
-	_, err = oras.Push(orascontext.Background(), resolver, chartRef, memoryStore, layers, oras.WithConfig(orasConfig), oras.WithNameValidation(nil))
-	if err != nil {
-		return err
+	copyOpts := []oras.CopyOpt{
+		oras.WithAllowedMediaType(HelmChartConfigMediaType, HelmChartContentLayerMediaType),
+		oras.WithNameValidation(nil),
+	}
+	if _, err := oras.Copy(orascontext.Background(), memoryStore, chartRef, resolver, chartRef, copyOpts...); err != nil {
+		return errors.Trace(err)
 	}
 	return nil
 }
