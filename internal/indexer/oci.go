@@ -11,6 +11,7 @@ import (
 	"github.com/bitnami-labs/pbjson"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 	"oras.land/oras-go/pkg/content"
@@ -142,7 +143,7 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 
 func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f string, e error) {
 	// Pull index files from remote
-	store := content.NewFileStore(rootPath)
+	store := content.NewFile(rootPath)
 	defer func() {
 		err := store.Close()
 		// This library is buggy, and we need to check the error string too
@@ -158,12 +159,22 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexLayerMediaType, "layer-")
 	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexConfigMediaType, "config-")
 
-	opts := []oras.PullOpt{
+	// Infer index filename from layer annotations
+	var indexFilename string
+	opts := []oras.CopyOpt{
 		oras.WithAllowedMediaType(chartsIndexLayerMediaType, chartsIndexConfigMediaType),
 		// The index artifact has no title
 		oras.WithPullEmptyNameAllowed(),
+		oras.WithLayerDescriptors(func(layers []ocispec.Descriptor) {
+			for _, layer := range layers {
+				switch layer.MediaType {
+				case chartsIndexLayerMediaType:
+					indexFilename = layer.Annotations["org.opencontainers.image.title"]
+				}
+			}
+		}),
 	}
-	_, layers, err := oras.Pull(ctx, ind.resolver, ind.reference, store, opts...)
+	_, err := oras.Copy(ctx, ind.resolver, ind.reference, store, ind.reference, opts...)
 	if err != nil {
 		if containerderrs.IsNotFound(err) {
 			return "", errors.Wrap(ErrNotFound, err.Error())
@@ -171,15 +182,6 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 		return "", err
 	}
 
-	// Infer index filename from layer annotations
-	var indexFilename string
-	for _, layer := range layers {
-		//nolint:gocritic
-		switch layer.MediaType {
-		case chartsIndexLayerMediaType:
-			indexFilename = layer.Annotations["org.opencontainers.image.title"]
-		}
-	}
 	// Fallback to the default index filename if the layers don't specify it
 	if indexFilename == "" {
 		klog.Infof("Unable to find index filename: using default")
