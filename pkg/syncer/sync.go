@@ -139,9 +139,11 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 	}
 
 	chartPath := path.Join(workdir, ch.Name)
-	if err := chart.ChangeReferences(chartPath, ch.Name, ch.Version, s.source, s.target); err != nil {
-		klog.Errorf("unable to process %q chart: %+v", id, err)
-		return "", errors.Trace(err)
+	if !s.skipValues {
+		if err := chart.ChangeReferences(chartPath, ch.Name, ch.Version, s.source, s.target); err != nil {
+			klog.Errorf("unable to process %q chart: %+v", id, err)
+			return "", errors.Trace(err)
+	}
 
 	}
 

@@ -15,6 +15,7 @@ var (
 	syncFromDate          string
 	syncWorkdir           string
 	syncSkipDependencies  bool
+	syncSkipValues        bool
 	syncLatestVersionOnly bool
 )
 
@@ -88,6 +89,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithInsecure(rootInsecure),
 				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
 				syncer.WithSkipDependencies(syncSkipDependencies),
+				syncer.WithSkipValues(syncSkipValues),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),
 			}
@@ -103,6 +105,7 @@ func newSyncCmd() *cobra.Command {
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
 	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
+	cmd.Flags().BoolVar(&syncSkipValues, "skip-values", false, "Skip rewriting values.yaml")
 	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
 
 	return cmd

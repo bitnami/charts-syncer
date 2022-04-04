@@ -31,6 +31,7 @@ type Syncer struct {
 	insecure                bool
 	relocateContainerImages bool
 	skipDependencies        bool
+	skipValues              bool
 	latestVersionOnly       bool
 	// list of charts to skip
 	skipCharts []string
@@ -95,6 +96,13 @@ func WithContainerImageRelocation(enable bool) Option {
 func WithSkipDependencies(skipDependencies bool) Option {
 	return func(s *Syncer) {
 		s.skipDependencies = skipDependencies
+	}
+}
+
+// WithSkipValues configures the syncer to skip rewriting the values yaml
+func WithSkipValues(skipValues bool) Option {
+	return func(s *Syncer) {
+		s.skipValues = skipValues
 	}
 }
 
