@@ -1,6 +1,5 @@
 [![CircleCI](https://circleci.com/gh/bitnami-labs/charts-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami-labs/charts-syncer/tree/master)
 
-
 # charts-syncer
 
 Sync chart packages and associated container images between chart repositories
