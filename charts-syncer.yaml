@@ -25,8 +25,10 @@ target:
   # repoName is used to modify the README of the chart. Default value: `myrepo`
   repoName: myrepo
   # containerRegistry is used to update the image registry section of the values.yaml file
+  # NOTE: If containerRegistry is not set (or not present), the registry sections won't be updated
   containerRegistry: demo.registry.io
   # containerRepository is used to update the image repository section of the values.yaml file
+  # NOTE: If containerRepository is not set (or not present), the repository sections won't be updated
   containerRepository: tpizarro/demo
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
