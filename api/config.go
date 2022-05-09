@@ -21,12 +21,6 @@ func (c *Config) Validate() error {
 			}
 		case Kind_LOCAL:
 		}
-		// if c.GetTarget().GetContainerRegistry() == "" {
-		// 	return errors.Errorf(`"target.containerRegistry" cannot be empty`)
-		// }
-		// if c.GetTarget().GetContainerRepository() == "" {
-		// 	return errors.Errorf(`"target.containerRepository" cannot be empty`)
-		// }
 	}
 
 	// Authentication

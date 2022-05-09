@@ -284,7 +284,7 @@ The parent section name does not matter. In the previous example, instead of `im
 
 The important thing is that the image name is specified with `registry`, `repository` and `tag`.
 
-The values of the parameteres `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. The `tag` remains unchanged.
+The values of the parameters `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. If these parameters are unset, the associated properties won't be modified. The `tag` property remains unchanged.
 
 > :warning: Be aware that this tool expects the images to be already present in the target container registry.
 
