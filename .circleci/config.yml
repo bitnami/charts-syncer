@@ -60,9 +60,9 @@ jobs:
     machine:
       image: ubuntu-2004:202201-02
     environment:
-      KIND_VERSION: "0.8.1"
-      KUBECTL_VERSION: "1.18.0"
-      HELM_VERSION: "3.2.3"
+      KIND_VERSION: "0.12.0"
+      KUBECTL_VERSION: "1.22.0"
+      HELM_VERSION: "3.8.1"
       DEBUG_MODE: "true"
     steps:
       - checkout
