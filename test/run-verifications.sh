@@ -7,7 +7,7 @@ set -o pipefail
 # Constants
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 FAILED_TEST=0
-EXPECTED_REGISTRY='gcr.io/bitnami-containers'
+EXPECTED_REGISTRY='docker.io/bitnami'
 
 ## Check that Ghost deployment is using the expected registry
 ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].spec.containers[0].image}')

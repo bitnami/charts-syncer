@@ -22,8 +22,8 @@ target:
   #
   # NOTE: This does not reallocate container artifacts, actually, but their
   #       references in the chart.
-  containerRegistry: gcr.io
-  containerRepository: bitnami-containers
+  containerRegistry: docker.io
+  containerRepository: bitnami
   repo:
     kind: LOCAL
     path: ./local-repo
