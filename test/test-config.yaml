@@ -6,8 +6,8 @@ source:
     kind: "HELM"
     url: "https://charts.bitnami.com/bitnami"
 target:
-  containerRegistry: "gcr.io"
-  containerRepository: "bitnami-containers"
+  containerRegistry: "docker.io"
+  containerRepository: "bitnami"
   repo:
     kind: "CHARTMUSEUM"
     url: "http://127.0.0.1:8080"
