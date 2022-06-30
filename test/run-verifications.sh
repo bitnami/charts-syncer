@@ -18,12 +18,12 @@ else
     FAILED_TEST=1
 fi
 
-## Check that Mariadb deployment is using the expected registry
-mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mariadb-0 -ojsonpath='{.items[0].spec.containers[0].image}')
-if [[ "${mariadbImage}" =~ "${EXPECTED_REGISTRY}" ]]; then
-    echo "[PASS] MariaDB is using the expected registry: ${EXPECTED_REGISTRY}"
+## Check that MySQL deployment is using the expected registry
+mysqlImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mysql-0 -ojsonpath='{.items[0].spec.containers[0].image}')
+if [[ "${mysqlImage}" =~ "${EXPECTED_REGISTRY}" ]]; then
+    echo "[PASS] MySQL is using the expected registry: ${EXPECTED_REGISTRY}"
 else
-    echo "[FAILED] MariaDB is not using the expected registry. Got: \"${mariadbImage}\", expected: \"${EXPECTED_REGISTRY}\""
+    echo "[FAILED] MySQL is not using the expected registry. Got: \"${mysqlImage}\", expected: \"${EXPECTED_REGISTRY}\""
     FAILED_TEST=1
 fi
 
