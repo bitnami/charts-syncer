@@ -2,7 +2,6 @@ package harbor
 
 import (
 	"bytes"
-	"crypto/tls"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -111,12 +110,9 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 
 	reqID := utils.EncodeSha1(u + file)
 	klog.V(4).Infof("[%s] POST %q", reqID, u)
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureHttpClient
 	}
 	res, err := client.Do(req)
 	if err != nil {

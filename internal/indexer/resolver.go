@@ -1,8 +1,7 @@
 package indexer
 
 import (
-	"crypto/tls"
-	"net/http"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"net/url"
 
 	"github.com/containerd/containerd/remotes"
@@ -10,13 +9,9 @@ import (
 )
 
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if insecure {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		}
+		client = utils.InsecureHttpClient
 	}
 	opts := docker.ResolverOptions{
 		Hosts: func(s string) ([]docker.RegistryHost, error) {

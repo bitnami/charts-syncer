@@ -2,7 +2,6 @@ package oci
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -119,12 +118,9 @@ func (r *Repo) getTagManifest(name, version string) (*ocispec.Manifest, error) {
 	if r.username != "" && r.password != "" {
 		req.SetBasicAuth(r.username, r.password)
 	}
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureHttpClient
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -183,12 +179,9 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	if r.username != "" && r.password != "" {
 		req.SetBasicAuth(r.username, r.password)
 	}
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureHttpClient
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -264,12 +257,9 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 
 	reqID := utils.EncodeSha1(u + remoteFilename)
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureHttpClient
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -471,13 +461,9 @@ func populateEntries(repo *api.Repo) (map[string][]string, error) {
 }
 
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if insecure {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		}
+		client = utils.InsecureHttpClient
 	}
 	opts := docker.ResolverOptions{
 		Hosts: func(s string) ([]docker.RegistryHost, error) {
