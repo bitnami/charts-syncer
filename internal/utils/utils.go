@@ -28,9 +28,9 @@ const (
 
 var (
 	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
-	UnixEpoch          = time.Unix(0, 0)
-	DefaultClient      = &http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}
-	InsecureHttpClient = &http.Client{Transport: &http.Transport{
+	UnixEpoch      = time.Unix(0, 0)
+	DefaultClient  = &http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}
+	InsecureClient = &http.Client{Transport: &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}

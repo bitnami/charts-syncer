@@ -11,7 +11,7 @@ import (
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
 	client := utils.DefaultClient
 	if insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	opts := docker.ResolverOptions{
 		Hosts: func(s string) ([]docker.RegistryHost, error) {

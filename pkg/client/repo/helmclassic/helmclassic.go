@@ -47,7 +47,7 @@ var reloadIndex = func(r *Repo) error {
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -176,7 +176,7 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {

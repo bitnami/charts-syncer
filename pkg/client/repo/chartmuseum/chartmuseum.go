@@ -113,7 +113,7 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 	klog.V(4).Infof("[%s] POST %q", reqID, u)
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {

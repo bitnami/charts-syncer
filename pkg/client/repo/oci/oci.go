@@ -120,7 +120,7 @@ func (r *Repo) getTagManifest(name, version string) (*ocispec.Manifest, error) {
 	}
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -181,7 +181,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	}
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -259,7 +259,7 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
 	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -463,7 +463,7 @@ func populateEntries(repo *api.Repo) (map[string][]string, error) {
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
 	client := utils.DefaultClient
 	if insecure {
-		client = utils.InsecureHttpClient
+		client = utils.InsecureClient
 	}
 	opts := docker.ResolverOptions{
 		Hosts: func(s string) ([]docker.RegistryHost, error) {
