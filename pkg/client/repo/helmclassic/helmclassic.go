@@ -1,7 +1,6 @@
 package helmclassic
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -46,12 +45,9 @@ var reloadIndex = func(r *Repo) error {
 
 	reqID := utils.EncodeSha1(u + "index.yaml")
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -178,12 +174,9 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 
 	reqID := utils.EncodeSha1(u + remoteFilename)
 	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := http.DefaultClient
+	client := utils.DefaultClient
 	if r.insecure {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client = &http.Client{Transport: tr}
+		client = utils.InsecureClient
 	}
 	res, err := client.Do(req)
 	if err != nil {

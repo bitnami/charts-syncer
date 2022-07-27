@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/sha1"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -27,7 +28,12 @@ const (
 
 var (
 	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
-	UnixEpoch = time.Unix(0, 0)
+	UnixEpoch      = time.Unix(0, 0)
+	DefaultClient  = &http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}
+	InsecureClient = &http.Client{Transport: &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+	}
 )
 
 // LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
@@ -72,7 +78,7 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	downloadURL := repo.GetUrl() + "/index.yaml"
 
 	// Get the data
-	client := &http.Client{}
+	client := DefaultClient
 	req, err := http.NewRequest("GET", downloadURL, nil)
 	if err != nil {
 		return "", errors.Trace(err)
