@@ -3,18 +3,17 @@ package repo
 import (
 	"io/ioutil"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client"
+	"github.com/juju/errors"
 
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache/cachedisk"
+	"github.com/bitnami-labs/charts-syncer/pkg/client"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/chartmuseum"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/local"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
-
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/juju/errors"
 )
 
 // NewClient returns a Client object
@@ -34,7 +33,7 @@ func NewClient(repo *api.Repo, opts ...types.Option) (client.ChartsReaderWriter,
 		}
 		cacheDir = dir
 	}
-	c, err := cache.New(cacheDir, repo.GetUrl())
+	c, err := cachedisk.New(cacheDir, repo.GetUrl())
 	if err != nil {
 		return nil, errors.Annotatef(err, "allocating cache")
 	}

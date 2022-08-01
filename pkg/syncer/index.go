@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-
-	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"github.com/philopon/go-toposort"
 	"k8s.io/klog"
+
+	"github.com/bitnami-labs/charts-syncer/internal/chart"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // Chart describes a chart, including dependencies
@@ -117,12 +117,14 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			// The last element of the array is the latest version
 			version := vs[len(vs)-1].String()
 			if err := s.processVersion(name, version, publishingThreshold); err != nil {
+				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
 			}
 		} else {
 			for _, version := range versions {
 				if err := s.processVersion(name, version, publishingThreshold); err != nil {
+					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
 					errs = multierror.Append(errs, errors.Trace(err))
 					continue
 				}

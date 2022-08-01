@@ -1,7 +1,6 @@
 package helmclassic
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"os"
 
 	"github.com/juju/errors"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
@@ -16,7 +16,6 @@ import (
 	"github.com/bitnami-labs/charts-syncer/internal/cache"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"helm.sh/helm/v3/pkg/chart"
 )
 
 // Repo allows to operate a chart repository.
@@ -154,51 +153,18 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	remoteFilename := fmt.Sprintf("%s-%s.tgz", name, version)
-	if r.cache.Has(remoteFilename) {
-		return r.cache.Path(remoteFilename), nil
+	fetchOpts := []utils.FetchOption{
+		utils.WithFetchUsername(r.username),
+		utils.WithFetchPassword(r.password),
+		utils.WithFetchInsecure(r.insecure),
+		utils.WithFetchURLBuilder(r.GetDownloadURL),
 	}
-
-	u, err := r.GetDownloadURL(name, version)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
-	}
-
-	reqID := utils.EncodeSha1(u + remoteFilename)
-	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := utils.DefaultClient
-	if r.insecure {
-		client = utils.InsecureClient
-	}
-	res, err := client.Do(req)
+	chartPath, err := utils.FetchAndCache(name, version, r.cache, fetchOpts...)
 	if err != nil {
 		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)
 	}
-	defer res.Body.Close()
 
-	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
-		bodyStr := utils.HTTPResponseBody(res)
-		return "", errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
-	}
-	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
-
-	w, err := r.cache.Writer(remoteFilename)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	defer w.Close()
-	if _, err := io.Copy(w, res.Body); err != nil {
-		return "", errors.Trace(err)
-	}
-	return r.cache.Path(remoteFilename), nil
+	return chartPath, nil
 }
 
 // Has checks if a repo has a specific chart

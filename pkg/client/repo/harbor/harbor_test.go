@@ -13,13 +13,14 @@ import (
 	"strings"
 	"testing"
 
+	"helm.sh/helm/v3/pkg/time"
+
 	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami-labs/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/harbor"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"helm.sh/helm/v3/pkg/time"
 )
 
 var (
@@ -66,7 +67,7 @@ func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cache, err := cache.New(cacheDir, harborRepo.GetUrl())
+	cache, err := cachedisk.New(cacheDir, harborRepo.GetUrl())
 	if err != nil {
 		t.Fatal(err)
 	}
