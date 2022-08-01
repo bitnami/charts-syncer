@@ -117,14 +117,14 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			// The last element of the array is the latest version
 			version := vs[len(vs)-1].String()
 			if err := s.processVersion(name, version, publishingThreshold); err != nil {
-				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.")
+				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
 			}
 		} else {
 			for _, version := range versions {
 				if err := s.processVersion(name, version, publishingThreshold); err != nil {
-					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.")
+					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
 					errs = multierror.Append(errs, errors.Trace(err))
 					continue
 				}
