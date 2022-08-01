@@ -16,10 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/juju/errors"
+	"github.com/mkmik/multierror"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
 )
 
 const (
@@ -314,4 +317,131 @@ func GetListenAddress() (string, error) {
 	defer lst.Close()
 
 	return lst.Addr().String(), nil
+}
+
+type statusHandler func(res *http.Response) error
+type urlBuilder func(name, version string) (string, error)
+
+type fetchOptions struct {
+	user            string
+	pass            string
+	insecure        bool
+	statusHandlerFn statusHandler
+	urlBuilderFn    urlBuilder
+}
+
+type FetchOption func(opts *fetchOptions)
+
+// WithFetchUsername configures a username for fetch operations
+func WithFetchUsername(user string) FetchOption {
+	return func(opts *fetchOptions) {
+		opts.user = user
+	}
+}
+
+// WithFetchPassword configures a password for fetch operations
+func WithFetchPassword(pass string) FetchOption {
+	return func(opts *fetchOptions) {
+		opts.pass = pass
+	}
+}
+
+// WithFetchInsecure enables insecure connection for fetch operations
+func WithFetchInsecure(insecure bool) FetchOption {
+	return func(opts *fetchOptions) {
+		opts.insecure = insecure
+	}
+}
+
+// WithFetchStatusHandler configures a status handler for fetch operations
+func WithFetchStatusHandler(h statusHandler) FetchOption {
+	return func(opts *fetchOptions) {
+		opts.statusHandlerFn = h
+	}
+}
+
+// WithFetchURLBuilder configures a URL builder for fetch operations
+func WithFetchURLBuilder(h urlBuilder) FetchOption {
+	return func(opts *fetchOptions) {
+		opts.urlBuilderFn = h
+	}
+}
+
+var defaultStatusHandler = func(res *http.Response) error {
+	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
+		bodyStr := HTTPResponseBody(res)
+		return errors.Errorf("got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+	}
+	return nil
+}
+
+// FetchAndCache fetches a chart and stores it in provided cache
+func FetchAndCache(name, version string, cache cache.Cacher, fopts ...FetchOption) (string, error) {
+	id := fmt.Sprintf("%s-%s.tgz", name, version)
+	if cache.Has(id) {
+		return cache.Path(id), nil
+	}
+
+	opts := fetchOptions{statusHandlerFn: defaultStatusHandler}
+	for _, opt := range fopts {
+		opt(&opts)
+	}
+
+	if opts.urlBuilderFn == nil {
+		return "", fmt.Errorf("requires a download URL builder")
+	}
+
+	u, err := opts.urlBuilderFn(name, version)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	if opts.user != "" && opts.pass != "" {
+		req.SetBasicAuth(opts.user, opts.pass)
+	}
+
+	reqID := EncodeSha1(u + id)
+	klog.V(4).Infof("[%s] GET %q", reqID, u)
+
+	client := DefaultClient
+	if opts.insecure {
+		client = InsecureClient
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
+	if opts.statusHandlerFn != nil {
+		if err := opts.statusHandlerFn(res); err != nil {
+			return "", errors.Trace(err)
+		}
+	}
+
+	w, err := cache.Writer(id)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	if _, err := io.Copy(w, res.Body); err != nil {
+		// Invalidate the cache
+		return "", errors.Trace(multierror.Append(err, cache.Invalidate(id)))
+	}
+
+	if err := w.Close(); err != nil {
+		// Invalidate the cache
+		return "", errors.Trace(multierror.Append(err, cache.Invalidate(id)))
+	}
+	if err := res.Body.Close(); err != nil {
+		return "", errors.Trace(err)
+	}
+
+	return cache.Path(id), nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,11 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/indexer"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -31,6 +25,12 @@ import (
 	"oras.land/oras-go/pkg/content"
 	orascontext "oras.land/oras-go/pkg/context"
 	"oras.land/oras-go/pkg/oras"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami-labs/charts-syncer/internal/indexer"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 )
 
 const (
@@ -238,57 +238,32 @@ func (r *Repo) GetDownloadURL(name string, version string) (string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	remoteFilename := fmt.Sprintf("%s-%s.tgz", name, version)
-	if r.cache.Has(remoteFilename) {
-		return r.cache.Path(remoteFilename), nil
+	statusHandlerFn := func(res *http.Response) error {
+		status := res.StatusCode
+		// Valid response codes from OCI registries are listed here:
+		// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
+		switch status {
+		case http.StatusOK:
+			return nil
+		default:
+			bodyStr := utils.HTTPResponseBody(res)
+			return errors.Errorf("got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+		}
 	}
 
-	u, err := r.GetDownloadURL(name, version)
-	if err != nil {
-		return "", errors.Trace(err)
+	fetchOpts := []utils.FetchOption{
+		utils.WithFetchUsername(r.username),
+		utils.WithFetchPassword(r.password),
+		utils.WithFetchInsecure(r.insecure),
+		utils.WithFetchStatusHandler(statusHandlerFn),
+		utils.WithFetchURLBuilder(r.GetDownloadURL),
 	}
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
-	}
-
-	reqID := utils.EncodeSha1(u + remoteFilename)
-	klog.V(4).Infof("[%s] GET %q", reqID, u)
-	client := utils.DefaultClient
-	if r.insecure {
-		client = utils.InsecureClient
-	}
-	res, err := client.Do(req)
+	chartPath, err := utils.FetchAndCache(name, version, r.cache, fetchOpts...)
 	if err != nil {
 		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)
 	}
-	defer res.Body.Close()
 
-	status := res.StatusCode
-	// Valid response codes from OCI registries are listed here:
-	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
-	switch status {
-	case http.StatusOK:
-		// do nothing, just continue
-	default:
-		bodyStr := utils.HTTPResponseBody(res)
-		return "", errors.Errorf("unable to fetch %s:%s chart, got HTTP Status: %s, Resp: %v", name, version, res.Status, bodyStr)
-	}
-	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
-
-	w, err := r.cache.Writer(remoteFilename)
-	if err != nil {
-		return "", errors.Trace(err)
-	}
-	defer w.Close()
-	if _, err := io.Copy(w, res.Body); err != nil {
-		return "", errors.Trace(err)
-	}
-
-	return r.cache.Path(remoteFilename), nil
+	return chartPath, nil
 }
 
 // Has checks if a repo has a specific chart

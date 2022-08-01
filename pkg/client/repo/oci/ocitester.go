@@ -16,15 +16,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/distribution/distribution/v3/configuration"
 	"github.com/distribution/distribution/v3/registry"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/cache/cachedisk"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
 )
 
 var (
@@ -90,7 +91,7 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cache, err := cache.New(cacheDir, ociRepo.GetUrl())
+	cache, err := cachedisk.New(cacheDir, ociRepo.GetUrl())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -160,12 +160,14 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 
 			depTgz, err := r.Fetch(dep.Name, dep.Version)
 			if err != nil {
+				klog.Warningf("Failed fetching %q chart. The dependencies processing will remain incomplete.")
 				errs = multierror.Append(errs, errors.Annotatef(err, "fetching %q chart", id))
 				continue
 			}
 
 			depFile := path.Join(chartPath, "charts", fmt.Sprintf("%s.tgz", id))
 			if err := utils.CopyFile(depFile, depTgz); err != nil {
+				klog.Warningf("Failed copying %q chart. The dependencies processing will remain incomplete.")
 				errs = multierror.Append(errs, errors.Annotatef(err, "copying %q chart to %q", id, depFile))
 				continue
 			}
