@@ -148,7 +148,7 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 	// Update deps
 	if hasDeps {
 		klog.V(3).Infof("Building %q dependencies", id)
-		if err := chart.BuildDependencies(chartPath, s.cli.dst, s.source.GetRepo(), s.target.GetRepo()); err != nil {
+		if err := chart.BuildDependencies(chartPath, s.cli.dst, s.source.GetRepo(), s.target.GetRepo(), s.target.ReplaceDependencyRepo); err != nil {
 			klog.Errorf("unable to build %q chart dependencies: %+v", id, err)
 			return "", errors.Trace(err)
 		}

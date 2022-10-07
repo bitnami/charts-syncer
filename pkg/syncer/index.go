@@ -162,7 +162,7 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 		return nil
 	}
 
-	if err := s.loadChart(name, version); err != nil {
+	if err := s.loadChart(name, version, ""); err != nil {
 		klog.Errorf("unable to load %q chart: %v", id, err)
 		return err
 	}
@@ -170,7 +170,7 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 }
 
 // loadChart loads a chart in the chart index map
-func (s *Syncer) loadChart(name string, version string) error {
+func (s *Syncer) loadChart(name string, version string, repository string) error {
 	id := fmt.Sprintf("%s-%s", name, version)
 	// loadChart is a recursive function and it will be invoked again for each
 	// dependency.
@@ -199,7 +199,15 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return nil
 	}
 
-	tgz, err := s.cli.src.Fetch(name, version)
+	//main source repo client
+	client := s.cli.src
+
+	//in case of dependency - switch to deps client (also includes main client - for deps in the Source repo)
+	if repository != "" {
+		client = s.cli.deps[repository]
+	}
+
+	tgz, err := client.Fetch(name, version)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -224,7 +232,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 		var errs error
 		for _, dep := range deps {
 			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
-			if err := s.loadChart(dep.Name, dep.Version); err != nil {
+			if err := s.loadChart(dep.Name, dep.Version, dep.Repository); err != nil {
 				errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
 				continue
 			}

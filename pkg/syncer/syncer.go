@@ -14,8 +14,9 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src client.ChartsReaderWriter
-	dst client.ChartsReaderWriter
+	src  client.ChartsReaderWriter
+	dst  client.ChartsReaderWriter
+	deps map[string]client.ChartsReaderWriter
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -128,12 +129,25 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 	}
 
 	s.cli = &Clients{}
+	//inits deps map
+	s.cli.deps = make(map[string]client.ChartsReaderWriter)
+	//Allowed deps repos
+	for _, depenencyRepo := range source.TrustedSourceDeps {
+		depClientTmp, err := repo.NewClient(depenencyRepo, types.WithCache(s.workdir), types.WithInsecure(s.insecure))
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		s.cli.deps[depenencyRepo.Url] = depClientTmp
+	}
+	//End of allowed deps
 	if source.GetRepo() != nil {
 		srcCli, err := repo.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
 		s.cli.src = srcCli
+		//Add source repo as a dependency repo also
+		s.cli.deps[source.GetRepo().Url] = srcCli
 	} else if source.GetIntermediateBundlesPath() != "" {
 		// Specifically disable dependencies sync for intermediate scenarios
 		disableDependencySync(s)

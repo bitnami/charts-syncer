@@ -114,7 +114,7 @@ func GetLockAPIVersion(chartPath string) (string, error) {
 //
 // It reads the lock file to download the versions from the target
 // chart repository (it assumes all charts are stored in a single repo).
-func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targetRepo *api.Repo) error {
+func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
 	// Build deps manually for OCI as helm does not support it yet
 	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
 		return errors.Trace(err)
@@ -140,11 +140,11 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 	}
 	switch apiVersion {
 	case APIV1:
-		if err := updateRequirementsFile(chartPath, lock, sourceRepo, targetRepo); err != nil {
+		if err := updateRequirementsFile(chartPath, lock, sourceRepo, targetRepo, replaceDependencyRepo); err != nil {
 			return errors.Trace(err)
 		}
 	case APIV2:
-		if err := updateChartMetadataFile(chartPath, lock, sourceRepo, targetRepo); err != nil {
+		if err := updateChartMetadataFile(chartPath, lock, sourceRepo, targetRepo, replaceDependencyRepo); err != nil {
 			return errors.Trace(err)
 		}
 	default:
@@ -179,7 +179,7 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 
 // updateChartMetadataFile updates the dependencies in Chart.yaml
 // For helm v3 dependency management
-func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo) error {
+func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
 	chartFile := path.Join(chartPath, ChartFilename)
 	chartYamlContent, err := ioutil.ReadFile(chartFile)
 	if err != nil {
@@ -193,7 +193,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 	for _, dep := range chartMetadata.Dependencies {
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
-		if dep.Repository == sourceRepo.GetUrl() {
+		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {
 				return errors.Trace(err)
@@ -206,7 +206,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 	if err := writeChartFile(dest, chartMetadata); err != nil {
 		return errors.Trace(err)
 	}
-	if err := updateLockFile(chartPath, lock, chartMetadata.Dependencies, sourceRepo, targetRepo, false); err != nil {
+	if err := updateLockFile(chartPath, lock, chartMetadata.Dependencies, sourceRepo, targetRepo, false, replaceDependencyRepo); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
@@ -214,7 +214,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
 // For helm v2 dependency management
-func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo) error {
+func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
 	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
@@ -230,7 +230,7 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
 		// the repository.
 		// For example, old charts pointing to helm/charts repo
-		if dep.Repository == sourceRepo.GetUrl() {
+		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {
 				return errors.Trace(err)
@@ -239,21 +239,20 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		}
 	}
 	// Write updated requirements yamls file
-
 	dest := path.Join(chartPath, RequirementsFilename)
 	if err := writeChartFile(dest, deps); err != nil {
 		return errors.Trace(err)
 	}
-	if err := updateLockFile(chartPath, lock, deps.Dependencies, sourceRepo, targetRepo, true); err != nil {
+	if err := updateLockFile(chartPath, lock, deps.Dependencies, sourceRepo, targetRepo, true, replaceDependencyRepo); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
 }
 
 // updateLockFile updates the lock file with the new registry
-func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency, sourceRepo *api.Repo, targetRepo *api.Repo, legacyLockfile bool) error {
+func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency, sourceRepo *api.Repo, targetRepo *api.Repo, legacyLockfile, replaceDependencyRepo bool) error {
 	for _, dep := range lock.Dependencies {
-		if dep.Repository == sourceRepo.GetUrl() {
+		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {
 				return errors.Trace(err)

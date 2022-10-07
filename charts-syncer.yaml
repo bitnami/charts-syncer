@@ -4,51 +4,41 @@
 
 # source includes relevant information about the source chart repository
 source:
+  # Dependencies located in repos from this list will be considered as trusted, and also synced.
+  # The entry format is the same as "repo" (see below)
+  trustedSourceDeps:
+  - kind: HELM
+    url: https://grafana.github.io/helm-charts
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: HELM
     # url is the url of the chart repository
-    url: http://localhost:8080 # local test source repo
+    url: https://prometheus-community.github.io/helm-charts # local test source repo
     # auth is used if the source repository is protected with basic auth (Optional section)
-    auth:
-      # username is the username used to authenticate against the source chart repo
-      # `SOURCE_AUTH_USERNAME` env var can be used instead of this entry
-      username: "USERNAME"
-      # password is the password used to authenticate against the source chart repo
-      # `SOURCE_AUTH_PASSWORD` env var can be used instead of this entry
-      password: "PASSWORD"
+    # auth:
+    #   # username is the username used to authenticate against the source chart repo
+    #   # `SOURCE_AUTH_USERNAME` env var can be used instead of this entry
+    #   username: "USERNAME"
+    #   # password is the password used to authenticate against the source chart repo
+    #   # `SOURCE_AUTH_PASSWORD` env var can be used instead of this entry
+    #   password: "PASSWORD"
     # Options for repositories of kind=OCI
     # disableChartsIndex: false
     # chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 # target includes relevant information about the target chart repository
 target:
-  # repoName is used to modify the README of the chart. Default value: `myrepo`
-  repoName: myrepo
-  # containerRegistry is used to update the image registry section of the values.yaml file
-  # NOTE: If containerRegistry is not set (or not present), the registry sections won't be updated
-  containerRegistry: demo.registry.io
-  # containerRepository is used to update the image repository section of the values.yaml file
-  # NOTE: If containerRepository is not set (or not present), the repository sections won't be updated
-  containerRepository: tpizarro/demo
+  # In case there is a need to mirror dependencies (from trustedSourceDeps list, see above) - this must be set to true
+  replaceDependencyRepo: true
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
-    kind: CHARTMUSEUM
+    kind: OCI
     # url is the url of the chart repository
-    url: http://localhost:9090 # local test target repo
-    # auth is used if the target repository is protected with basic auth (Optional section)
-    auth:
-      # username is the username used to authenticate against the target chart repo
-      # `TARGET_AUTH_USERNAME` env var can be used instead of this entry
-      username: "USERNAME"
-      # password is the password used to authenticate against the target chart repo
-      # `TARGET_AUTH_PASSWORD` env var can be used instead of this entry
-      password: "PASSWORD"
+    url: https://europe-west1-docker.pkg.dev/mm-platform-sre-prod/chriss-charts-syncer-dev-and-testing
 # charts is an OPTIONAL list to specify a subset of charts to be synchronized
 # It is mandatory if the source repo is OCI and not autodiscovery is supported in that repository
 # More info here https://github.com/bitnami-labs/charts-syncer#charts-index-for-oci-based-repositories
 charts:
-  - redis
-  - etcd
+  - kube-prometheus-stack
 # opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped
 # either "charts" or "skipCharts" can be used at once
 # skipCharts:
