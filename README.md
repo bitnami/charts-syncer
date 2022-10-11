@@ -255,6 +255,32 @@ charts:
   - ...
 ~~~
 
+#### Amazon Elastic Container Registry (ECR)
+Amazon Elastic Container Registry (ECR) is an OCI registry, but it has two peculiarities that should be taken into account when interacting with charts-syncer.
+
+The first peculiarity relates to authentication, usually you would have an IAM user with access_key_id and secret_access_key credentials. These **are not** the credentials that should be entered in the config file.
+To obtain the proper credentials, you need to obtain a temporary password to operate the ECR registry. By using the following command, you can get the password:
+
+```
+$ aws ecr get-login-password --region REGION
+```
+
+In the previous command remember to update the REGION placeholder by a proper value.
+The username will always be `AWS`.
+
+The second peculiarity only affects when using ECR as a target registry since you need to create the repositories in advance.
+If the repositories don't exist when executing charts-syncer you will get an error like the following:
+
+```
+failed to do request: Post "https://AWS_ACCOUNT.dkr.ecr.AWS_REGION.amazonaws.com/v2/charts-syncer-test/charts/common/blobs/uploads/": EOF
+failed to do request: Post "https://AWS_ACCOUNT.dkr.ecr.AWS_REGION.amazonaws.com/v2/charts-syncer-test/charts/apache/blobs/uploads/": EOF
+failed to do request: Post "https://AWS_ACCOUNT.dkr.ecr.AWS_REGION.amazonaws.com/v2/charts-syncer-test/charts/mariadb/blobs/uploads/": EOF
+failed to do request: Post "https://AWS_ACCOUNT.dkr.ecr.AWS_REGION.amazonaws.com/v2/charts-syncer-test/charts/mysql/blobs/uploads/": EOF
+failed to do request: Post "https://AWS_ACCOUNT.dkr.ecr.AWS_REGION.amazonaws.com/v2/charts-syncer-test/charts/redis/blobs/uploads/": EOF
+```
+
+In that case make sure all the missing repositories are created before executing charts-syner again. Please refer to [AWS documentation](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html) to see how to do it.
+
 ### LOCAL example
 
 In case charts-syncer is not able to directly push the modified charts to the desired target, it would be possible to sync the charts
