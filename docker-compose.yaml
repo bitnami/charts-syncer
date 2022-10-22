@@ -1,12 +1,11 @@
-version: '3.1'
-
 services:
   charts-syncer:
     build: .
     restart: "always"
-    command: "sync --config /config/charts-syncer.yaml -v 4 --latest-version-only"
+    command: "sync --config /config/sync-deps.yaml -v 4 --latest-version-only"
     # environment:
       # - TARGET_AUTH_USERNAME=oauth2accesstoken
       # - TARGET_AUTH_PASSWORD=
     volumes:
       - "./examples:/config"
+      - "./localrepo:/localrepo"
