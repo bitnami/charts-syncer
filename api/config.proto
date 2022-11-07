@@ -24,7 +24,7 @@ message Source {
     // Ignored if the repo is an intermediate bundle since the images are inside the bundle
     Containers containers = 3;
 
-    repeated Repo trustedSourceDeps = 6;
+    repeated Repo ignoreTrustedRepos = 6;
 }
 
 message Containers {
@@ -50,7 +50,7 @@ message Target {
     string repo_name = 4;
 
     Containers containers = 6;
-    bool replaceDependencyRepo = 7;
+    repeated Repo syncTrustedRepos = 7;
 }
 
 // Generic repo representation
