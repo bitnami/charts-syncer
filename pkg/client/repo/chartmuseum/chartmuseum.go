@@ -56,7 +56,7 @@ func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool)
 // GetUploadURL returns the URL to upload a chart
 func (r *Repo) GetUploadURL() string {
 	u := *r.url
-	u.Path = "/api/charts"
+	u.Path += "/api/charts"
 	return u.String()
 }
 
