@@ -23,13 +23,13 @@ import (
 // SyncPendingCharts syncs the charts not found in the target
 //
 // It uses topological sort to sync dependencies first.
-func (s *Syncer) SyncPendingCharts(names ...string) error {
+func (s *Syncer) SyncPendingCharts(chs ...*api.Charts) error {
 	var errs error
 
 	// There might be problems loading all the charts due to missing dependencies,
 	// invalid/wrong charts in the repository, etc. Therefore, let's warn about
 	// them instead of blocking the whole sync.
-	err := s.loadCharts(names...)
+	err := s.loadCharts(chs...)
 	if err != nil {
 		klog.Warningf("There were some problems loading the information of the requested charts: %v", err)
 		errs = multierror.Append(errs, errors.Trace(err))

@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/bitnami-labs/charts-syncer/api"
 )
 
 func removeTgzPath(i ChartIndex) {
@@ -15,13 +17,13 @@ func removeTgzPath(i ChartIndex) {
 func TestLoadCharts(t *testing.T) {
 	testCases := []struct {
 		desc           string
-		entries        []string
+		entries        []*api.Charts
 		skippedEntries []string
 		want           ChartIndex
 	}{
 		{
 			desc:    "load apache and kafka",
-			entries: []string{"apache", "kafka"},
+			entries: []*api.Charts{{Name: "apache"}, {Name: "kafka"}},
 			want: ChartIndex{
 				"apache-7.3.15":    &Chart{Name: "apache", Version: "7.3.15"},
 				"kafka-10.3.3":     &Chart{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}},
@@ -30,7 +32,7 @@ func TestLoadCharts(t *testing.T) {
 		},
 		{
 			desc:           "skip apache and kafka",
-			entries:        []string{"apache", "kafka", "zookeeper"},
+			entries:        []*api.Charts{{Name: "apache"}, {Name: "kafka"}, {Name: "zookeeper"}},
 			skippedEntries: []string{"apache", "kafka"},
 			want: ChartIndex{
 				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
