@@ -19,7 +19,7 @@ var (
 	cmRegex           = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
 	username   string = "user"
 	password   string = "password"
-	repositroy string = "myrepo"
+	repository string = "myrepo"
 )
 
 // RepoTester allows to unit test each repo implementation
@@ -54,7 +54,7 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 		indexFile:  indexFile,
 	}
 	s := httptest.NewServer(tester)
-	u, err := url.Parse(fmt.Sprintf("%s/%s", s.URL, repositroy))
+	u, err := url.Parse(fmt.Sprintf("%s/%s", s.URL, repository))
 	if err != nil {
 		t.Fatal(err)
 	}
