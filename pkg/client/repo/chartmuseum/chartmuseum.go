@@ -60,6 +60,10 @@ func (r *Repo) GetUploadURL() string {
 	return u.String()
 }
 
+func (r *Repo) CreateRepository(repository string) error {
+	return nil
+}
+
 // Upload uploads a chart to the repo.
 func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 	f, err := os.Open(file)

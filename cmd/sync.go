@@ -16,6 +16,7 @@ var (
 	syncWorkdir           string
 	syncSkipDependencies  bool
 	syncLatestVersionOnly bool
+	autoCreateRepository  bool
 )
 
 var (
@@ -90,8 +91,8 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),
+				syncer.WithAutoCreateRepository(autoCreateRepository),
 			}
-
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
 				return errors.Trace(err)
@@ -105,6 +106,6 @@ func newSyncCmd() *cobra.Command {
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
 	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
 	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
-
+	cmd.Flags().BoolVar(&autoCreateRepository, "auto-create-repository", false, "automatically create charts and images repositories,only supports harbor")
 	return cmd
 }

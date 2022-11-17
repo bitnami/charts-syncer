@@ -54,6 +54,11 @@ var reloadIndex = func(r *Repo) error {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode == http.StatusNotFound {
+		r.Index = repo.NewIndexFile()
+		return nil
+	}
+
 	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
 		bodyStr := utils.HTTPResponseBody(res)
 		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
@@ -180,6 +185,10 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (r *Repo) CreateRepository(repository string) error {
+	return nil
 }
 
 // Upload uploads a chart to the repo

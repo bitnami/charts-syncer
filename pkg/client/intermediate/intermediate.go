@@ -98,6 +98,10 @@ func (bd *BundlesDir) Has(name string, version string) (bool, error) {
 	return false, nil
 }
 
+func (bd *BundlesDir) CreateRepository(repository string) error {
+	return nil
+}
+
 // Upload uploads a chart to the repo
 func (bd *BundlesDir) Upload(filepath string, metadata *chart.Metadata) error {
 	name := metadata.Name

@@ -2,6 +2,7 @@ package harbor
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -57,6 +58,64 @@ func (r *Repo) GetUploadURL() string {
 	u := *r.url
 	u.Path = strings.Replace(u.Path, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
 	return u.String()
+}
+
+// GetRepositoryURL returns the URL to upload a chart
+func (r *Repo) GetRepositoryURL() string {
+	u := *r.url
+	u.Path = "api/v2.0/projects"
+	return u.String()
+}
+
+func (r *Repo) CreateRepository(repository string) error {
+	target := strings.Split(repository, "/")
+	if len(target) < 3 {
+		return nil
+	}
+	repository = target[len(target)-1]
+
+	repo := struct {
+		ProjectName string `json:"project_name"`
+		Public      bool   `json:"public"`
+	}{
+		ProjectName: repository,
+		Public:      true,
+	}
+
+	data, err := json.Marshal(&repo)
+	if err != nil {
+		return err
+	}
+
+	body := &bytes.Buffer{}
+	body.Write(data)
+
+	u := r.GetRepositoryURL()
+	req, err := http.NewRequest("POST", u, body)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	req.Header.Add("content-type", "application/json")
+	if r.username != "" && r.password != "" {
+		req.SetBasicAuth(r.username, r.password)
+	}
+
+	client := utils.DefaultClient
+	if r.insecure {
+		client = utils.InsecureClient
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return errors.Annotatef(err, "create %q repository", repository)
+	}
+	defer res.Body.Close()
+
+	if err := (res.StatusCode < 200 || res.StatusCode > 299) && res.StatusCode != 409; err {
+		bodyStr := utils.HTTPResponseBody(res)
+		return errors.Errorf("unable to create %q repository, got HTTP Status: %s, Resp: %v", repository, res.Status, bodyStr)
+	}
+
+	return nil
 }
 
 // Upload uploads a chart to the repo

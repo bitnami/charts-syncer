@@ -22,6 +22,7 @@ type ChartsReader interface {
 
 // ChartsWriter defines the methods that a WriteOnly chart or bundle client should implement.
 type ChartsWriter interface {
+	CreateRepository(repository string) error
 	Upload(filepath string, metadata *chart.Metadata) error
 }
 
@@ -29,4 +30,18 @@ type ChartsWriter interface {
 type ChartsReaderWriter interface {
 	ChartsReader
 	ChartsWriter
+}
+
+// ContainersReader defines the methods that a ReadOnly images client should implement.
+type ContainersReader interface {
+}
+
+// ContainersWriter defines the methods that a WriteOnly images client should implement.
+type ContainersWriter interface {
+	CreateRepository(repository string) error
+}
+
+type ContainersReaderWriter interface {
+	ContainersReader
+	ContainersWriter
 }

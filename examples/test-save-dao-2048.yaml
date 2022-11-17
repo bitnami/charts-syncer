@@ -17,7 +17,6 @@ target:
   intermediateBundlesPath: charts-syncer
 
 charts:
-  - name: dao-2048-bak
   - name: dao-2048
     versions:
-      - 1.2.3
+      - 1.2.1

@@ -3,6 +3,7 @@ package syncer
 import (
 	"fmt"
 	"io/ioutil"
+	"k8s.io/klog"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
-	"k8s.io/klog"
 )
 
 // SyncPendingCharts syncs the charts not found in the target
@@ -123,12 +123,54 @@ func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
 		return "", errors.Trace(err)
 	}
 
+	if s.autoCreateRepository && s.target.GetRepo() != nil && s.target.GetRepo().Url != "" && s.target.GetRepo().Kind == api.Kind_HARBOR {
+		err = s.SyncChartRepository()
+		if err != nil {
+			return "", err
+		}
+
+		err = s.SyncImagesRepository(chartMover)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if err = chartMover.Move(); err != nil {
 		klog.Errorf("unable to move chart %s:%s: %+v", chart.Name, chart.Version, err)
 		return "", errors.Trace(err)
 	}
 
 	return packagedChartPath, nil
+}
+
+func (s *Syncer) SyncChartRepository() error {
+	if s.target.GetRepo() == nil {
+		return nil
+	}
+
+	err := s.cli.dst.CreateRepository(s.target.GetRepo().Url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Syncer) SyncImagesRepository(chartMover *mover.ChartMover) error {
+	changes := chartMover.GetImageChanges()
+	for _, change := range changes {
+		if s.containerCLI != nil {
+			err := s.containerCLI.CreateRepository(change.RewrittenReference.Name())
+			if err != nil {
+				return err
+			}
+		} else {
+			err := s.cli.dst.CreateRepository(change.RewrittenReference.Name())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, hasDeps bool) (string, error) {
@@ -194,7 +236,7 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		return relok8sBundleLoadReq(
 			chart.TgzPath, outputChartPath,
 			target.GetContainerRegistry(), target.GetContainerRepository(),
-			target.ContainerPrefixRegistry, target.GetContainers().GetAuth()), packagedChartPath
+			target.GetContainerPrefixRegistry(), target.GetContainers().GetAuth()), packagedChartPath
 	} else {
 		// Direct syncing, SOURCE_REPO => TARGET_REPO
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
