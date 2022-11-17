@@ -1,0 +1,3 @@
+image:
+  name: harbor-repo.vmware.com/tanzu_isv_engineering/tiny
+  tag: tiniest

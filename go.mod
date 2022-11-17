@@ -1,10 +1,13 @@
 module github.com/bitnami-labs/charts-syncer
 
-go 1.17
+go 1.18
 
 // Needed so we can require asset-relocation-tool-for-kubernetes packages
 // https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/89
-replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d16ab90
+replace (
+	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes => ./staging/src/github.com/asset-relocation-tool-for-kubernetes
+	gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d16ab90
+)
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
@@ -15,7 +18,6 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-containerregistry v0.7.0
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
-	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799
@@ -23,7 +25,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
-	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.5.0
+	github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes v0.5.1
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.8.1
@@ -93,6 +95,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.4 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect

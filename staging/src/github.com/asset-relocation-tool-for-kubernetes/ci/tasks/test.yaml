@@ -1,0 +1,25 @@
+# Copyright 2021 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause
+---
+platform: linux
+
+params:
+  MAKE_TARGET: test
+  REGISTRY_SERVER:
+  REGISTRY_USERNAME:
+  REGISTRY_PASSWORD:
+
+inputs:
+  - name: source
+
+run:
+  path: /bin/bash
+  dir: source
+  args:
+    - -exc
+    - |
+      if [ "${MAKE_TARGET}" == "test-external" ] ; then
+        docker-login.sh "${REGISTRY_SERVER}" "${REGISTRY_USERNAME}" "${REGISTRY_PASSWORD}"
+      fi
+
+      make "${MAKE_TARGET}"

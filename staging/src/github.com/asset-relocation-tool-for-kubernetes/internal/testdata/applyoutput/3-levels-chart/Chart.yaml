@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: 1.16.0
+dependencies:
+- name: subchart-1
+  repository: ""
+  version: 0.1.0
+- name: subchart-2
+  repository: ""
+  version: 0.1.0
+description: A Helm chart for Kubernetes
+name: 3-levels-chart
+type: application
+version: 0.1.0

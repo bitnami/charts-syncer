@@ -49,6 +49,7 @@ message Target {
         string intermediate_bundles_path = 5;
     }
     string container_registry = 2;
+    string container_prefix_registry = 7;
     string container_repository = 3;
     string repo_name = 4;
 

@@ -1,0 +1,3 @@
+---
+global:
+  imageRegistry: harbor-repo.vmware.com/tanzu_isv_engineering

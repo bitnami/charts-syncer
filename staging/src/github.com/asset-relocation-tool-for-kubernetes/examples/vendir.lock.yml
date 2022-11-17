@@ -1,0 +1,23 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - helmChart:
+      appVersion: 10.5.12
+      version: 9.4.2
+    path: mariadb-chart
+  - manual: {}
+    path: image-hints.yaml
+  - manual: {}
+    path: README.md
+  path: simple-chart
+- contents:
+  - helmChart:
+      appVersion: 5.7.2
+      version: 11.1.5
+    path: wordpress-chart
+  - manual: {}
+    path: image-hints.yaml
+  - manual: {}
+    path: README.md
+  path: chart-with-subcharts
+kind: LockConfig

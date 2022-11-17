@@ -1,0 +1,25 @@
+apiVersion: v2
+dependencies:
+- name: subchart-1
+  repository: ""
+#- name: subchart-2
+#  repository: ""
+#- name: subchart-3
+#  repository: ""
+#- name: subchart-4
+#  repository: ""
+#- name: subchart-5
+#  repository: ""
+#- name: subchart-6
+#  repository: ""
+#- name: subchart-7
+#  repository: ""
+#- name: subchart-8
+#  repository: ""
+#- name: subchart-9
+#  repository: ""
+#- name: subchart-10
+#  repository: ""
+name: complex-chart
+type: application
+version: 1.0.0

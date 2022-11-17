@@ -1,0 +1,17 @@
+# This file contains patterns for every single image that we want to be relocated along with the Helm Chart
+# for both parent and subcharts
+# Important Note: Even if you are using the same image in multiple places, make sure to add a rule
+# for every one of those instances, that way the resolved, relocated image reference will be writen back  
+---
+# Parent chart
+- "{{ .image.registry }}/{{ .image.repository }}:{{ .image.tag }}"
+- "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
+- "{{ .volumePermissions.image.registry }}/{{ .volumePermissions.image.repository }}:{{ .volumePermissions.image.tag }}"
+# MariaDB sub-chart
+- "{{ .mariadb.image.registry }}/{{ .mariadb.image.repository }}:{{ .mariadb.image.tag }}"
+- "{{ .mariadb.metrics.image.registry }}/{{ .mariadb.metrics.image.repository }}:{{ .mariadb.metrics.image.tag }}"
+- "{{ .mariadb.volumePermissions.image.registry }}/{{ .mariadb.volumePermissions.image.repository }}:{{ .mariadb.volumePermissions.image.tag }}"
+# Memcached sub-chart
+- "{{ .memcached.image.registry }}/{{ .memcached.image.repository }}:{{ .memcached.image.tag }}"
+- "{{ .memcached.metrics.image.registry }}/{{ .memcached.metrics.image.repository }}:{{ .memcached.metrics.image.tag }}"
+- "{{ .memcached.volumePermissions.image.registry }}/{{ .memcached.volumePermissions.image.repository }}:{{ .memcached.volumePermissions.image.tag }}"

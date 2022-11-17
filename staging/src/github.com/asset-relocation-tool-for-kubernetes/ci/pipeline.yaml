@@ -1,0 +1,232 @@
+# Copyright 2021 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause
+---
+resource_types:
+  - name: helm-chart
+    type: registry-image
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/jghiloni/helm-chart-resource
+      tag: v0.1.1
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/teliaoss/github-pr-resource
+      tag: v0.23.0
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+  - name: github-release
+    type: docker-image
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/concourse/github-release-resource
+      tag: 1.6.4
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+resources:
+  - name: source
+    type: git
+    icon: github
+    source:
+      uri: git@github.com:vmware-tanzu/asset-relocation-tool-for-kubernetes.git
+      private_key: ((github.private_key))
+      branch: main
+      ignore_paths:
+        - ci/Dockerfile
+        - ci/pipeline.yaml
+
+  - name: pull-requests
+    type: pull-request
+    icon: github
+    check_every: 1m
+    source:
+      repository: vmware-tanzu/asset-relocation-tool-for-kubernetes
+      access_token: ((github.access_token))
+
+  - name: test-image-source
+    type: git
+    icon: github
+    source:
+      uri: git@github.com:vmware-tanzu/asset-relocation-tool-for-kubernetes.git
+      private_key: ((github.private_key))
+      branch: main
+      paths:
+        - ci/Dockerfile
+
+  - name: test-image
+    type: docker-image
+    icon: docker
+    source:
+      repository: harbor-repo.vmware.com/tanzu_isv_engineering/relok8s-test-image
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+  - name: docker-image
+    type: registry-image
+    icon: docker
+    source:
+      # Image being built on every new release by our release workflow in Github
+      # https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/actions/workflows/goreleaser.yml
+      repository: ghcr.io/vmware-tanzu/asset-relocation-tool-for-kubernetes
+
+  - name: nginx-chart
+    type: helm-chart
+    icon: kubernetes
+    source:
+      repository_url: https://charts.bitnami.com/bitnami
+      chart: nginx
+
+jobs:
+  - name: build-test-image
+    plan:
+      - get: test-image-source
+        trigger: true
+      - put: test-image
+        params:
+          build: test-image-source
+          dockerfile: test-image-source/ci/Dockerfile
+          tag_as_latest: true
+
+  - name: test
+    plan:
+      - in_parallel:
+          - get: test-image
+            passed:
+              - build-test-image
+            trigger: true
+          - get: source
+            trigger: true
+      - task: run-unit-tests
+        image: test-image
+        file: source/ci/tasks/test.yaml
+        params:
+          MAKE_TARGET: test-units
+      - task: run-feature-tests
+        image: test-image
+        file: source/ci/tasks/test.yaml
+        params:
+          MAKE_TARGET: test-features
+      - task: run-external-tests
+        image: test-image
+        file: source/ci/tasks/test.yaml
+        params:
+          MAKE_TARGET: test-external
+          REGISTRY_SERVER: harbor-repo.vmware.com
+          REGISTRY_USERNAME: ((harbor-private.username))
+          REGISTRY_PASSWORD: ((harbor-private.token))
+
+  - name: relocate-chart
+    plan:
+      - in_parallel:
+        - get: docker-image
+          trigger: true
+        - get: nginx-chart
+      - task: relocate
+        image: docker-image
+        config:
+          platform: linux
+          params:
+            REGISTRY_SERVER: harbor-repo.vmware.com
+            REGISTRY_USERNAME: ((harbor-private.username))
+            REGISTRY_PASSWORD: ((harbor-private.token))
+          inputs:
+            - name: nginx-chart
+          outputs:
+            - name: rewritten-chart
+          run:
+            path: bash
+            args:
+              - -exc
+              - |
+                docker-login.sh "${REGISTRY_SERVER}" "${REGISTRY_USERNAME}" "${REGISTRY_PASSWORD}"
+
+                cat > image-patterns.yaml <<EOF
+                ---
+                - "{{ .image.registry }}/{{ .image.repository }}:{{ .image.tag }}"
+                - "{{ .cloneStaticSiteFromGit.image.registry }}/{{ .cloneStaticSiteFromGit.image.repository }}:{{ .cloneStaticSiteFromGit.image.tag }}"
+                - "{{ .ldapDaemon.image.registry }}/{{ .ldapDaemon.image.repository }}:{{ .ldapDaemon.image.tag }}"
+                - "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
+                EOF
+
+                relok8s chart move nginx-chart/*.tgz \
+                  --yes \
+                  --image-patterns image-patterns.yaml \
+                  --registry "${REGISTRY_SERVER}" \
+                  --repo-prefix tanzu_isv_engineering_private
+                mv *.relocated.tgz rewritten-chart/chart.tgz
+      - task: print-diff
+        image: docker-image
+        config:
+          platform: linux
+          inputs:
+            - name: nginx-chart
+            - name: rewritten-chart
+          run:
+            path: bash
+            args:
+              - -exc
+              - |
+                # NOTE: The leading ! is because it is an error condition if there are no differences in the two files
+                ! diff --context=3 \
+                  <(tar xzfO nginx-chart/*.tgz nginx/values.yaml) \
+                  <(tar xzfO rewritten-chart/chart.tgz nginx/values.yaml)
+
+  - name: test-pull-request
+    serial: true
+    plan:
+      - in_parallel:
+        - get: test-image
+          passed:
+            - build-test-image
+        - get: source
+          resource: pull-requests
+          trigger: true
+          version: every
+          params:
+            integration_tool: rebase
+          on_success:
+            put: pull-requests
+            inputs: detect
+            params:
+              path: source
+              status: pending
+          on_failure:
+            put: pull-requests
+            inputs: detect
+            params:
+              path: source
+              context: merge-conflict
+              status: failure
+      - do:
+        - task: run-unit-tests
+          image: test-image
+          file: source/ci/tasks/test.yaml
+          params:
+            MAKE_TARGET: test-units
+        - task: run-feature-tests
+          image: test-image
+          file: source/ci/tasks/test.yaml
+          params:
+            MAKE_TARGET: test-features
+        - task: run-external-tests
+          image: test-image
+          file: source/ci/tasks/test.yaml
+          params:
+            MAKE_TARGET: test-external
+            REGISTRY_SERVER: harbor-repo.vmware.com
+            REGISTRY_USERNAME: ((harbor-private.username))
+            REGISTRY_PASSWORD: ((harbor-private.token))
+        on_failure:
+          put: pull-requests
+          inputs: detect
+          params:
+            path: source
+            status: failure
+      - put: pull-requests
+        inputs: detect
+        params:
+          path: source
+          status: success
