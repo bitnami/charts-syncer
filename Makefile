@@ -14,7 +14,7 @@ fullcover:
 	GO111MODULE=on go tool cover -func=coverage.out
 
 gen:
-	go generate github.com/bitnami-labs/charts-syncer/...
+	cd api && protoc --go_out=plugins=grpc:. config.proto
 
 build: $(GO_SOURCES)
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./

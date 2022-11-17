@@ -1,14 +1,14 @@
 syntax = "proto3";
 
 package api;
-option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
+option go_package = "./;api";
 
 // Config file structure
 message Config {
     Source source = 1;
     Target target = 2;
     // Helm Charts to include during sync
-    repeated string charts = 3;
+    repeated charts charts = 3;
     // Opposite of charts property. It indicates the list of charts to skip during sync
     repeated string skip_charts = 5;
     bool relocate_container_images = 4;
@@ -23,6 +23,11 @@ message Source {
 
     // Ignored if the repo is an intermediate bundle since the images are inside the bundle
     Containers containers = 3;
+}
+
+message charts {
+    string name = 1;
+    repeated string versions = 2;
 }
 
 message Containers {

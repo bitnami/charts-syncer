@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"fmt"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"sort"
 	"time"
 
@@ -64,7 +65,7 @@ func (i ChartIndex) Get(id string) *Chart {
 }
 
 // loadCharts loads the charts map into the index from the source repo
-func (s *Syncer) loadCharts(charts ...string) error {
+func (s *Syncer) loadCharts(charts ...*api.Charts) error {
 	if len(charts) == 0 {
 		if !s.autoDiscovery {
 			return errors.Errorf("unable to discover charts to sync")
@@ -76,10 +77,16 @@ func (s *Syncer) loadCharts(charts ...string) error {
 		if len(srcCharts) == 0 {
 			return errors.Errorf("not found charts to sync")
 		}
-		charts = srcCharts
+
+		for _, name := range srcCharts {
+			charts = append(charts, &api.Charts{Name: name})
+		}
 	}
+
 	// Sort chart names
-	sort.Strings(charts)
+	sort.Slice(charts, func(i, j int) bool {
+		return charts[i].Name > charts[j].Name
+	})
 
 	// Create basic layout for date and parse flag to time type
 	publishingThreshold, err := utils.GetDateThreshold(s.fromDate)
@@ -90,20 +97,20 @@ func (s *Syncer) loadCharts(charts ...string) error {
 
 	// Iterate over charts in source index
 	var errs error
-	for _, name := range charts {
-		if shouldSkipChart(name, s.skipCharts) {
-			klog.V(3).Infof("Indexing %q charts SKIPPED...", name)
+	for _, chart := range charts {
+		if shouldSkipChart(chart.Name, s.skipCharts) {
+			klog.V(3).Infof("Indexing %q charts SKIPPED...", chart.Name)
 			continue
 		}
 
-		versions, err := s.cli.src.ListChartVersions(name)
+		versions, err := s.cli.src.ListChartVersions(chart.Name)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
 		}
 
-		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
-		klog.V(3).Infof("Indexing %q charts...", name)
+		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), chart.Name, versions)
+		klog.V(3).Infof("Indexing %q charts...", chart.Name)
 		if s.latestVersionOnly {
 			vs := make([]*semver.Version, len(versions))
 			for i, r := range versions {
@@ -116,15 +123,20 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			sort.Sort(semver.Collection(vs))
 			// The last element of the array is the latest version
 			version := vs[len(vs)-1].String()
-			if err := s.processVersion(name, version, publishingThreshold); err != nil {
-				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
+			if err := s.processVersion(chart.Name, version, publishingThreshold); err != nil {
+				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", chart.Name, version)
 				errs = multierror.Append(errs, errors.Trace(err))
 				continue
 			}
 		} else {
 			for _, version := range versions {
-				if err := s.processVersion(name, version, publishingThreshold); err != nil {
-					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
+				if len(chart.Versions) > 0 && shouldSkipChartVersion(version, chart.Versions) {
+					klog.V(3).Infof("Indexing %q %q charts SKIPPED...", chart.Name, version)
+					continue
+				}
+
+				if err := s.processVersion(chart.Name, version, publishingThreshold); err != nil {
+					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", chart.Name, version)
 					errs = multierror.Append(errs, errors.Trace(err))
 					continue
 				}
@@ -270,4 +282,13 @@ func shouldSkipChart(chartName string, skippedCharts []string) bool {
 		}
 	}
 	return false
+}
+
+func shouldSkipChartVersion(chartVersion string, Versions []string) bool {
+	for _, s := range Versions {
+		if s == chartVersion {
+			return false
+		}
+	}
+	return true
 }

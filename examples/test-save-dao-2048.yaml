@@ -1,0 +1,24 @@
+source:
+  repo:
+    kind: HARBOR # or as any other supported Helm Chart repository kinds
+    url: https://release-ci.daocloud.io/chartrepo/charts-syncer
+    ## Helm repository credentials. Alternatively you can use environmental variables
+    # auth:
+    #   username: [USERNAME]
+    #   password: [PASSWORD]
+    ## Container registry authentication
+  # containers:
+  #   auth:
+  #     registry: [URL] # i.e my.harbor.io
+  #     username: [USERNAME]
+  #     password: [PASSWORD]
+target:
+  # The important bit. This instructs charts-syncer to store intermediate bundles in the given directory
+  intermediateBundlesPath: charts-syncer
+
+charts:
+  - name: dao-2048
+    versions:
+      - 1.2.1
+      - 1.2.2
+  - name: dao-2048-bak

@@ -1,0 +1,17 @@
+source:
+  intermediateBundlesPath: charts-syncer
+target:
+  containerRegistry: release.daocloud.io
+  containerRepository: charts-syncer
+  repo:
+    kind: HARBOR # or as any other supported Helm Chart repository kinds
+    url: https://release.daocloud.io/chartrepo/charts-syncer
+    auth:
+      username: "admin"
+      password: "x3OFzuW0tpGYFDAr63wRx81dqms="
+  ## Container registry authentication
+  containers:
+    auth:
+      registry: release.daocloud.io/charts-syncer
+      username: "admin"
+      password: "x3OFzuW0tpGYFDAr63wRx81dqms="
