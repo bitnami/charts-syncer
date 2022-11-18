@@ -1,6 +1,7 @@
 package chartmuseum
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,9 +16,10 @@ import (
 )
 
 var (
-	cmRegex         = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	username string = "user"
-	password string = "password"
+	cmRegex           = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+	username   string = "user"
+	password   string = "password"
+	repository string = "myrepo"
 )
 
 // RepoTester allows to unit test each repo implementation
@@ -52,7 +54,7 @@ func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) 
 		indexFile:  indexFile,
 	}
 	s := httptest.NewServer(tester)
-	u, err := url.Parse(s.URL)
+	u, err := url.Parse(fmt.Sprintf("%s/%s", s.URL, repository))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,20 +78,20 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle recognized requests.
-	if base, chart := path.Split(r.URL.Path); base == "/api/charts/" && r.Method == "GET" {
+	if base, chart := path.Split(r.URL.Path); base == "/myrepo/api/charts/" && r.Method == "GET" {
 		rt.GetChart(w, r, chart)
 		return
 	}
-	if r.URL.Path == "/api/charts" && r.Method == "POST" {
+	if r.URL.Path == "/myrepo/api/charts" && r.Method == "POST" {
 		rt.PostChart(w, r)
 		return
 	}
-	if r.URL.Path == "/index.yaml" && r.Method == "GET" {
+	if r.URL.Path == "/myrepo/index.yaml" && r.Method == "GET" {
 		rt.GetIndex(w, r, rt.emptyIndex, rt.indexFile)
 		return
 	}
 	if cmRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
-		chartPackage := strings.Split(r.URL.Path, "/")[2]
+		chartPackage := strings.Split(r.URL.Path, "/")[3]
 		rt.GetChartPackage(w, r, chartPackage)
 		return
 	}
