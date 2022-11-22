@@ -51,7 +51,7 @@ func initConfigFile() error {
 }
 
 func newSyncCmd() *cobra.Command {
-	var c api.Config
+	c := api.Config{}
 
 	cmd := &cobra.Command{
 		Use:     "sync",
@@ -91,6 +91,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),
 			}
+
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
 				return errors.Trace(err)

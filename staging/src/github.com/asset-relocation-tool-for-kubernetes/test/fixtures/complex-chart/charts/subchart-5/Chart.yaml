@@ -1,0 +1,3 @@
+apiVersion: v2
+name: subchart-5
+version: 1.0.0

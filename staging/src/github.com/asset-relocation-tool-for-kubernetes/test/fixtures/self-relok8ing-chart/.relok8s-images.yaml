@@ -1,0 +1,4 @@
+---
+- "{{ .image.repository }}:{{ .image.tag }}"
+- "{{ .sameImageButNoTagRequirement.image }}"
+- "{{ .singleImageReference.image }}"

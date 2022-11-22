@@ -181,6 +181,13 @@ func WithSkipCharts(charts []string) Option {
 	}
 }
 
+// WithPrefixRegistry add prefix registry.
+func WithPrefixRegistry(prefixRegistry string) Option {
+	return func(s *Syncer) {
+		s.target.ContainerPrefixRegistry = prefixRegistry
+	}
+}
+
 func disableDependencySync(syncer *Syncer) {
 	if syncer.skipDependencies == false {
 		klog.Warningf("Ignoring skipDependencies option as dependency sync is not supported if container image relocation is true or syncing from/to intermediate directory ")

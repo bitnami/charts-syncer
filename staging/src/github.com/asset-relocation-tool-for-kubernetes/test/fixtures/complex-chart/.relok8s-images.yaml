@@ -1,0 +1,11 @@
+---
+- "{{.global.imageRegistry}}/{{ .subchart-1.deployment.imageName }}:{{ .subchart-1.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-2.deployment.imageName }}:{{ .subchart-2.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-3.deployment.imageName }}:{{ .subchart-3.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-4.deployment.imageName }}:{{ .subchart-4.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-5.deployment.imageName }}:{{ .subchart-5.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-6.deployment.imageName }}:{{ .subchart-6.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-7.deployment.imageName }}:{{ .subchart-7.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-8.deployment.imageName }}:{{ .subchart-8.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-9.deployment.imageName }}:{{ .subchart-9.deployment.dockerTag }}"
+- "{{.global.imageRegistry}}/{{ .subchart-10.deployment.imageName }}:{{ .subchart-10.deployment.dockerTag }}"

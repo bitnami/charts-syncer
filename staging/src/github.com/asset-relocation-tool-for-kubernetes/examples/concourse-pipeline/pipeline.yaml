@@ -1,0 +1,106 @@
+# Copyright 2021 VMware, Inc.
+# SPDX-License-Identifier: BSD-2-Clause
+---
+resource_types:
+  - name: helm-chart
+    type: registry-image
+    source:
+      repository: jghiloni/helm-chart-resource
+      tag: v0.1.1
+      username: ((dockerhub.username))
+      password: ((dockerhub.access_token))
+
+resources:
+  - name: relok8s
+    type: registry-image
+    icon: docker
+    source:
+      repository: projects.registry.vmware.com/tanzu_isv_engineering/relok8s
+
+  - name: nginx-chart
+    type: helm-chart
+    icon: kubernetes
+    source:
+      repository_url: https://charts.bitnami.com/bitnami
+      chart: nginx
+
+  - name: relocated-chart
+    type: helm-chart
+    icon: kubernetes
+    source:
+      repository_url: https://harbor-repo.vmware.com/chartrepo/tanzu_isv_engineering_private
+      username: ((harbor-private.username))
+      password: ((harbor-private.token))
+      chart: nginx
+
+jobs:
+  - name: relocate-chart
+    plan:
+      - in_parallel:
+          - get: relok8s
+          - get: nginx-chart
+            trigger: true
+      - task: make-image-hints-file
+        image: relok8s
+        config:
+          platform: linux
+          outputs:
+            - name: nginx-chart-hints
+          run:
+            path: bash
+            args:
+              - -exc
+              - |
+                cat > nginx-chart-hints/image-hints.yaml <<EOF
+                ---
+                - "{{ .image.registry }}/{{ .image.repository }}:{{ .image.tag }}"
+                - "{{ .cloneStaticSiteFromGit.image.registry }}/{{ .cloneStaticSiteFromGit.image.repository }}:{{ .cloneStaticSiteFromGit.image.tag }}"
+                - "{{ .ldapDaemon.image.registry }}/{{ .ldapDaemon.image.repository }}:{{ .ldapDaemon.image.tag }}"
+                - "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
+                EOF
+      - task: relocate
+        image: relok8s
+        config:
+          platform: linux
+          params:
+            REGISTRY_SERVER: harbor-repo.vmware.com
+            REGISTRY_USERNAME: ((harbor-private.username))
+            REGISTRY_PASSWORD: ((harbor-private.token))
+          inputs:
+            - name: nginx-chart
+            - name: nginx-chart-hints
+          outputs:
+            - name: rewritten-chart
+          run:
+            path: bash
+            args:
+              - -exc
+              - |
+                docker-login.sh "${REGISTRY_SERVER}" "${REGISTRY_USERNAME}" "${REGISTRY_PASSWORD}"
+
+                relok8s chart move nginx-chart/*.tgz \
+                  --yes \
+                  --image-patterns nginx-chart-hints/image-hints.yaml \
+                  --registry "${REGISTRY_SERVER}" \
+                  --repo-prefix tanzu_isv_engineering_private
+                mv *.relocated.tgz rewritten-chart/chart.tgz
+      - task: print-diff
+        image: relok8s
+        config:
+          platform: linux
+          inputs:
+            - name: nginx-chart
+            - name: rewritten-chart
+          run:
+            path: bash
+            args:
+              - -exc
+              - |
+                # NOTE: The leading ! is because it is an error condition if there are no differences in the two files
+                ! diff --context=3 \
+                  <(tar xzfO nginx-chart/*.tgz nginx/values.yaml) \
+                  <(tar xzfO rewritten-chart/chart.tgz nginx/values.yaml)
+      - put: relocated-chart
+        inputs: detect
+        params:
+          repository: rewritten-chart/chart.tgz

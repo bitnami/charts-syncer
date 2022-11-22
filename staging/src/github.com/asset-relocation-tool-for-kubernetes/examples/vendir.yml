@@ -1,0 +1,28 @@
+apiVersion: vendir.k14s.io/v1alpha1
+kind: Config
+directories:
+  - path: simple-chart
+    contents:
+      - path: mariadb-chart
+        helmChart:
+          name: mariadb
+          version: "9.4.2"
+          repository:
+            url: https://charts.bitnami.com/bitnami
+      - path: image-hints.yaml
+        manual: {}
+      - path: README.md
+        manual: {}
+
+  - path: chart-with-subcharts
+    contents:
+      - path: wordpress-chart
+        helmChart:
+          name: wordpress
+          version: "11.1.5"
+          repository:
+            url: https://charts.bitnami.com/bitnami
+      - path: image-hints.yaml
+        manual: {}
+      - path: README.md
+        manual: {}

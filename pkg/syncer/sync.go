@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/bitnami-labs/charts-syncer/api"
-
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
@@ -195,7 +194,7 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		return relok8sBundleLoadReq(
 			chart.TgzPath, outputChartPath,
 			target.GetContainerRegistry(), target.GetContainerRepository(),
-			target.GetContainers().GetAuth()), packagedChartPath
+			target.ContainerPrefixRegistry, target.GetContainers().GetAuth()), packagedChartPath
 	} else {
 		// Direct syncing, SOURCE_REPO => TARGET_REPO
 		// Once https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/94 is solved, we could
@@ -203,11 +202,11 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		outputChartPath := filepath.Join(outdir, "%s-%s.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.tgz", chart.Name, chart.Version))
 		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository(),
-			source.GetContainers().GetAuth(), target.GetContainers().GetAuth()), packagedChartPath
+			target.GetContainerPrefixRegistry(), source.GetContainers().GetAuth(), target.GetContainers().GetAuth()), packagedChartPath
 	}
 }
 
-func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository, containerPrefixRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -220,6 +219,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
 				Registry:         containerRegistry,
+				PrefixRegistry:   containerPrefixRepository,
 				RepositoryPrefix: containerRepository,
 				ForcePush:        true,
 			},
@@ -256,7 +256,7 @@ func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *ap
 	return req
 }
 
-func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository, containerPrefixRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -268,6 +268,7 @@ func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRe
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
 				Registry:         containerRegistry,
+				PrefixRegistry:   containerPrefixRepository,
 				RepositoryPrefix: containerRepository,
 				ForcePush:        true,
 			},

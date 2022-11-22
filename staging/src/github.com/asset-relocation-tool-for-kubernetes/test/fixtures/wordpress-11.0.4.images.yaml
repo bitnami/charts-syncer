@@ -1,0 +1,9 @@
+---
+- "{{ .image.registry }}/{{ .image.repository }}:{{ .image.tag }}"
+- "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
+- "{{ .volumePermissions.image.registry }}/{{ .volumePermissions.image.repository }}:{{ .volumePermissions.image.tag }}"
+- "{{ .mariadb.image.registry }}/{{ .mariadb.image.repository }}:{{ .mariadb.image.tag }}"
+- "{{ .mariadb.metrics.image.registry }}/{{ .mariadb.metrics.image.repository }}:{{ .mariadb.metrics.image.tag }}"
+- "{{ .mariadb.volumePermissions.image.registry }}/{{ .mariadb.volumePermissions.image.repository }}:{{ .mariadb.volumePermissions.image.tag }}"
+- "{{ .memcached.image.registry }}/{{ .memcached.image.repository }}:{{ .memcached.image.tag }}"
+- "{{ .memcached.metrics.image.registry }}/{{ .memcached.metrics.image.repository }}:{{ .memcached.metrics.image.tag }}"
