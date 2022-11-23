@@ -219,6 +219,10 @@ func (cm *ChartMover) WithRetries(retries uint) *ChartMover {
 	return cm
 }
 
+func (cm *ChartMover) GetImageChanges() []*internal.ImageChange {
+	return cm.imageChanges
+}
+
 // Print shows the changes expected to be performed during relocation,
 // including the new location of the Helm Chart Images as well as
 // the expected rewrites in the Helm Chart.

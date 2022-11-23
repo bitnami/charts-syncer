@@ -187,7 +187,7 @@ func TestRelok8sMoveReq(t *testing.T) {
 			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "treg", Username: "tuser", Password: "tpass"}},
 		},
 	}
-	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers",
+	got := relok8sMoveReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", "",
 		&api.Containers_ContainerAuth{Username: "suser", Password: "spass", Registry: "sreg"}, &api.Containers_ContainerAuth{Username: "tuser", Password: "tpass", Registry: "treg"},
 	)
 	if !reflect.DeepEqual(want, got) {
@@ -242,7 +242,7 @@ func TestRelok8sBundleLoadReq(t *testing.T) {
 			ContainersAuth: &mover.ContainersAuth{Credentials: &mover.OCICredentials{Server: "reg", Username: "user", Password: "pass"}},
 		},
 	}
-	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", &api.Containers_ContainerAuth{Username: "user", Password: "pass", Registry: "reg"})
+	got := relok8sBundleLoadReq("/tmp/source-dir", "/tmp/target-dir", "gcr.io", "my-project/containers", "", &api.Containers_ContainerAuth{Username: "user", Password: "pass", Registry: "reg"})
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected relok8s bundle load request. got: %v, want: %v", got, want)
 	}

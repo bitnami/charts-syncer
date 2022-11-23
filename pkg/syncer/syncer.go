@@ -1,10 +1,12 @@
 package syncer
 
 import (
+	"net/url"
 	"os"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/pkg/client"
+	"github.com/bitnami-labs/charts-syncer/pkg/client/container"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
@@ -23,7 +25,8 @@ type Syncer struct {
 	source *api.Source
 	target *api.Target
 
-	cli *Clients
+	cli          *Clients
+	containerCLI client.ContainersReaderWriter
 
 	dryRun                  bool
 	autoDiscovery           bool
@@ -33,7 +36,8 @@ type Syncer struct {
 	skipDependencies        bool
 	latestVersionOnly       bool
 	// list of charts to skip
-	skipCharts []string
+	skipCharts           []string
+	autoCreateRepository bool
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -153,6 +157,37 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 			return nil, errors.Trace(err)
 		}
 		s.cli.dst = dstCli
+
+		if s.autoCreateRepository {
+			registry := target.GetContainerPrefixRegistry()
+			if registry == "" {
+				registry = target.GetContainerRegistry()
+			}
+
+			if registry == "" {
+				return nil, errors.New("use auto-create-repository must specify containerPrefixRegistry or containerRegistry")
+			}
+
+			_, err := url.Parse(registry)
+			if err != nil {
+				return nil, errors.Trace(err)
+			}
+
+			r := &api.Containers{}
+			if target.Containers.Auth != nil {
+				r.Auth = &api.Containers_ContainerAuth{
+					Registry: registry,
+					Username: target.Containers.Auth.GetUsername(),
+					Password: target.Containers.Auth.GetPassword(),
+				}
+			}
+
+			cli, err := container.NewClient(registry, r, types.WithInsecure(s.insecure))
+			if err != nil {
+				return nil, errors.Trace(err)
+			}
+			s.containerCLI = cli
+		}
 	} else if target.GetIntermediateBundlesPath() != "" {
 		// Specifically disable dependencies sync for intermediate scenarios
 		disableDependencySync(s)
@@ -188,9 +223,19 @@ func WithPrefixRegistry(prefixRegistry string) Option {
 	}
 }
 
+// WithAutoCreateRepository automatically create charts and images repository if they not exist".
+func WithAutoCreateRepository(autoCreateRepository bool) Option {
+	if autoCreateRepository == true {
+		klog.Warningf("auto-create-repository only supports harbor")
+	}
+	return func(s *Syncer) {
+		s.autoCreateRepository = autoCreateRepository
+	}
+}
+
 func disableDependencySync(syncer *Syncer) {
 	if syncer.skipDependencies == false {
-		klog.Warningf("Ignoring skipDependencies option as dependency sync is not supported if container image relocation is true or syncing from/to intermediate directory ")
+		klog.Warningf("Ignoring skipDependencies option as dependency sync is not supported if container image relocation is true or syncing from/to intermediate directory")
 	}
 	syncer.skipDependencies = true
 }

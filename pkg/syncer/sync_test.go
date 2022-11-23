@@ -44,19 +44,27 @@ func getChartIndex(t *testing.T, name string, targetRepo *api.Target, tester rep
 func TestFakeSyncPendingCharts(t *testing.T) {
 	testCases := []struct {
 		desc           string
-		entries        []string
+		entries        []*api.Charts
 		skippedEntries []string
 		want           []string
 	}{
 		{
-			desc:    "load apache and kafka",
-			entries: []string{"apache", "kafka"},
+			desc: "load apache and kafka",
+			entries: []*api.Charts{{
+				Name: "apache",
+			}, {
+				Name: "kafka",
+			}},
 			// zookeeper is a dependency
 			want: []string{"apache-7.3.15.tgz", "kafka-10.3.3.tgz", "zookeeper-5.14.3.tgz"},
 		},
 		{
-			desc:           "skip apache",
-			entries:        []string{"apache", "kafka"},
+			desc: "skip apache",
+			entries: []*api.Charts{{
+				Name: "apache",
+			}, {
+				Name: "kafka",
+			}},
 			skippedEntries: []string{"apache"},
 			want:           []string{"kafka-10.3.3.tgz", "zookeeper-5.14.3.tgz"},
 		},
@@ -104,7 +112,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 		targetRepo        *api.Target
 		skipDependencies  bool
 		latestVersionOnly bool
-		entries           []string
+		entries           []*api.Charts
 		requiredCharts    []string
 		want              []*helmclassic.ChartVersion
 	}{
@@ -133,7 +141,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 				},
 			},
 			skipDependencies: false,
-			entries:          []string{"common", "etcd"},
+			entries:          []*api.Charts{{Name: "common"}, {Name: "etcd"}},
 			requiredCharts:   []string{"common", "etcd"},
 			want: []*helmclassic.ChartVersion{
 				{
@@ -178,7 +186,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 				},
 			},
 			skipDependencies: false,
-			entries:          []string{"kafka"},
+			entries:          []*api.Charts{{Name: "kafka"}},
 			requiredCharts:   []string{"common", "kafka", "zookeeper"},
 			want: []*helmclassic.ChartVersion{
 				{
@@ -227,7 +235,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 				},
 			},
 			skipDependencies: true,
-			entries:          []string{"kafka"},
+			entries:          []*api.Charts{{Name: "kafka"}},
 			requiredCharts:   []string{"common", "kafka", "zookeeper"},
 			want: []*helmclassic.ChartVersion{
 				{
@@ -260,7 +268,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 					},
 				},
 			},
-			entries:        []string{"common"},
+			entries:        []*api.Charts{{Name: "common"}},
 			requiredCharts: []string{"common"},
 			want: []*helmclassic.ChartVersion{
 				{
@@ -298,7 +306,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 					},
 				},
 			},
-			entries:           []string{"common"},
+			entries:           []*api.Charts{{Name: "common"}},
 			requiredCharts:    []string{"common"},
 			latestVersionOnly: true,
 			want: []*helmclassic.ChartVersion{
