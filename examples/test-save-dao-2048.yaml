@@ -14,9 +14,11 @@ source:
   #     password: [PASSWORD]
 target:
   # The important bit. This instructs charts-syncer to store intermediate bundles in the given directory
-  intermediateBundlesPath: charts-syncer
+  intermediateBundlesPath: charts-dir
 
 charts:
   - name: dao-2048
     versions:
       - 1.2.1
+      - 1.2.2
+  - name: dao-2048-bak
