@@ -95,6 +95,9 @@ func applyUpdate(chart *chart.Chart, a *RewriteAction) error {
 // Additionally it will return the rewrite action with path relative to that Helm Chart
 func (a *RewriteAction) FindChartDestination(parentChart *chart.Chart) (*chart.Chart, *RewriteAction) {
 	for _, subchart := range parentChart.Dependencies() {
+		if _, ok := parentChart.Values[a.TopLevelKey()]; ok {
+			continue
+		}
 		if subchart.Name() == a.TopLevelKey() {
 			// Recursively perform the check stripping out the rewrite prefix
 			// and providing the actual subchart reference

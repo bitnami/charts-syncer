@@ -1,5 +1,5 @@
 source:
-  intermediateBundlesPath: charts-syncer
+  intermediateBundlesPath: charts-dir
 target:
   containerRegistry: release-ci.daocloud.io
   containerPrefixRegistry: release-ci.daocloud.io
