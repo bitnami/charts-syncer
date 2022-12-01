@@ -4,6 +4,8 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+
+	"github.com/bitnami-labs/charts-syncer/pkg/util/chartutil"
 )
 
 // Validate validates the config file is correct
@@ -35,6 +37,18 @@ func (c *Config) Validate() error {
 		// so the user does not need to set it up
 		if auth.Username == "" || auth.Password == "" {
 			return errors.Errorf(`"target.containers.auth" "username"" and "password" are required"`)
+		}
+	}
+
+	// check charts name and versions
+	for _, chart := range c.Charts {
+		if err := chartutil.ValidateChartName(chart.Name); err != nil {
+			return errors.Errorf(`"charts name %s is invalid  %s`, chart.Name, err.Error())
+		}
+		for _, version := range chart.Versions {
+			if err := chartutil.ValidateChartVersion(version); err != nil {
+				return errors.Errorf(`"charts %s version %s is invalid, %s"`, chart.Name, version, err.Error())
+			}
 		}
 	}
 

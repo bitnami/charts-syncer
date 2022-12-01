@@ -6,18 +6,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"sort"
+
+	"github.com/juju/errors"
+	"helm.sh/helm/v3/pkg/chart"
 
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
-	"github.com/juju/errors"
-	"helm.sh/helm/v3/pkg/chart"
-)
-
-var (
-	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.bundle.tar")
+	"github.com/bitnami-labs/charts-syncer/pkg/util/chartutil"
 )
 
 type chartVersions []string
@@ -52,7 +49,7 @@ func New(dir string) (*BundlesDir, error) {
 	}
 	for _, m := range matches {
 		filename := filepath.Base(m)
-		s := versionRe.FindStringSubmatch(filename)
+		s := chartutil.FindStringSubmatch(filename)
 		entries[s[1]] = append(entries[s[1]], s[2])
 		sort.Strings(entries[s[0]])
 	}
@@ -80,7 +77,7 @@ func (bd *BundlesDir) ListChartVersions(name string) ([]string, error) {
 
 // Fetch fetches a chart
 func (bd *BundlesDir) Fetch(name string, version string) (string, error) {
-	return path.Join(bd.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version)), nil
+	return path.Join(bd.dir, fmt.Sprintf("%s_%s.bundle.tar", name, version)), nil
 }
 
 // Has checks if a repo has a specific chart
@@ -119,7 +116,7 @@ func (bd *BundlesDir) Upload(filepath string, metadata *chart.Metadata) error {
 		return errors.Annotatef(err, "reading %q", filepath)
 	}
 
-	out := path.Join(bd.dir, fmt.Sprintf("%s-%s.bundle.tar", name, version))
+	out := path.Join(bd.dir, fmt.Sprintf("%s_%s.bundle.tar", name, version))
 	dst, err := os.Create(out)
 	if err != nil {
 		return errors.Annotatef(err, "creating %q", out)

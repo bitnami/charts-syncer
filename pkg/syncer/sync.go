@@ -50,7 +50,7 @@ func (s *Syncer) SyncPendingCharts(chs ...*api.Charts) error {
 	}
 
 	for _, ch := range charts {
-		id := fmt.Sprintf("%s-%s", ch.Name, ch.Version)
+		id := fmt.Sprintf("%s_%s", ch.Name, ch.Version)
 		klog.Infof("Syncing %q chart...", id)
 
 		klog.V(3).Infof("Processing %q chart...", id)
