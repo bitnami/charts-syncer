@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"fmt"
-	"github.com/bitnami-labs/charts-syncer/api"
 	"sort"
 	"time"
 
@@ -12,8 +11,10 @@ import (
 	"github.com/philopon/go-toposort"
 	"k8s.io/klog"
 
+	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami-labs/charts-syncer/pkg/util/chartutil"
 )
 
 // Chart describes a chart, including dependencies
@@ -98,6 +99,11 @@ func (s *Syncer) loadCharts(charts ...*api.Charts) error {
 	// Iterate over charts in source index
 	var errs error
 	for _, chart := range charts {
+		if err := chartutil.ValidateChartName(chart.Name); err != nil {
+			klog.V(3).Infof("Indexing %q charts name is invalid SKIPPED...", chart.Name)
+			continue
+		}
+
 		if shouldSkipChart(chart.Name, s.skipCharts) {
 			klog.V(3).Infof("Indexing %q charts SKIPPED...", chart.Name)
 			continue
@@ -132,6 +138,11 @@ func (s *Syncer) loadCharts(charts ...*api.Charts) error {
 			for _, version := range versions {
 				if len(chart.Versions) > 0 && shouldSkipChartVersion(version, chart.Versions) {
 					klog.V(3).Infof("Indexing %q %q charts SKIPPED...", chart.Name, version)
+					continue
+				}
+
+				if err := chartutil.ValidateChartVersion(version); err != nil {
+					klog.V(3).Infof("Indexing %q %q charts version is invalid SKIPPED...", chart.Name, version)
 					continue
 				}
 
