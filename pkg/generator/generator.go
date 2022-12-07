@@ -1,7 +1,9 @@
 package generator
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 
@@ -12,6 +14,7 @@ import (
 
 type Generator struct {
 	dryRun bool
+	output string
 
 	manifest *api.Manifest
 }
@@ -26,12 +29,35 @@ func New(manifest *api.Manifest, opts ...Option) (*Generator, error) {
 		o(g)
 	}
 
+	if g.output != "" {
+		err := g.checkOutputDir()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return g, nil
 }
 
 func getRepoName(repoURL string) string {
 	target := strings.Split(repoURL, "/")
 	return target[len(target)-1]
+}
+
+func (g *Generator) checkOutputDir() error {
+	_, err := os.Stat(g.output)
+	if err != nil {
+		if errors.Is(err, fs.ErrExist) {
+			return nil
+		}
+		if errors.Is(err, fs.ErrNotExist) {
+			err := os.MkdirAll(g.output, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func convertCharts(charts []*api.Charts) []*Charts {
@@ -90,7 +116,12 @@ func (g *Generator) Generator() error {
 			return err
 		}
 
-		err = os.WriteFile(fmt.Sprintf("%s.yaml", getRepoName(manifest.GetRepoURL())), data, os.ModePerm)
+		fileName := fmt.Sprintf("%s.yaml", getRepoName(manifest.GetRepoURL()))
+		if g.output != "" {
+			fileName = fmt.Sprintf("%s/%s", g.output, fileName)
+		}
+
+		err = os.WriteFile(fileName, data, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -101,9 +132,16 @@ func (g *Generator) Generator() error {
 // Option is an option value used to create a new syncer instance.
 type Option func(*Generator)
 
-// WithDryRun configures the syncer to run in dry-run mode.
+// WithDryRun configures the generator to run in dry-run mode.
 func WithDryRun(enable bool) Option {
 	return func(s *Generator) {
 		s.dryRun = enable
+	}
+}
+
+// WithOutputDir configures the generator generate config file dir.
+func WithOutputDir(dir string) Option {
+	return func(s *Generator) {
+		s.output = dir
 	}
 }

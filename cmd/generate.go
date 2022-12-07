@@ -12,6 +12,10 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/generator"
 )
 
+var (
+	outputDir string
+)
+
 func initGenerateConfigFile() error {
 	// Use config file from the flag.
 	if rootGenerateConfig != "" {
@@ -46,11 +50,6 @@ func newGenerateCmd() *cobra.Command {
 				return errors.Trace(err)
 			}
 
-			// Env variables bindings for viper
-			if err := manifest.InitEnvBindings(); err != nil {
-				return errors.Trace(err)
-			}
-
 			// Load manifest config file relying on viper to find it
 			if err := manifest.Load(&m); err != nil {
 				return errors.Trace(err)
@@ -64,6 +63,7 @@ func newGenerateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			genOptions := []generator.Option{
 				generator.WithDryRun(rootDryRun),
+				generator.WithOutputDir(outputDir),
 			}
 
 			g, err := generator.New(&m, genOptions...)
@@ -73,5 +73,8 @@ func newGenerateCmd() *cobra.Command {
 			return errors.Trace(g.Generator())
 		},
 	}
+
+	cmd.Flags().StringVar(&outputDir, "output-dir", ".", "Output directory")
+
 	return cmd
 }
