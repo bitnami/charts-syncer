@@ -11,6 +11,7 @@ replace (
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bitnami-labs/pbjson v1.1.0
 	github.com/containerd/containerd v1.6.6
 	github.com/distribution/distribution/v3 v3.0.0-20211118083504-a29a3c99a684
@@ -45,7 +46,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
-	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v0.0.0-20141110184014-b1d153021fcd // indirect

@@ -8,15 +8,17 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/avast/retry-go"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/pkg/mover"
 	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
+
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/chart"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 )
 
 // SyncPendingCharts syncs the charts not found in the target
@@ -102,7 +104,19 @@ func (s *Syncer) SyncPendingCharts(chs ...*api.Charts) error {
 		}
 
 		klog.V(3).Infof("Uploading %q chart...", id)
-		if err := s.cli.dst.Upload(packagedChartPath, metadata); err != nil {
+		err = retry.Do(
+			func() error {
+				if err := s.cli.dst.Upload(packagedChartPath, metadata); err != nil {
+					return err
+				}
+				return nil
+			},
+			retry.Attempts(3),
+			retry.OnRetry(func(n uint, err error) {
+				klog.V(3).Infof("Attempt #%d failed: %s\n", n+1, err.Error())
+			}),
+		)
+		if err != nil {
 			klog.Errorf("unable to upload %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
@@ -124,12 +138,24 @@ func (s *Syncer) SyncWithRelok8s(chart *Chart, outdir string) (string, error) {
 	}
 
 	if s.autoCreateRepository && s.target.GetRepo() != nil && s.target.GetRepo().Url != "" && s.target.GetRepo().Kind == api.Kind_HARBOR {
-		err = s.SyncChartRepository()
-		if err != nil {
-			return "", err
-		}
+		err = retry.Do(
+			func() error {
+				err = s.SyncChartRepository()
+				if err != nil {
+					return err
+				}
 
-		err = s.SyncImagesRepository(chartMover)
+				err = s.SyncImagesRepository(chartMover)
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+			retry.Attempts(3),
+			retry.OnRetry(func(n uint, err error) {
+				klog.V(3).Infof("Attempt #%d failed: %s\n", n+1, err.Error())
+			}),
+		)
 		if err != nil {
 			return "", err
 		}
