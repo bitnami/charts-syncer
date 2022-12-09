@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/bitnami-labs/charts-syncer/cmd"
 )

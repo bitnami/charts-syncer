@@ -18,7 +18,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // Repo allows to operate a chart repository.

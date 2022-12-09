@@ -47,8 +47,10 @@ target:
 # It is mandatory if the source repo is OCI and not autodiscovery is supported in that repository
 # More info here https://github.com/bitnami-labs/charts-syncer#charts-index-for-oci-based-repositories
 charts:
-  - redis
-  - etcd
+  - name: redis
+    version:
+      - 1.2.1
+  - name: etcd
 # opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped
 # either "charts" or "skipCharts" can be used at once
 # skipCharts:

@@ -3,7 +3,6 @@ package syncer
 import (
 	"fmt"
 	"io/ioutil"
-	"k8s.io/klog"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
+	"k8s.io/klog/v2"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
