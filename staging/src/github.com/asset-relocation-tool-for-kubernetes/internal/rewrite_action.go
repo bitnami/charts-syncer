@@ -153,7 +153,7 @@ func applyRewrites(values map[string]interface{}, rewriteActions []*RewriteActio
 	return values, nil
 }
 
-func (t *ImageTemplate) Render(chart *chart.Chart, rewriteActions ...*RewriteAction) (name.Reference, error) {
+func (t *ImageTemplate) Render(chart *chart.Chart, insecure bool, rewriteActions ...*RewriteAction) (name.Reference, error) {
 	values := buildValuesMap(chart)
 
 	// Apply rewrite actions
@@ -169,7 +169,12 @@ func (t *ImageTemplate) Render(chart *chart.Chart, rewriteActions ...*RewriteAct
 		return nil, fmt.Errorf("failed to render image: %w", err)
 	}
 
-	image, err := name.ParseReference(output.String())
+	var image name.Reference
+	if insecure {
+		image, err = name.ParseReference(output.String(), name.Insecure)
+	} else {
+		image, err = name.ParseReference(output.String())
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse image reference: %w", err)
 	}
