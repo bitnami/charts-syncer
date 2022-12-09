@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	defaultCfgFile = "charts-syncer.yaml"
+	defaultCfgFile         = "charts-syncer.yaml"
+	defaultGenerateCfgFile = "charts-generator-syncer.yaml"
 )
 
 var (
@@ -15,9 +16,10 @@ var (
 
 Find more information at: https://github.com/bitnami-labs/charts-syncer`
 
-	rootConfig   string
-	rootDryRun   bool
-	rootInsecure bool
+	rootConfig         string
+	rootGenerateConfig string
+	rootDryRun         bool
+	rootInsecure       bool
 )
 
 func newRootCmd() *cobra.Command {
@@ -31,11 +33,13 @@ func newRootCmd() *cobra.Command {
 
 	cmd.PersistentFlags().BoolVar(&rootDryRun, "dry-run", false, "Only shows the charts pending to be synced without syncing them")
 	cmd.PersistentFlags().StringVarP(&rootConfig, "config", "c", "", fmt.Sprintf("Config file. Defaults to ./%s or $HOME/%s)", defaultCfgFile, defaultCfgFile))
+	cmd.PersistentFlags().StringVarP(&rootGenerateConfig, "generate-config", "g", "", fmt.Sprintf("Generate Config file. Defaults to ./%s or $HOME/%s)", defaultGenerateCfgFile, defaultGenerateCfgFile))
 	cmd.PersistentFlags().BoolVar(&rootInsecure, "insecure", false, "Allow insecure SSL connections")
 
 	// Add subcommands
 	cmd.AddCommand(
 		newSyncCmd(),
+		newGenerateCmd(),
 		newVersionCmd(),
 	)
 

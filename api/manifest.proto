@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package api;
+option go_package = "./;api";
+
+import "api/config.proto";
+
+message Manifest {
+    string apiVersion = 1;
+    string kind = 2;
+    Metadata metadata = 3;
+    Spec spec = 4;
+}
+
+message Metadata {
+    string name = 1;
+}
+
+message Spec {
+    repeated Manifests manifests = 1;
+}
+
+message Manifests {
+    string repoURL = 1;
+    Kind kind = 2;
+    repeated Charts charts = 3;
+}

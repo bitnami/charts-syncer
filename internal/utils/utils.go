@@ -19,7 +19,7 @@ import (
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/bitnami-labs/charts-syncer/api"
 	"github.com/bitnami-labs/charts-syncer/internal/cache"

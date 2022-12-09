@@ -21,7 +21,7 @@ import (
 	"github.com/juju/errors"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"helm.sh/helm/v3/pkg/chart"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"oras.land/oras-go/pkg/content"
 	orascontext "oras.land/oras-go/pkg/context"
 	"oras.land/oras-go/pkg/oras"

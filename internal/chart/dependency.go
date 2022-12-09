@@ -13,7 +13,7 @@ import (
 	"github.com/mkmik/multierror"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/provenance"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/yaml"
 
 	"github.com/bitnami-labs/charts-syncer/api"

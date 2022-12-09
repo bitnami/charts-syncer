@@ -11,7 +11,7 @@ import (
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // Clients holds the source and target chart repo clients

@@ -21,7 +21,7 @@ fullcover:
 	GO111MODULE=on go tool cover -func=coverage.out
 
 gen:
-	cd api && protoc --go_out=plugins=grpc:. config.proto
+	protoc --proto_path=:. --go_out=plugins=grpc:./api api/config.proto api/manifest.proto
 
 build: $(GO_SOURCES)
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./
