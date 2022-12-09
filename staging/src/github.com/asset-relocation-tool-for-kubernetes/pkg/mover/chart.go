@@ -151,6 +151,7 @@ type ChartMover struct {
 	// raw contents of the hints file. Sample:
 	// test/fixtures/testchart.images.yaml
 	rawHints []byte
+	Insecure bool
 }
 
 // NewChartMover creates a ChartMover to relocate a chart following the given
@@ -509,7 +510,7 @@ func (cm *ChartMover) loadOriginalImages(imagePatterns []*internal.ImageTemplate
 		}
 		action = "load"
 	}
-	imageChanges, err := loadImageChanges(cm.chart, imagePatterns, loadFn)
+	imageChanges, err := loadImageChanges(cm.chart, imagePatterns, loadFn, cm.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("failed to %s original images: %w", action, err)
 	}
@@ -519,12 +520,12 @@ func (cm *ChartMover) loadOriginalImages(imagePatterns []*internal.ImageTemplate
 // loadImageChanges loads images from a loader function load and wraps them as
 // ImageChange appropriately. As the load function is abstracted away this
 // can be loading remote or local images the same way.
-func loadImageChanges(chart *chart.Chart, patterns []*internal.ImageTemplate, load imageLoadFn) ([]*internal.ImageChange, error) {
+func loadImageChanges(chart *chart.Chart, patterns []*internal.ImageTemplate, load imageLoadFn, insecure bool) ([]*internal.ImageChange, error) {
 	var changes []*internal.ImageChange
 	imageCache := map[string]*internal.ImageChange{}
 
 	for _, pattern := range patterns {
-		originalImage, err := pattern.Render(chart)
+		originalImage, err := pattern.Render(chart, insecure)
 		if err != nil {
 			return nil, err
 		}
@@ -573,7 +574,7 @@ func (cm *ChartMover) computeChanges(imageChanges []*internal.ImageChange, regis
 
 		chartChanges = append(chartChanges, newActions...)
 
-		rewrittenImage, err := change.Pattern.Render(cm.chart, newActions...)
+		rewrittenImage, err := change.Pattern.Render(cm.chart, cm.Insecure, newActions...)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -610,7 +611,11 @@ func (cm *ChartMover) pushRewrittenImages(imageChanges []*internal.ImageChange) 
 
 					// if we know the tag, use that when pushing the image
 					if change.Tag != "" {
-						imageToPush, err = name.NewTag(imageToPush.Context().Name(), name.WithDefaultTag(change.Tag))
+						if cm.Insecure {
+							imageToPush, err = name.NewTag(imageToPush.Context().Name(), name.Insecure, name.WithDefaultTag(change.Tag))
+						} else {
+							imageToPush, err = name.NewTag(imageToPush.Context().Name(), name.WithDefaultTag(change.Tag))
+						}
 						if err != nil {
 							cm.logger.Printf("Unable to determine the original tag for %s: %w", change.RewrittenReference.Name(), err)
 							imageToPush = change.RewrittenReference
@@ -739,6 +744,13 @@ type Option func(*ChartMover)
 func WithRetries(retries uint) Option {
 	return func(c *ChartMover) {
 		c.retries = retries
+	}
+}
+
+// WithInsecure defines the push operation to use HTTP or HTTPS
+func WithInsecure(insecure bool) Option {
+	return func(c *ChartMover) {
+		c.Insecure = insecure
 	}
 }
 
