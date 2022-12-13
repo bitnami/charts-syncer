@@ -13,11 +13,9 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux  go build  -o charts-syncer
 
-FROM scratch
+FROM alpine:3.15
 ARG IMAGE_VERSION
 ENV IMAGE_VERSION=${IMAGE_VERSION}
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-# Workaround to have a /tmp folder in the scratch container
-COPY --from=build /workdir /tmp
-COPY --from=syncer /workdir/charts-syncer /
-ENTRYPOINT [ "/charts-syncer" ]
+COPY --from=syncer /workdir/charts-syncer /bin/
+ENTRYPOINT [ "/bin/charts-syncer" ]
