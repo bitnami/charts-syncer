@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	outputDir string
+	outputDir         string
+	bundlesPathPrefix string
 )
 
 func initGenerateConfigFile() error {
@@ -64,6 +65,7 @@ func newGenerateCmd() *cobra.Command {
 			genOptions := []generator.Option{
 				generator.WithDryRun(rootDryRun),
 				generator.WithOutputDir(outputDir),
+				generator.WithBundlesPathPrefix(bundlesPathPrefix),
 			}
 
 			g, err := generator.New(&m, genOptions...)
@@ -74,7 +76,8 @@ func newGenerateCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&outputDir, "output-dir", ".", "Output directory")
+	cmd.Flags().StringVar(&outputDir, "output-dir", ".", "charts-syncer config output directory")
+	cmd.Flags().StringVar(&bundlesPathPrefix, "bundles-path-prefix", ".", "charts-syncer config target intermediateBundlesPath prefix")
 
 	return cmd
 }
