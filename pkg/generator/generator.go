@@ -13,8 +13,9 @@ import (
 )
 
 type Generator struct {
-	dryRun bool
-	output string
+	dryRun            bool
+	output            string
+	bundlesPathPrefix string
 
 	manifest *api.Manifest
 }
@@ -41,6 +42,14 @@ func New(manifest *api.Manifest, opts ...Option) (*Generator, error) {
 func getRepoName(repoURL string) string {
 	target := strings.Split(repoURL, "/")
 	return target[len(target)-1]
+}
+
+func (g *Generator) getIntermediateBundlesPath(repoURL string) string {
+	repo := getRepoName(repoURL)
+	if g.bundlesPathPrefix == "" {
+		return repo
+	}
+	return fmt.Sprintf("%s/%s", g.bundlesPathPrefix, repo)
 }
 
 func (g *Generator) checkOutputDir() error {
@@ -106,7 +115,7 @@ func (g *Generator) Generator() error {
 				},
 			},
 			Target: Target{
-				IntermediateBundlesPath: getRepoName(manifest.GetRepoURL()),
+				IntermediateBundlesPath: g.getIntermediateBundlesPath(manifest.GetRepoURL()),
 			},
 			Charts: convertCharts(manifest.GetCharts()),
 		}
@@ -143,5 +152,12 @@ func WithDryRun(enable bool) Option {
 func WithOutputDir(dir string) Option {
 	return func(s *Generator) {
 		s.output = dir
+	}
+}
+
+// WithBundlesPathPrefix configures the generator generate config target intermediate bundles' path prefix.
+func WithBundlesPathPrefix(prefix string) Option {
+	return func(s *Generator) {
+		s.bundlesPathPrefix = prefix
 	}
 }
