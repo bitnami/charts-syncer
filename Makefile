@@ -4,12 +4,6 @@ GOARCH ?= $(shell go env GOARCH)
 VERSION := $(or $(VERSION), dev)
 LDFLAGS="-X github.com/bitnami-labs/charts-syncer/cmd.version=$(VERSION)"
 
-# build args
-IMAGE_VERSION := $(shell echo $(VERSION) | sed 's/+/-/1')
-REGISTRY_SERVER_ADDRESS?="release-ci.daocloud.io"
-REGISTRY_REPO?="$(REGISTRY_SERVER_ADDRESS)/kpanda"
-BUILD_ARCH ?= linux/$(GOARCH)
-
 test:
 	GO111MODULE=on go test ./...
 
