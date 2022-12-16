@@ -25,17 +25,3 @@ gen:
 
 build: $(GO_SOURCES)
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./
-
-image: $(SOURCES)
-	echo "Building charts-syncer for arch = $(BUILD_ARCH)"
-	export DOCKER_CLI_EXPERIMENTAL=enabled ;\
-	! ( docker buildx ls | grep charts-syncer-multi-platform-builder ) && docker buildx create --use --platform=$(BUILD_ARCH) --name charts-syncer-multi-platform-builder ;\
-	docker buildx build \
-			--build-arg version=$(IMAGE_VERSION) \
-			--builder charts-syncer-multi-platform-builder \
-			--platform $(BUILD_ARCH) \
-			--tag $(REGISTRY_REPO)/charts-syncer:$(IMAGE_VERSION)  \
-			--tag $(REGISTRY_REPO)/charts-syncer:latest  \
-			-f ./Dockerfile \
-			--load \
-			.
