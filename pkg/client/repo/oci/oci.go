@@ -274,7 +274,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 	u := *r.url
 	// Form API endpoint URL from repo url as per the specification:
 	// https://github.com/opencontainers/distribution-spec/blob/main/spec.md#checking-if-content-exists-in-the-registry
-	// A successful request should return 200 OK.
+	// The request should return 200 OK if the manifest exists.
 	u.Path = path.Join("v2", u.Path, name, "manifests", version)
 	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
