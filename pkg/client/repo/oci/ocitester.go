@@ -187,7 +187,7 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rt.GetChartPackage(w, r, name, digest)
 		return
 	}
-	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
+	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && (r.Method == "GET" || r.Method == "HEAD") {
 		testBasicAuth(rt.t, r)
 		name := strings.Split(r.URL.Path, "/")[4]
 		version := strings.Split(r.URL.Path, "/")[6]
