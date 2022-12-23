@@ -174,7 +174,7 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 			}
 
 			r := &api.Containers{}
-			if target.Containers.Auth != nil {
+			if target.Containers != nil && target.Containers.Auth != nil {
 				r.Auth = &api.Containers_ContainerAuth{
 					Registry: registry,
 					Username: target.Containers.Auth.GetUsername(),
