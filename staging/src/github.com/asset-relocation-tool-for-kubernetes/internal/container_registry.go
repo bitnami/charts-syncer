@@ -4,7 +4,9 @@
 package internal
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -17,18 +19,29 @@ type ContainerRegistryInterface interface {
 	Check(digest string, imageReference name.Reference) (bool, error)
 	Pull(imageReference name.Reference) (v1.Image, string, error)
 	Push(image v1.Image, dest name.Reference) error
+	WithInsecure(insecure bool)
 }
 
 type ContainerRegistryClient struct {
-	auth authn.Keychain
+	auth     authn.Keychain
+	insecure bool
 }
 
 func NewContainerRegistryClient(auth authn.Keychain) *ContainerRegistryClient {
 	return &ContainerRegistryClient{auth: auth}
 }
 
+func (i *ContainerRegistryClient) WithInsecure(insecure bool) {
+	i.insecure = insecure
+}
+
 func (i *ContainerRegistryClient) Pull(imageReference name.Reference) (v1.Image, string, error) {
-	image, err := remote.Image(imageReference, remote.WithAuthFromKeychain(i.auth))
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if i.insecure {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
+	image, err := remote.Image(imageReference, remote.WithAuthFromKeychain(i.auth), remote.WithTransport(transport))
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to pull image %s: %w", imageReference.Name(), err)
 	}
@@ -61,7 +74,11 @@ func (i *ContainerRegistryClient) Check(digest string, imageReference name.Refer
 }
 
 func (i *ContainerRegistryClient) Push(image v1.Image, dest name.Reference) error {
-	err := remote.Write(dest, image, remote.WithAuthFromKeychain(i.auth))
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if i.insecure {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	err := remote.Write(dest, image, remote.WithAuthFromKeychain(i.auth), remote.WithTransport(transport))
 	if err != nil {
 		return fmt.Errorf("failed to push image %s: %w", dest.Name(), err)
 	}

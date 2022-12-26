@@ -751,6 +751,7 @@ func WithRetries(retries uint) Option {
 func WithInsecure(insecure bool) Option {
 	return func(c *ChartMover) {
 		c.Insecure = insecure
+		c.targetContainerRegistry.WithInsecure(insecure)
 	}
 }
 
