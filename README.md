@@ -33,21 +33,21 @@ Sync chart packages and associated container images between chart repositories
 
 ### Sync all Helm Charts
 
-~~~bash
+```console
 $ charts-syncer sync
-~~~
+```
 
 ### Sync Helm Charts from a specific date
 
-~~~bash
+```console
 $ charts-syncer sync --from-date 2020-05-15
-~~~
+```
 
 ### Sync latest version of each Helm Chart
 
-~~~bash
+```console
 $ charts-syncer sync --latest-version-only
-~~~
+```
 
 ## Advanced Usage
 
@@ -56,14 +56,14 @@ $ charts-syncer sync --latest-version-only
 By default, charts-syncer only sync Helm Charts packages, it does not copy the container images referenced by the chart. This
 feature can be enabled by setting the `relocateContainerImages: true` property in the config file i.e
 
-~~~yaml
+```yaml
 # leverage .relok8s-images.yaml file inside the Charts to move the container images too
 relocateContainerImages: true
 source:
    ...
 target:
    ...
-~~~
+```
 
 In order for this option to work it is required that the source Helm Charts includes a `.relok8s-images.yaml` file with information
 about where to find the images inside chart. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
@@ -80,7 +80,7 @@ For those cases, charts-syncer supports a two steps relocation for offline Chart
 
 Below you can find an example configuration file. To know all the available configuration keys see the [charts-syncer](./charts-syncer.yaml) file as it includes explanatory comments for each configuration key.
 
-~~~yaml
+```yaml
 #
 # Example config file
 #
@@ -121,7 +121,7 @@ charts:
 # either "charts" or "skipCharts" can be used at once
 # skipCharts:
 #  - mariadb
-~~~
+```
 
 > Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
 >
@@ -190,24 +190,24 @@ https://$HARBOR_DOMAIN/chartrepo/$HARBOR_PROJECT
 
 So if HARBOR_DOMAIN=my.harbor.com and HARBOR_PROJECT=my-project, you would need to specify this repo in the config file like:
 
-~~~yaml
+```yaml
 target:
  repo:
    kind: HARBOR
    url: https://my.harbor.com/chartrepo/my-project
-~~~
+```
 
 ### OCI example
 
 Since Harbor 2.0.0, there are two ways of storing charts. The legacy one uses chartmuseum under the hood and it corresponds to the HARBOR kind of this project.
 The new one however uses OCI to store helm charts as OCI artifacts. In case you are using Harbor with OCI backend you can use the following example:
 
-~~~yaml
+```yaml
 target:
  repo:
    kind: OCI
    url: https://my.harbor.com/my-project/subpath
-~~~
+```
 
 `subpath` in the previous url is optional in case your charts are not stored directly under your projects.
 It is worth mentioning that you can use Harbor robot accounts using OCI registries as source or target.
@@ -230,7 +230,7 @@ For example, if your URL is `https://my-oci-registry.io/my-project/subpath` and 
 An example of the valid index format can be seen directly in its [Protobuf definition](internal/indexer/api/index.proto). Worth to mention 
 that the format of the charts index for OCI repositories is a custom one, not a traditional Helm index file.
 
-~~~yaml
+```yaml
 source:
  repo:
    kind: OCI
@@ -238,11 +238,11 @@ source:
    # disableChartsIndex: true
    # Charts index location override, charts-index:latest by default
    chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
-~~~
+```
 
 Finally, if no charts index is found, charts-syncer will require the list of charts in the config file:
 
-~~~yaml
+```yaml
 source:
   repo:
     kind: OCI
@@ -253,7 +253,7 @@ charts:
   - redis
   - mariadb
   - ...
-~~~
+```
 
 #### Amazon Elastic Container Registry (ECR)
 Amazon Elastic Container Registry (ECR) is an OCI registry, but it has two peculiarities that should be taken into account when interacting with charts-syncer.
@@ -261,7 +261,7 @@ Amazon Elastic Container Registry (ECR) is an OCI registry, but it has two pecul
 The first peculiarity relates to authentication, usually you would have an IAM user with access_key_id and secret_access_key credentials. These **are not** the credentials that should be entered in the config file.
 To obtain the proper credentials, you need to obtain a temporary password to operate the ECR registry. By using the following command, you can get the password:
 
-```
+```console
 $ aws ecr get-login-password --region REGION
 ```
 
@@ -286,12 +286,12 @@ In that case make sure all the missing repositories are created before executing
 In case charts-syncer is not able to directly push the modified charts to the desired target, it would be possible to sync the charts
 to a local folder using the LOCAL target kind and then use any other tool or process to upload these charts to the final charts repository.
 
-~~~yaml
+```yaml
 target:
  repo:
    kind: LOCAL
    path: your_local_path
-~~~
+```
 
 ## Requirements
 
@@ -299,12 +299,12 @@ In order for this tool to be able to successfully migrate a chart from a source 
 
 - The images used by the chart must be specified in the following way in the values.yaml file:
 
-~~~yaml
+```yaml
 image:
   registry: docker.io
   repository: bitnami/ghost
   tag: 3.22.2-debian-10-r0
-~~~
+```
 
 The parent section name does not matter. In the previous example, instead of `image` it could be `mainImage` or whatever other name.
 
@@ -341,7 +341,7 @@ Let's see the performed changes with an example. Imagine I sync the Ghost chart 
 
 I would use this config file:
 
-~~~yaml
+```yaml
 source:
   repo:
     kind: HELM
@@ -353,13 +353,13 @@ target:
   repo:
     kind: CHARTMUSEUM
     url: http://localhost:8080
-~~~
+```
 
 After executing the tool, these are the changes performed to the following files:
 
 #### values.yaml
 
-~~~diff
+```diff
 diff --git a/values.yaml b/values.yaml
 index dff53b1..a9d5884 100755
 --- a/values.yaml
@@ -386,11 +386,11 @@ index dff53b1..a9d5884 100755
      tag: buster
      pullPolicy: Always
      ## Optionally specify an array of imagePullSecrets.
-~~~
+```
 
 #### requirements.lock (only for Helm v2 charts)
 
-~~~diff
+```diff
 diff --git a/requirements.lock b/requirements.lock
 index ae8a2c5..ea23e53 100755
 --- a/requirements.lock
@@ -409,11 +409,11 @@ index ae8a2c5..ea23e53 100755
 -generated: "2020-07-06T18:13:45.662082005Z"
 +digest: sha256:fbd22a3fc7b93ce6875a37902a3c8ccbb5dd3db2611ec9860b99e49d9f23196e
 +generated: "2020-07-07T12:57:28.573258+02:00"
-~~~
+```
 
 #### Chart.lock (only for Helm v3 charts)
 
-~~~diff
+```diff
 diff --git a/Chart.lock b/Chart.lock
 index ae1c198..eeed9a7 100644
 --- a/Chart.lock
@@ -428,7 +428,7 @@ index ae1c198..eeed9a7 100644
 -generated: "2020-09-29T12:51:56.872354+02:00"
 +digest: sha256:8aef6388d327cdf9b8f5714aadfe8112b2e2ff53494e86dbd42946d742d33ff0
 +generated: "2020-09-30T16:15:20.548388+02:00"
-~~~
+```
 
 #### README.md
 
@@ -484,3 +484,16 @@ Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob
 ## How to build
 
 > Check the [developer docs](docs/development.md).
+
+## License
+
+Copyright &copy; 2023 Bitnami
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
