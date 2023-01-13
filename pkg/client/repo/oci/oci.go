@@ -268,14 +268,37 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(name string, version string) (bool, error) {
-	versions, err := r.ListChartVersions(name)
+	ctx, cancel := context.WithTimeout(context.Background(), getTimeout)
+	defer cancel()
+
+	u := *r.url
+	// Form API endpoint URL from repo url as per the specification:
+	// https://github.com/opencontainers/distribution-spec/blob/main/spec.md#checking-if-content-exists-in-the-registry
+	// The request should return 200 OK if the manifest exists.
+	u.Path = path.Join("v2", u.Path, name, "manifests", version)
+	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
 	if err != nil {
 		return false, errors.Trace(err)
 	}
-	for _, v := range versions {
-		if v == version {
-			return true, nil
-		}
+
+	req.Header.Set("Accept", ImageManifestMediaType)
+	if r.username != "" && r.password != "" {
+		req.SetBasicAuth(r.username, r.password)
+	}
+
+	client := utils.DefaultClient
+	if r.insecure {
+		client = utils.InsecureClient
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, errors.Trace(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
 	}
 	return false, nil
 }
