@@ -250,7 +250,7 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 	w.Write(tagsList)
 }
 
-// HeadManifest404 return if a manifests exists or not
+// HeadManifest200 return if a manifests exists or not
 func (rt *RepoTester) HeadManifest200(w http.ResponseWriter) {
 	w.WriteHeader(200)
 }
