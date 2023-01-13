@@ -187,7 +187,12 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rt.GetChartPackage(w, r, name, digest)
 		return
 	}
-	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && (r.Method == "GET" || r.Method == "HEAD") {
+	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && r.Method == "HEAD" {
+		testBasicAuth(rt.t, r)
+		rt.HeadManifest200(w)
+		return
+	}
+	if ociTagManifestRegex.Match([]byte(r.URL.Path)) && r.Method == "GET" {
 		testBasicAuth(rt.t, r)
 		name := strings.Split(r.URL.Path, "/")[4]
 		version := strings.Split(r.URL.Path, "/")[6]
@@ -243,6 +248,11 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 		rt.t.Fatal(err)
 	}
 	w.Write(tagsList)
+}
+
+// HeadManifest404 return if a manifests exists or not
+func (rt *RepoTester) HeadManifest200(w http.ResponseWriter) {
+	w.WriteHeader(200)
 }
 
 // HeadManifest404 return if a manifests exists or not
