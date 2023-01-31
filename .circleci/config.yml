@@ -46,7 +46,7 @@ workflows:
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.19
     steps:
       - checkout
       - run: make build
