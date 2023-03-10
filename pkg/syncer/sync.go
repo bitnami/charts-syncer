@@ -184,7 +184,9 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 	if target.GetIntermediateBundlesPath() != "" {
 		// airgap scenario step 1: SOURCE REPO => Intermediate bundles path
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.bundle.tar", chart.Name, chart.Version))
-		return relok8sBundleSaveReq(chart.TgzPath, packagedChartPath, source.GetContainers().GetAuth()), packagedChartPath
+		return relok8sBundleSaveReq(
+			chart.TgzPath, packagedChartPath, source.GetRepo().GetImageHintsFile(),
+			source.GetContainers().GetAuth()), packagedChartPath
 	} else if source.GetIntermediateBundlesPath() != "" {
 		// airgap scenario step 2: Intermediate bundles path => TARGET REPO
 		// Second step of intermediate process
@@ -193,7 +195,7 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		outputChartPath := filepath.Join(outdir, "%s-%s.relocated.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.relocated.tgz", chart.Name, chart.Version))
 		return relok8sBundleLoadReq(
-			chart.TgzPath, outputChartPath,
+			chart.TgzPath, outputChartPath, source.GetRepo().GetImageHintsFile(),
 			target.GetContainerRegistry(), target.GetContainerRepository(),
 			target.GetContainers().GetAuth()), packagedChartPath
 	} else {
@@ -202,12 +204,12 @@ func getRelok8sMoveRequest(source *api.Source, target *api.Target, chart *Chart,
 		// specify the name we want for the output file. Until then, we should keep using this template thing
 		outputChartPath := filepath.Join(outdir, "%s-%s.tgz")
 		packagedChartPath := filepath.Join(outdir, fmt.Sprintf("%s-%s.tgz", chart.Name, chart.Version))
-		return relok8sMoveReq(chart.TgzPath, outputChartPath, target.GetContainerRegistry(), target.GetContainerRepository(),
+		return relok8sMoveReq(chart.TgzPath, outputChartPath, source.GetRepo().GetImageHintsFile(), target.GetContainerRegistry(), target.GetContainerRepository(),
 			source.GetContainers().GetAuth(), target.GetContainers().GetAuth()), packagedChartPath
 	}
 }
 
-func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+func relok8sMoveReq(sourcePath, targetPath, imageHintsFile, containerRegistry, containerRepository string, sourceAuth, targetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -215,6 +217,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 					Path: sourcePath,
 				},
 			},
+			ImageHintsFile: imageHintsFile,
 			ContainersAuth: chartsSyncerToRelok8sAuth(sourceAuth),
 		},
 		Target: mover.Target{
@@ -235,7 +238,7 @@ func relok8sMoveReq(sourcePath, targetPath, containerRegistry, containerReposito
 	return req
 }
 
-func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+func relok8sBundleSaveReq(sourcePath, targetPath, imageHintsFile string, containerSourceAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -243,6 +246,7 @@ func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *ap
 					Path: sourcePath,
 				},
 			},
+			ImageHintsFile: imageHintsFile,
 			ContainersAuth: chartsSyncerToRelok8sAuth(containerSourceAuth),
 		},
 		Target: mover.Target{
@@ -256,7 +260,7 @@ func relok8sBundleSaveReq(sourcePath, targetPath string, containerSourceAuth *ap
 	return req
 }
 
-func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
+func relok8sBundleLoadReq(sourcePath, targetPath, imageHintsFile, containerRegistry, containerRepository string, containerTargetAuth *api.Containers_ContainerAuth) *mover.ChartMoveRequest {
 	req := &mover.ChartMoveRequest{
 		Source: mover.Source{
 			Chart: mover.ChartSpec{
@@ -264,6 +268,7 @@ func relok8sBundleLoadReq(sourcePath, targetPath, containerRegistry, containerRe
 					Path: sourcePath,
 				},
 			},
+			ImageHintsFile: imageHintsFile,
 		},
 		Target: mover.Target{
 			Rules: mover.RewriteRules{
