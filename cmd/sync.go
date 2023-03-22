@@ -16,6 +16,7 @@ var (
 	syncWorkdir           string
 	syncSkipDependencies  bool
 	syncLatestVersionOnly bool
+	syncMatchVersion      string
 )
 
 var (
@@ -90,6 +91,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),
+				syncer.WithMatchVersion(syncMatchVersion),
 			}
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
@@ -104,6 +106,7 @@ func newSyncCmd() *cobra.Command {
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
 	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
 	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
+	cmd.Flags().StringVar(&syncMatchVersion, "match-version", ".*", "Sync matching version of each chart")
 
 	return cmd
 }

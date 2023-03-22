@@ -7,6 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/chartutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"time"
 
@@ -128,11 +129,16 @@ func (s *Syncer) loadCharts(charts ...string) error {
 				continue
 			}
 		} else {
+			matchVersionRe := regexp.MustCompile(s.matchVersion)
 			for _, version := range versions {
-				if err := s.processVersion(name, version, publishingThreshold); err != nil {
-					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
-					errs = multierror.Append(errs, errors.Trace(err))
-					continue
+				if matchVersionRe.MatchString(version) {
+					if err := s.processVersion(name, version, publishingThreshold); err != nil {
+						klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
+						errs = multierror.Append(errs, errors.Trace(err))
+						continue
+					}
+				} else {
+					klog.V(3).Infof("Skip the version %s that does not match", version)
 				}
 			}
 		}
