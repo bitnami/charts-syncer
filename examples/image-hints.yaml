@@ -1,5 +1,5 @@
 ---
 # Every rule, once interpolated, must represent a valid container image URI
 - "{{ .image.registry }}/{{ .image.repository }}:{{ .image.tag }}"
-- "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
-- "{{ .volumePermissions.image.registry }}/{{ .volumePermissions.image.repository }}:{{ .volumePermissions.image.tag }}"
+#- "{{ .metrics.image.registry }}/{{ .metrics.image.repository }}:{{ .metrics.image.tag }}"
+#- "{{ .volumePermissions.image.registry }}/{{ .volumePermissions.image.repository }}:{{ .volumePermissions.image.tag }}"

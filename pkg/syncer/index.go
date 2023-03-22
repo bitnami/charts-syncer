@@ -2,6 +2,11 @@ package syncer
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -104,6 +109,7 @@ func (s *Syncer) loadCharts(charts ...string) error {
 
 		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
 		klog.V(3).Infof("Indexing %q charts...", name)
+		// TODO 在这里添加版本的正则过滤
 		if s.latestVersionOnly {
 			vs := make([]*semver.Version, len(versions))
 			for i, r := range versions {
@@ -204,6 +210,10 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return errors.Trace(err)
 	}
 
+	if err = modifyChartImageTag(tgz); err != nil {
+		return errors.Trace(err)
+	}
+
 	ch := &Chart{
 		Name:    name,
 		Version: version,
@@ -270,4 +280,35 @@ func shouldSkipChart(chartName string, skippedCharts []string) bool {
 		}
 	}
 	return false
+}
+
+func modifyChartImageTag(chartPath string) error {
+	//chartPath := "/Users/vista/project/vista/yihctl/cmd/tools/choerodon-platform-2.2.0.tgz"
+	cq, err := loader.Load(chartPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	// 如果没有设置 image.tag，默认设为 AppVersion
+	if cq.Values["image"] != nil && (cq.Values["image"]).(map[string]interface{})["tag"] == nil {
+		(cq.Values["image"]).(map[string]interface{})["tag"] = cq.Metadata.AppVersion
+		for idx, f := range cq.Raw {
+			if f.Name == "values.yaml" {
+				cq.Raw[idx].Data, _ = yaml.Marshal(cq.Values)
+
+				// 更新默认的 chart
+				err = os.Remove(chartPath)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				d := filepath.Dir(chartPath)
+				_, err = chartutil.Save(cq, d)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				break
+			}
+		}
+	}
+	return nil
 }
