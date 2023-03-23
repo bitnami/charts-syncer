@@ -102,10 +102,21 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			continue
 		}
 
-		versions, err := s.cli.src.ListChartVersions(name)
+		versionsTmp, err := s.cli.src.ListChartVersions(name)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
+		}
+
+		// 先过滤满足条件的版本
+		var versions []string
+		matchVersionRe := regexp.MustCompile(s.matchVersion)
+		for _, v := range versionsTmp {
+			if matchVersionRe.MatchString(v) {
+				versions = append(versions, v)
+			} else {
+				klog.V(3).Infof("Skip the version %s that does not match", v)
+			}
 		}
 
 		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
@@ -129,17 +140,13 @@ func (s *Syncer) loadCharts(charts ...string) error {
 				continue
 			}
 		} else {
-			matchVersionRe := regexp.MustCompile(s.matchVersion)
 			for _, version := range versions {
-				if matchVersionRe.MatchString(version) {
-					if err := s.processVersion(name, version, publishingThreshold); err != nil {
-						klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
-						errs = multierror.Append(errs, errors.Trace(err))
-						continue
-					}
-				} else {
-					klog.V(3).Infof("Skip the version %s that does not match", version)
+				if err := s.processVersion(name, version, publishingThreshold); err != nil {
+					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
+					errs = multierror.Append(errs, errors.Trace(err))
+					continue
 				}
+
 			}
 		}
 	}
