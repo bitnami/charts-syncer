@@ -121,7 +121,6 @@ func (s *Syncer) loadCharts(charts ...string) error {
 
 		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
 		klog.V(3).Infof("Indexing %q charts...", name)
-		// TODO 在这里添加版本的正则过滤
 		if s.latestVersionOnly {
 			vs := make([]*semver.Version, len(versions))
 			for i, r := range versions {
@@ -223,8 +222,10 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return errors.Trace(err)
 	}
 
-	if err = modifyChartImageTag(tgz); err != nil {
-		return errors.Trace(err)
+	if s.relocateContainerImages {
+		if err = modifyChartImageTag(tgz); err != nil {
+			return errors.Trace(err)
+		}
 	}
 
 	ch := &Chart{

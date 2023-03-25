@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -55,7 +54,8 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		klog.Infof("Syncing %q chart...", id)
 
 		klog.V(3).Infof("Processing %q chart...", id)
-		outdir, err := ioutil.TempDir("", "charts-syncer")
+		cwd, _ := os.Getwd()
+		outdir, err := os.MkdirTemp(cwd, "charts-syncer")
 		if err != nil {
 			klog.Errorf("unable to create output directory for %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
@@ -65,7 +65,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 
 		hasDeps := len(ch.Dependencies) > 0
 
-		workdir, err := ioutil.TempDir("", "charts-syncer")
+		workdir, err := os.MkdirTemp("", "charts-syncer")
 		if err != nil {
 			klog.Errorf("unable to create work directory for %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
@@ -156,7 +156,7 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 
 	// Read final chart metadata
 	configFilePath := fmt.Sprintf("%s/Chart.yaml", chartPath)
-	chartConfig, err := ioutil.ReadFile(configFilePath)
+	chartConfig, err := os.ReadFile(configFilePath)
 	if err != nil {
 		klog.Errorf("unable to read %q metadata: %+v", id, err)
 		return "", errors.Trace(err)
