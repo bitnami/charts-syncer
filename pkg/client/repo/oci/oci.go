@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/juju/errors"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"helm.sh/helm/v3/pkg/chart"
@@ -267,40 +268,38 @@ func (r *Repo) Fetch(name string, version string) (string, error) {
 }
 
 // Has checks if a repo has a specific chart
-func (r *Repo) Has(name string, version string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), getTimeout)
-	defer cancel()
-
-	u := *r.url
-	// Form API endpoint URL from repo url as per the specification:
-	// https://github.com/opencontainers/distribution-spec/blob/main/spec.md#checking-if-content-exists-in-the-registry
-	// The request should return 200 OK if the manifest exists.
-	u.Path = path.Join("v2", u.Path, name, "manifests", version)
-	req, err := http.NewRequestWithContext(ctx, "HEAD", u.String(), nil)
-	if err != nil {
-		return false, errors.Trace(err)
-	}
-
-	req.Header.Set("Accept", ImageManifestMediaType)
-	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
-	}
-
-	client := utils.DefaultClient
+func (r *Repo) Has(chartName string, version string) (bool, error) {
+	parseOpts := []name.Option{}
 	if r.insecure {
-		client = utils.InsecureClient
+		parseOpts = append(parseOpts, name.Insecure)
 	}
 
-	resp, err := client.Do(req)
+	ref, err := name.ParseReference(
+		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version),
+		parseOpts...)
 	if err != nil {
-		return false, errors.Trace(err)
+		return false, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		return true, nil
+	opts := []remote.Option{}
+	if r.username != "" && r.password != "" {
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
 	}
-	return false, nil
+
+	_, err = remote.Head(ref, opts...)
+	if err != nil {
+		if terr, ok := err.(*transport.Error); ok {
+			if terr.StatusCode == http.StatusNotFound {
+				return false, nil
+			}
+		}
+		return false, errors.Errorf("failed checking remote: %s", err)
+	}
+
+	return true, nil
 }
 
 // Upload uploads a chart to the repo
