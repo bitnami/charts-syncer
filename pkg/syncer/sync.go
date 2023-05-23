@@ -2,13 +2,7 @@ package syncer
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-
 	"github.com/bitnami-labs/charts-syncer/api"
-
 	"github.com/bitnami-labs/charts-syncer/internal/chart"
 	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/juju/errors"
@@ -17,7 +11,11 @@ import (
 	"gopkg.in/yaml.v2"
 	helm "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
+	"io/ioutil"
 	"k8s.io/klog"
+	"os"
+	"path"
+	"path/filepath"
 )
 
 // SyncPendingCharts syncs the charts not found in the target
@@ -102,6 +100,11 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 			continue
 		}
 
+		if utils.ShouldIgnoreRepo(ch.Repo, s.target.SyncTrustedRepos, s.source.IgnoreTrustedRepos) {
+			klog.Infof("Skipping upload of %q chart because its repository is only in ignoreTrustedRepos list", id)
+			continue
+		}
+
 		klog.V(3).Infof("Uploading %q chart...", id)
 		if err := s.cli.dst.Upload(packagedChartPath, metadata); err != nil {
 			klog.Errorf("unable to upload %q chart: %+v", id, err)
@@ -148,7 +151,7 @@ func (s *Syncer) SyncWithChartsSyncer(ch *Chart, id, workdir, outdir string, has
 	// Update deps
 	if hasDeps {
 		klog.V(3).Infof("Building %q dependencies", id)
-		if err := chart.BuildDependencies(chartPath, s.cli.dst, s.source.GetRepo(), s.target.GetRepo(), s.target.ReplaceDependencyRepo); err != nil {
+		if err := chart.BuildDependencies(chartPath, s.cli.dst, s.source.GetRepo(), s.target.GetRepo(), s.cli.trusted, s.target.SyncTrustedRepos, s.source.IgnoreTrustedRepos); err != nil {
 			klog.Errorf("unable to build %q chart dependencies: %+v", id, err)
 			return "", errors.Trace(err)
 		}

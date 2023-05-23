@@ -4,33 +4,35 @@
 
 # source includes relevant information about the source chart repository
 source:
-  # Dependencies located in repos from this list will be considered as trusted, and also synced.
-  # The entry format is the same as "repo" (see below)
-  trustedSourceDeps:
-  - kind: HELM
-    url: https://grafana.github.io/helm-charts
+  # Optional: Dependencies located in repos from this list will be considered as trusted and maintained as is
+  # if there is a need to work with external repositories different from the source - they must be included here
+  ignoreTrustedRepos:
+    - kind: HELM
+      url: https://grafana.github.io/helm-charts
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: HELM
     # url is the url of the chart repository
-    url: https://prometheus-community.github.io/helm-charts # local test source repo
+    url: https://prometheus-community.github.io/helm-charts  # local test source repo
+
 # target includes relevant information about the target chart repository
 target:
-  # In case there is a need to mirror dependencies (from trustedSourceDeps list, see above) - this must be set to true
-  replaceDependencyRepo: true
+  # repoName is used to modify the README of the chart. Default value: `myrepo`
+  repoName: myrepo
+
+  # Optional: Dependencies located in repos from this list will be considered as trusted and also synced to the target.
+  # This setting takes precedence of source.ignoreTrustedRepos for the same entry.
+  # If there is a need to work with external repositories different from the source - they must be included here
+  syncTrustedRepos:
+    - kind: HELM
+      url: https://grafana.github.io/helm-charts
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: LOCAL
-    path: localrepo
-# charts is an OPTIONAL list to specify a subset of charts to be synchronized
-# It is mandatory if the source repo is OCI and not autodiscovery is supported in that repository
-# More info here https://github.com/bitnami-labs/charts-syncer#charts-index-for-oci-based-repositories
+    # url is the url of the chart repository
+    path: localrepo # local test target repo
 charts:
   - kube-prometheus-stack
-# opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped
-# either "charts" or "skipCharts" can be used at once
-# skipCharts:
-#  - mariadb
 
 # Whether to also relocate the container images referenced by the Helm Chart
 # Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file

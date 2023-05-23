@@ -1,6 +1,8 @@
 package syncer
 
 import (
+	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -13,6 +15,16 @@ func removeTgzPath(i ChartIndex) {
 }
 
 func TestLoadCharts(t *testing.T) {
+
+	repo := api.Repo{
+		Kind: api.Kind_UNKNOWN,
+	}
+
+	repoZooKeeper := api.Repo{
+		Kind: api.Kind_UNKNOWN,
+		Url:  "https://charts.bitnami.com/bitnami",
+	}
+
 	testCases := []struct {
 		desc           string
 		entries        []string
@@ -23,9 +35,9 @@ func TestLoadCharts(t *testing.T) {
 			desc:    "load apache and kafka",
 			entries: []string{"apache", "kafka"},
 			want: ChartIndex{
-				"apache-7.3.15":    &Chart{Name: "apache", Version: "7.3.15"},
-				"kafka-10.3.3":     &Chart{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}},
-				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
+				"apache-7.3.15":    &Chart{Name: "apache", Version: "7.3.15", Repo: repo},
+				"kafka-10.3.3":     &Chart{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}, Repo: repo},
+				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3", Repo: repoZooKeeper},
 			},
 		},
 		{
@@ -33,7 +45,7 @@ func TestLoadCharts(t *testing.T) {
 			entries:        []string{"apache", "kafka", "zookeeper"},
 			skippedEntries: []string{"apache", "kafka"},
 			want: ChartIndex{
-				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
+				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3", Repo: repo},
 			},
 		},
 	}
@@ -48,7 +60,7 @@ func TestLoadCharts(t *testing.T) {
 			// Remove TgzPath values from the computed index
 			removeTgzPath(s.getIndex())
 
-			if diff := cmp.Diff(tc.want, s.getIndex()); diff != "" {
+			if diff := cmp.Diff(tc.want, s.getIndex(), cmpopts.IgnoreUnexported(api.Repo{})); diff != "" {
 				t.Errorf("want vs got diff:\n %+v", diff)
 			}
 		})
@@ -83,7 +95,7 @@ func TestTopologicalSortCharts(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreUnexported(api.Repo{})); diff != "" {
 				t.Errorf("want vs got diff:\n %+v", diff)
 			}
 		})

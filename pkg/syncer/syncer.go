@@ -1,22 +1,23 @@
 package syncer
 
 import (
-	"os"
-
 	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami-labs/charts-syncer/internal/utils"
 	"github.com/bitnami-labs/charts-syncer/pkg/client"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/repo"
 	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	"k8s.io/klog"
+	"os"
 )
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src  client.ChartsReaderWriter
-	dst  client.ChartsReaderWriter
-	deps map[string]client.ChartsReaderWriter
+	src client.ChartsReaderWriter
+	dst client.ChartsReaderWriter
+	//stores clients for ignoreTrustedRepos and syncTrustedRepos repositories
+	trusted map[uint32]client.ChartsReaderWriter
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -129,25 +130,35 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 	}
 
 	s.cli = &Clients{}
-	//inits deps map
-	s.cli.deps = make(map[string]client.ChartsReaderWriter)
-	//Allowed deps repos
-	for _, depenencyRepo := range source.TrustedSourceDeps {
-		depClientTmp, err := repo.NewClient(depenencyRepo, types.WithCache(s.workdir), types.WithInsecure(s.insecure))
+	//inits trusted map
+	s.cli.trusted = make(map[uint32]client.ChartsReaderWriter)
+
+	//adds all ignored but trusted repos to the client map
+	for _, tRepo := range source.IgnoreTrustedRepos {
+		depClientTmp, err := repo.NewClient(tRepo, types.WithCache(s.workdir), types.WithInsecure(s.insecure))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
-		s.cli.deps[depenencyRepo.Url] = depClientTmp
+		locationId := utils.GetRepoLocationId(utils.GetRepoLocation(tRepo))
+		s.cli.trusted[locationId] = depClientTmp
 	}
-	//End of allowed deps
+
+	//adds all trusted repos to the client map
+	for _, tRepo := range target.SyncTrustedRepos {
+		depClientTmp, err := repo.NewClient(tRepo, types.WithCache(s.workdir), types.WithInsecure(s.insecure))
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
+		locationId := utils.GetRepoLocationId(utils.GetRepoLocation(tRepo))
+		s.cli.trusted[locationId] = depClientTmp
+	}
+
 	if source.GetRepo() != nil {
 		srcCli, err := repo.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
 		s.cli.src = srcCli
-		//Add source repo as a dependency repo also
-		s.cli.deps[source.GetRepo().Url] = srcCli
 	} else if source.GetIntermediateBundlesPath() != "" {
 		// Specifically disable dependencies sync for intermediate scenarios
 		disableDependencySync(s)

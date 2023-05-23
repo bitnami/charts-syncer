@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/url"
-	"os"
-	"path"
-
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/provenance"
+	"io/ioutil"
 	"k8s.io/klog"
+	"net/url"
+	"os"
+	"path"
 	"sigs.k8s.io/yaml"
 
 	"github.com/bitnami-labs/charts-syncer/api"
@@ -65,7 +64,7 @@ func GetChartLock(chartPath string) (*chart.Lock, error) {
 	return lock, nil
 }
 
-// GetChartDependencies returns the chart chart.Dependencies from a chart in tgz format.
+// GetChartDependencies returns the chart dependencies from a chart in tgz format.
 func GetChartDependencies(filepath string, name string) ([]*chart.Dependency, error) {
 	// Create temporary working directory
 	chartPath, err := ioutil.TempDir("", "charts-syncer")
@@ -112,9 +111,9 @@ func GetLockAPIVersion(chartPath string) (string, error) {
 
 // BuildDependencies updates the chart dependencies and their repository references in the provided chart path
 //
-// It reads the lock file to download the versions from the target
-// chart repository (it assumes all charts are stored in a single repo).
-func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
+// It reads the lock file to download the versions from the target chart repository
+func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targetRepo *api.Repo, t map[uint32]client.ChartsReaderWriter, syncTrusted, ignoreTrusted []*api.Repo) error {
+
 	// Build deps manually for OCI as helm does not support it yet
 	if err := os.RemoveAll(path.Join(chartPath, "charts")); err != nil {
 		return errors.Trace(err)
@@ -138,13 +137,14 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 	if apiVersion == "" {
 		return nil
 	}
+
 	switch apiVersion {
 	case APIV1:
-		if err := updateRequirementsFile(chartPath, lock, sourceRepo, targetRepo, replaceDependencyRepo); err != nil {
+		if err := updateRequirementsFile(chartPath, lock, sourceRepo, targetRepo, syncTrusted, ignoreTrusted); err != nil {
 			return errors.Trace(err)
 		}
 	case APIV2:
-		if err := updateChartMetadataFile(chartPath, lock, sourceRepo, targetRepo, replaceDependencyRepo); err != nil {
+		if err := updateChartMetadataFile(chartPath, lock, sourceRepo, targetRepo, syncTrusted, ignoreTrusted); err != nil {
 			return errors.Trace(err)
 		}
 	default:
@@ -158,7 +158,22 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 			id := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
 			klog.V(4).Infof("Building %q chart dependency", id)
 
-			depTgz, err := r.Fetch(dep.Name, dep.Version)
+			var repoClient client.ChartsReader = nil
+
+			depRepo := api.Repo{
+				Url: dep.Repository,
+			}
+
+			//if the repo is trusted and won't be synced - we download the dependency from it (source)
+			if utils.ShouldIgnoreRepo(depRepo, syncTrusted, ignoreTrusted) {
+				repoClient = t[utils.GetRepoLocationId(dep.Repository)]
+			} else {
+				//otherwise we download it from the destination repo
+				repoClient = r
+			}
+
+			depTgz, err := repoClient.Fetch(dep.Name, dep.Version)
+
 			if err != nil {
 				klog.Warningf("Failed fetching %q chart. The dependencies processing will remain incomplete.", id)
 				errs = multierror.Append(errs, errors.Annotatef(err, "fetching %q chart", id))
@@ -179,7 +194,7 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 
 // updateChartMetadataFile updates the dependencies in Chart.yaml
 // For helm v3 dependency management
-func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
+func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, syncTrusted, ignoreTrusted []*api.Repo) error {
 	chartFile := path.Join(chartPath, ChartFilename)
 	chartYamlContent, err := ioutil.ReadFile(chartFile)
 	if err != nil {
@@ -191,8 +206,15 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 		return errors.Annotatef(err, "error unmarshaling %s file", chartFile)
 	}
 	for _, dep := range chartMetadata.Dependencies {
-		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
-		// the repository.
+		// Maybe there are dependencies from other chart repos. We replace them or not depending on what we have in
+		// source.ignoreTrustedRepos and target.syncTrustedRepos (the logic can be found in utils.ShouldIgnoreRepo)
+		r := api.Repo{
+			Url: dep.Repository,
+		}
+
+		//ignore repo means don't replace it, don't ignore - means "replace it" - use negation to achieve it
+		replaceDependencyRepo := !utils.ShouldIgnoreRepo(r, syncTrusted, ignoreTrusted)
+
 		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {
@@ -206,7 +228,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 	if err := writeChartFile(dest, chartMetadata); err != nil {
 		return errors.Trace(err)
 	}
-	if err := updateLockFile(chartPath, lock, chartMetadata.Dependencies, sourceRepo, targetRepo, false, replaceDependencyRepo); err != nil {
+	if err := updateLockFile(chartPath, lock, chartMetadata.Dependencies, sourceRepo, targetRepo, false, syncTrusted, ignoreTrusted); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
@@ -214,7 +236,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 
 // updateRequirementsFile returns the full list of dependencies and the list of missing dependencies.
 // For helm v2 dependency management
-func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, replaceDependencyRepo bool) error {
+func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo, syncTrusted, ignoreTrusted []*api.Repo) error {
 	requirementsFile := path.Join(chartPath, RequirementsFilename)
 	requirements, err := ioutil.ReadFile(requirementsFile)
 	if err != nil {
@@ -227,8 +249,15 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 		return errors.Annotatef(err, "error unmarshaling %s file", requirementsFile)
 	}
 	for _, dep := range deps.Dependencies {
-		// Maybe there are dependencies from other chart repos. In this case we don't want to replace
-		// the repository.
+		// Maybe there are dependencies from other chart repos. We replace them or not depending on what we have in
+		// source.ignoreTrustedRepos and target.syncTrustedRepos (the logic can be found in utils.ShouldIgnoreRepo)
+		r := api.Repo{
+			Url: dep.Repository,
+		}
+
+		//ignore repo means don't replace it, don't ignore - means "replace it" - use negation to achieve it
+		replaceDependencyRepo := !utils.ShouldIgnoreRepo(r, syncTrusted, ignoreTrusted)
+
 		// For example, old charts pointing to helm/charts repo
 		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
@@ -243,15 +272,25 @@ func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targ
 	if err := writeChartFile(dest, deps); err != nil {
 		return errors.Trace(err)
 	}
-	if err := updateLockFile(chartPath, lock, deps.Dependencies, sourceRepo, targetRepo, true, replaceDependencyRepo); err != nil {
+	if err := updateLockFile(chartPath, lock, deps.Dependencies, sourceRepo, targetRepo, true, syncTrusted, ignoreTrusted); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
 }
 
 // updateLockFile updates the lock file with the new registry
-func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency, sourceRepo *api.Repo, targetRepo *api.Repo, legacyLockfile, replaceDependencyRepo bool) error {
+func updateLockFile(chartPath string, lock *chart.Lock, deps []*chart.Dependency, sourceRepo *api.Repo, targetRepo *api.Repo, legacyLockfile bool, syncTrusted, ignoreTrusted []*api.Repo) error {
 	for _, dep := range lock.Dependencies {
+
+		// Maybe there are dependencies from other chart repos. We replace them or not depending on what we have in
+		// source.ignoreTrustedRepos and target.syncTrustedRepos (the logic can be found in utils.ShouldIgnoreRepo)
+		r := api.Repo{
+			Url: dep.Repository,
+		}
+
+		//ignore repo means don't replace it, don't ignore - means "replace it" - use negation to achieve it
+		replaceDependencyRepo := !utils.ShouldIgnoreRepo(r, syncTrusted, ignoreTrusted)
+
 		if dep.Repository == sourceRepo.GetUrl() || replaceDependencyRepo {
 			repoUrl, err := getDependencyRepoURL(targetRepo)
 			if err != nil {

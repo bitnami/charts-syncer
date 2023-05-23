@@ -4,11 +4,6 @@
 
 # source includes relevant information about the source chart repository
 source:
-  # Dependencies located in repos from this list will be considered as trusted, and also synced.
-  # The entry format is the same as "repo" (see below)
-  trustedSourceDeps:
-  - kind: HELM
-    url: https://grafana.github.io/helm-charts
   repo:
     # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
     kind: HELM
@@ -27,9 +22,7 @@ source:
     # chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 # target includes relevant information about the target chart repository
 target:
-  # In case there is a need to mirror dependencies (from trustedSourceDeps list, see above) - this must be set to true
-  replaceDependencyRepo: true
-# repoName is used to modify the README of the chart. Default value: `myrepo`
+  # repoName is used to modify the README of the chart. Default value: `myrepo`
   repoName: myrepo
   # containerRegistry is used to update the image registry section of the values.yaml file
   # NOTE: If containerRegistry is not set (or not present), the registry sections won't be updated

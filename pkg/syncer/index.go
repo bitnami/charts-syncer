@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"fmt"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"sort"
 	"time"
 
@@ -20,6 +21,7 @@ type Chart struct {
 	Name         string
 	Version      string
 	Dependencies []string
+	Repo         api.Repo
 
 	TgzPath string
 }
@@ -161,7 +163,6 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 		klog.V(5).Infof("Skipping %q chart: Already indexed", id)
 		return nil
 	}
-
 	if err := s.loadChart(name, version, "", false); err != nil {
 		klog.Errorf("unable to load %q chart: %v", id, err)
 		return err
@@ -199,15 +200,17 @@ func (s *Syncer) loadChart(name string, version string, repository string, isDep
 		return nil
 	}
 
-	//main source repo client
-	client := s.cli.src
+	var tgz string
+	var err error
 
-	//in case of dependency - switch to deps client, but only if there is a valid entry for the current repo
-	if isDep && len(s.cli.deps) > 0 && s.cli.deps[repository] != nil {
-		client = s.cli.deps[repository]
+	repoKey := utils.GetRepoLocationId(repository)
+
+	if isDep && s.cli.trusted[repoKey] != nil {
+		tgz, err = s.cli.trusted[repoKey].Fetch(name, version)
+	} else {
+		tgz, err = s.cli.src.Fetch(name, version)
 	}
 
-	tgz, err := client.Fetch(name, version)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -216,6 +219,7 @@ func (s *Syncer) loadChart(name string, version string, repository string, isDep
 		Name:    name,
 		Version: version,
 		TgzPath: tgz,
+		Repo:    api.Repo{Url: repository},
 	}
 
 	if !s.skipDependencies {
