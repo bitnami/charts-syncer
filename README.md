@@ -1,6 +1,5 @@
 [![CircleCI](https://circleci.com/gh/bitnami-labs/charts-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami-labs/charts-syncer/tree/master)
 
-
 # charts-syncer
 
 Sync chart packages and associated container images between chart repositories
@@ -487,7 +486,7 @@ Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob
 
 ## License
 
-Copyright &copy; 2023 VMware Inc
+Copyright &copy; 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 
