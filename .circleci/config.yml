@@ -18,9 +18,10 @@ install_kind: &install_kind
     sudo mv kind-Linux-amd64 /usr/local/bin/kind
 install_chartmuseum: &install_chartmuseum
   run: |
-    curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum
-    chmod +x chartmuseum
-    sudo mv chartmuseum /usr/local/bin/
+    curl -LO https://get.helm.sh/chartmuseum-v${CHARTMUSEUM_VERSION}-linux-amd64.tar.gz
+    tar xzf chartmuseum-v${CHARTMUSEUM_VERSION}-linux-amd64.tar.gz
+    chmod a+x ./linux-amd64/chartmuseum
+    sudo mv ./linux-amd64/chartmuseum /usr/local/bin/
 install_wait_for_port: &install_wait_for_port
   run: |
     curl -LO https://github.com/bitnami/wait-for-port/releases/download/v1.0/wait-for-port.zip
@@ -63,6 +64,7 @@ jobs:
       KIND_VERSION: "0.12.0"
       KUBECTL_VERSION: "1.22.0"
       HELM_VERSION: "3.8.1"
+      CHARTMUSEUM_VERSION: "0.16.0"
       DEBUG_MODE: "true"
     steps:
       - checkout
