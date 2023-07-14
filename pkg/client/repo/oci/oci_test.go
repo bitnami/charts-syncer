@@ -47,8 +47,18 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
-	has, err := c.Has("kafka", "12.2.1")
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
+
+	chartMetadata := &chart.Metadata{
+		Name:    "apache",
+		Version: "7.3.15",
+	}
+	if err := c.Upload("../../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
+		t.Fatal(err)
+	}
+
+	has, err := c.Has(chartMetadata.Name, chartMetadata.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
