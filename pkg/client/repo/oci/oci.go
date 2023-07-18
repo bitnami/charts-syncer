@@ -2,6 +2,7 @@ package oci
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -287,6 +288,12 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 			Username: r.username,
 			Password: r.password,
 		}))
+	}
+
+	if r.insecure {
+		remote.DefaultTransport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
 	}
 
 	_, err = remote.Head(ref, opts...)
