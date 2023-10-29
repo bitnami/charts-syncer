@@ -54,8 +54,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		klog.Infof("Syncing %q chart...", id)
 
 		klog.V(3).Infof("Processing %q chart...", id)
-		cwd, _ := os.Getwd()
-		outdir, err := os.MkdirTemp(cwd, "charts-syncer")
+		outdir, err := os.MkdirTemp("", "charts-syncer")
 		if err != nil {
 			klog.Errorf("unable to create output directory for %q chart: %+v", id, err)
 			errs = multierror.Append(errs, errors.Trace(err))
