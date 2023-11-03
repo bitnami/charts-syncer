@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/proto"
 )

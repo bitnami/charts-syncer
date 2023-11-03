@@ -16,9 +16,9 @@ import (
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client"
 )
 
 // dependencies is the list of dependencies of a chart

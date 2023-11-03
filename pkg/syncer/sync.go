@@ -7,10 +7,10 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 
-	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/internal/chart"
+	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
 	"github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/pkg/mover"

@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/bitnami-labs/charts-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami-labs/charts-syncer/tree/master)
+[![CircleCI](https://circleci.com/gh/bitnami/charts-syncer.svg?style=svg&circle-token=91105ed254723ef1e3af739f6d31dc845136828c)](https://circleci.com/gh/bitnami/charts-syncer/tree/master)
 
 # charts-syncer
 

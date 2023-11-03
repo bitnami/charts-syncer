@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package api;
-option go_package = "github.com/bitnami-labs/charts-syncer/api;api";
+option go_package = "github.com/bitnami/charts-syncer/api;api";
 
 // Config file structure
 message Config {

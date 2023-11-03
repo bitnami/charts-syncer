@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/local"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/local"
 )
 
 // FakeSyncerOpts allows to configure a Fake syncer.

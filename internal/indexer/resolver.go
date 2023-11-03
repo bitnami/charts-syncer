@@ -6,7 +6,7 @@ import (
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/internal/utils"
 )
 
 func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {

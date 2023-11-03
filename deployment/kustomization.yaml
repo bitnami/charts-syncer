@@ -7,7 +7,7 @@ commonLabels:
 images:
   - name: gcr.io/bitnami-labs/charts-syncer
     # Set this value to the latest release
-    # https://github.com/bitnami-labs/charts-syncer/releases
+    # https://github.com/bitnami/charts-syncer/releases
     newTag: v0.20.1
 
 resources:
@@ -30,4 +30,4 @@ secretGenerator:
     # useful if you are loading creds from a GCR/ACR service account p12/json file
     # files:
     #  - target-password=config/my_gcr_creds.json
-  
+

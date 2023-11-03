@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )

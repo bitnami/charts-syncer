@@ -6,8 +6,8 @@ import (
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/utils"
 )
 
 // ChangeReferences changes the references of a chart tgz file from the source

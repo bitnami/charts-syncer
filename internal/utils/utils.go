@@ -21,8 +21,8 @@ import (
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/cache"
 )
 
 const (

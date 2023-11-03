@@ -9,7 +9,7 @@ builds:
     main: ./main.go
     binary: charts-syncer
     ldflags:
-      - -X github.com/bitnami-labs/charts-syncer/cmd.version={{.Version}}
+      - -X github.com/bitnami/charts-syncer/cmd.version={{.Version}}
 dockers:
   -
     ids:

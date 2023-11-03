@@ -2,7 +2,7 @@ package indexer
 
 import (
 	"context"
-	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
+	"github.com/bitnami/charts-syncer/internal/indexer/api"
 )
 
 // Indexer is the interface that an indexer should implement

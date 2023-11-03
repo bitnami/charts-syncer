@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/oci"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/oci"
 )
 
 // Creates an HTTP server that knows how to reply to all OCI related requests

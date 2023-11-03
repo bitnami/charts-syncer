@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/bitnami-labs/charts-syncer/internal/indexer/api"
+	"github.com/bitnami/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"

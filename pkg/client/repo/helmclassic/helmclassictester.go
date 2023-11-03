@@ -17,7 +17,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 	"gopkg.in/yaml.v2"
 )
 

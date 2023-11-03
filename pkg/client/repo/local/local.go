@@ -11,8 +11,8 @@ import (
 
 	"github.com/juju/errors"
 
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 )
 

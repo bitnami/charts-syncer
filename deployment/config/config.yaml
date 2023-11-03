@@ -1,6 +1,6 @@
-# Charts syncer config file https://github.com/bitnami-labs/charts-syncer/blob/master/charts-syncer.yaml
+# Charts syncer config file https://github.com/bitnami/charts-syncer/blob/master/charts-syncer.yaml
 
-# Relocate also container images https://github.com/bitnami-labs/charts-syncer#sync-helm-charts-and-container-images
+# Relocate also container images https://github.com/bitnami/charts-syncer#sync-helm-charts-and-container-images
 # relocateContainerImages: true
 source:
   repo:
