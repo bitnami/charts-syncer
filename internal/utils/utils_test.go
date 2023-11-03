@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -65,7 +64,7 @@ func TestDownloadIndex(t *testing.T) {
 func TestUntar(t *testing.T) {
 	filepath := "../../testdata/apache-7.3.15.tgz"
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	testTmpDir, err := os.MkdirTemp("", "charts-syncer-tests")
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}

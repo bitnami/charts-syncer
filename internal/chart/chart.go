@@ -2,7 +2,7 @@ package chart
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -29,7 +29,7 @@ func updateValuesFile(valuesFile string, targetRepo *api.Target) error {
 
 // updateContainerImageRepository updates the container repository in a values.yaml file.
 func updateContainerImageRepository(valuesFile string, target *api.Target) error {
-	values, err := ioutil.ReadFile(valuesFile)
+	values, err := os.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -37,7 +37,7 @@ func updateContainerImageRepository(valuesFile string, target *api.Target) error
 	if len(submatch) > 0 {
 		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], target.ContainerRepository, submatch[3])
 		newContents := repositoryRegex.ReplaceAllString(string(values), replaceLine)
-		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
+		err = os.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -47,7 +47,7 @@ func updateContainerImageRepository(valuesFile string, target *api.Target) error
 
 // updateContainerImageRegistry updates the container registry in a values.yaml file.
 func updateContainerImageRegistry(valuesFile string, target *api.Target) error {
-	values, err := ioutil.ReadFile(valuesFile)
+	values, err := os.ReadFile(valuesFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -55,7 +55,7 @@ func updateContainerImageRegistry(valuesFile string, target *api.Target) error {
 	if len(submatch) > 0 {
 		replaceLine := fmt.Sprintf("%s%s%s", submatch[1], target.ContainerRegistry, submatch[3])
 		newContents := registryRegex.ReplaceAllString(string(values), replaceLine)
-		err = ioutil.WriteFile(valuesFile, []byte(newContents), 0)
+		err = os.WriteFile(valuesFile, []byte(newContents), 0)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -65,7 +65,7 @@ func updateContainerImageRegistry(valuesFile string, target *api.Target) error {
 
 // updateReadmeFile performs some substitutions to a given README.md file.
 func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName string) error {
-	readme, err := ioutil.ReadFile(readmeFile)
+	readme, err := os.ReadFile(readmeFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -84,5 +84,5 @@ func updateReadmeFile(readmeFile, sourceURL, targetURL, chartName, repoName stri
 		replaceText := fmt.Sprintf("%s%s/%s%s", submatch[1], repoName, chartName, submatch[3])
 		newContent = regex.ReplaceAllString(newContent, replaceText)
 	}
-	return errors.Trace(ioutil.WriteFile(readmeFile, []byte(newContent), 0))
+	return errors.Trace(os.WriteFile(readmeFile, []byte(newContent), 0))
 }

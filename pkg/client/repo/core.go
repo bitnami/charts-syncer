@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/juju/errors"
 
@@ -27,7 +27,7 @@ func NewClient(repo *api.Repo, opts ...types.Option) (client.ChartsReaderWriter,
 	// Define cache dir if it hasn't been provided
 	cacheDir := copts.GetCache()
 	if cacheDir == "" {
-		dir, err := ioutil.TempDir("", "client")
+		dir, err := os.MkdirTemp("", "client")
 		if err != nil {
 			return nil, errors.Annotatef(err, "creating temporary dir")
 		}

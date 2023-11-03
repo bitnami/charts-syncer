@@ -3,7 +3,6 @@ package oci
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -87,7 +86,7 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Helper()
 
 	// Define cache dir
-	cacheDir, err := ioutil.TempDir("", "client")
+	cacheDir, err := os.MkdirTemp("", "client")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +226,7 @@ func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, nam
 	// Get oci manifest from testdata folder
 	manifestFileName := fmt.Sprintf("%s-%s-oci-manifest.json", name, version)
 	manifestFile := filepath.Join(testdataPath, manifestFileName)
-	manifest, err := ioutil.ReadFile(manifestFile)
+	manifest, err := os.ReadFile(manifestFile)
 	if err != nil {
 		rt.t.Fatal(err)
 	}
@@ -243,7 +242,7 @@ func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name s
 	// Get oci manifest from testdata folder
 	tagsListFileName := fmt.Sprintf("%s-oci-tags-list.json", name)
 	tagsListFile := filepath.Join(testdataPath, tagsListFileName)
-	tagsList, err := ioutil.ReadFile(tagsListFile)
+	tagsList, err := os.ReadFile(tagsListFile)
 	if err != nil {
 		rt.t.Fatal(err)
 	}
@@ -274,7 +273,7 @@ func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, na
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
-	chartPackage, err := ioutil.ReadFile(chartPackageFile)
+	chartPackage, err := os.ReadFile(chartPackageFile)
 	if err != nil {
 		rt.t.Fatal(err)
 	}

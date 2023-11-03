@@ -2,7 +2,6 @@ package helmclassic_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -33,7 +32,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Helper()
 
 	// Create temp folder and copy index.yaml
-	dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-index-fake")
+	dstTmp, err := os.MkdirTemp("", "charts-syncer-tests-index-fake")
 	if err != nil {
 		t.Fatalf("error creating temporary folder: %v", err)
 	}
@@ -50,17 +49,17 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 
 	// Replace placeholder
 	u := fmt.Sprintf("%s%s", tester.GetURL(), "/charts")
-	index, err := ioutil.ReadFile(dstIndex)
+	index, err := os.ReadFile(dstIndex)
 	if err != nil {
 		t.Fatal(err)
 	}
 	newContents := strings.Replace(string(index), "TEST_PLACEHOLDER", u, -1)
-	if err = ioutil.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
+	if err = os.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
 		t.Fatal(err)
 	}
 
 	// Define cache dir
-	cacheDir, err := ioutil.TempDir("", "client")
+	cacheDir, err := os.MkdirTemp("", "client")
 	if err != nil {
 		t.Fatal(err)
 	}

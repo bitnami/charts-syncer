@@ -2,7 +2,6 @@ package cachedisk
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -65,7 +64,7 @@ func (c *Cache) Read(w io.Writer, filename string) error {
 	if !c.Has(filename) {
 		return errors.NotFoundf("cache { id:%s, filename:%s }", c.id, filename)
 	}
-	data, err := ioutil.ReadFile(c.Path(filename))
+	data, err := os.ReadFile(c.Path(filename))
 	if err != nil {
 		return errors.Annotatef(err, "reading %q from the cache", filename)
 	}
