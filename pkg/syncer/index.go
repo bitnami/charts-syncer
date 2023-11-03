@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"fmt"
+	"github.com/bitnami-labs/charts-syncer/api"
 	"sort"
 	"time"
 
@@ -20,6 +21,7 @@ type Chart struct {
 	Name         string
 	Version      string
 	Dependencies []string
+	Repo         api.Repo
 
 	TgzPath string
 }
@@ -161,8 +163,7 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 		klog.V(5).Infof("Skipping %q chart: Already indexed", id)
 		return nil
 	}
-
-	if err := s.loadChart(name, version); err != nil {
+	if err := s.loadChart(name, version, "", false); err != nil {
 		klog.Errorf("unable to load %q chart: %v", id, err)
 		return err
 	}
@@ -170,7 +171,7 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 }
 
 // loadChart loads a chart in the chart index map
-func (s *Syncer) loadChart(name string, version string) error {
+func (s *Syncer) loadChart(name string, version string, repository string, isDep bool) error {
 	id := fmt.Sprintf("%s-%s", name, version)
 	// loadChart is a recursive function and it will be invoked again for each
 	// dependency.
@@ -199,7 +200,17 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return nil
 	}
 
-	tgz, err := s.cli.src.Fetch(name, version)
+	var tgz string
+	var err error
+
+	repoKey := utils.GetRepoLocationId(repository)
+
+	if isDep && s.cli.trusted[repoKey] != nil {
+		tgz, err = s.cli.trusted[repoKey].Fetch(name, version)
+	} else {
+		tgz, err = s.cli.src.Fetch(name, version)
+	}
+
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -208,6 +219,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 		Name:    name,
 		Version: version,
 		TgzPath: tgz,
+		Repo:    api.Repo{Url: repository},
 	}
 
 	if !s.skipDependencies {
@@ -224,7 +236,7 @@ func (s *Syncer) loadChart(name string, version string) error {
 		var errs error
 		for _, dep := range deps {
 			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
-			if err := s.loadChart(dep.Name, dep.Version); err != nil {
+			if err := s.loadChart(dep.Name, dep.Version, dep.Repository, true); err != nil {
 				errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
 				continue
 			}

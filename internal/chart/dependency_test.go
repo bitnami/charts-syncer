@@ -89,7 +89,10 @@ func TestUpdateRequirementsFile(t *testing.T) {
 
 	chartPath := newChartPath(t, "../../testdata/kafka-10.3.3.tgz", "kafka")
 	requirementsFile := path.Join(chartPath, RequirementsFilename)
-	if err := updateRequirementsFile(chartPath, lock, source.GetRepo(), target.GetRepo()); err != nil {
+
+	var ignoreTrusted, syncTrusted []*api.Repo
+
+	if err := updateRequirementsFile(chartPath, lock, source.GetRepo(), target.GetRepo(), syncTrusted, ignoreTrusted); err != nil {
 		t.Fatal(err)
 	}
 
@@ -163,7 +166,9 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := updateChartMetadataFile(chartPath, lock, source.GetRepo(), target.GetRepo()); err != nil {
+	var ignoreTrusted, syncTrusted []*api.Repo
+
+	if err := updateChartMetadataFile(chartPath, lock, source.GetRepo(), target.GetRepo(), syncTrusted, ignoreTrusted); err != nil {
 		t.Fatal(err)
 	}
 

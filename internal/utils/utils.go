@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"crypto/tls"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"io/ioutil"
 	"net"
@@ -444,4 +445,44 @@ func FetchAndCache(name, version string, cache cache.Cacher, fopts ...FetchOptio
 	}
 
 	return cache.Path(id), nil
+}
+
+func ShouldIgnoreRepo(repo api.Repo, syncTrusted, ignoreTrusted []*api.Repo) bool {
+
+	repoLocationId := GetRepoLocationId(GetRepoLocation(&repo))
+
+	for _, trRepo := range syncTrusted {
+		if GetRepoLocationId(GetRepoLocation(trRepo)) == repoLocationId {
+			return false
+		}
+	}
+
+	for _, ignoreTrRepo := range ignoreTrusted {
+		if GetRepoLocationId(GetRepoLocation(ignoreTrRepo)) == repoLocationId {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetRepoLocationId returns a unique id for a repo based on the repo url or path
+func GetRepoLocationId(l string) uint32 {
+	h := fnv.New32a()
+
+	//@todo trim whitespaces from the values used ?!
+	h.Write([]byte(strings.ToLower(l)))
+
+	return h.Sum32()
+}
+
+// GetRepoLocation returns the repo url or path
+func GetRepoLocation(repo *api.Repo) string {
+	if repo.Url != "" {
+		//remote repo
+		return repo.Url
+	}
+
+	//local repo
+	return repo.Path
 }

@@ -28,3 +28,6 @@ dist
 
 ### Tests output
 pkg/syncer/workdir/
+
+#MacOs stuff
+.DS_Store
