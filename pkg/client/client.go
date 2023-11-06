@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 )
 

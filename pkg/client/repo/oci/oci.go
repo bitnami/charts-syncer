@@ -27,11 +27,11 @@ import (
 	orascontext "oras.land/oras-go/pkg/context"
 	"oras.land/oras-go/pkg/oras"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/indexer"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/cache"
+	"github.com/bitnami/charts-syncer/internal/indexer"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 )
 
 const (

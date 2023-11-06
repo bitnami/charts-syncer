@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 
 	"github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/pkg/mover"
 )

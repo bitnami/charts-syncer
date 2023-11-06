@@ -9,15 +9,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
 
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/cache"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 )
 

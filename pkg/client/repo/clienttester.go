@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/chartmuseum"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/chartmuseum"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 )
 
 // ClientTester defines the methods that a fake tester should implement

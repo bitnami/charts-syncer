@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/utils"
 	"helm.sh/helm/v3/pkg/chart"
 	"sigs.k8s.io/yaml"
 )

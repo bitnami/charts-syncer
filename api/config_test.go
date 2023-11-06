@@ -3,7 +3,7 @@ package api_test
 import (
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 )
 
 func TestValidate(t *testing.T) {

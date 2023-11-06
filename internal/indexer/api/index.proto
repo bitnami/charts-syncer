@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package api;
-option go_package = "github.com/bitnami-labs/charts-syncer/internal/indexer/api;api";
+option go_package = "github.com/bitnami/charts-syncer/internal/indexer/api;api";
 
 // ChartMetadata contains relevant information about the released chart
 message ChartMetadata {

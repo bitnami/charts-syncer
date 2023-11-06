@@ -11,8 +11,8 @@ import (
 	"github.com/philopon/go-toposort"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/internal/chart"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/internal/chart"
+	"github.com/bitnami/charts-syncer/internal/utils"
 )
 
 // Chart describes a chart, including dependencies

@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	"helm.sh/helm/v3/pkg/chart"
 )

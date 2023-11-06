@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/config"
-	"github.com/bitnami-labs/charts-syncer/pkg/syncer"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/config"
+	"github.com/bitnami/charts-syncer/pkg/syncer"
 	"github.com/juju/errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"

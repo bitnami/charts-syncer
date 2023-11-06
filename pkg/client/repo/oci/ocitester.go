@@ -22,10 +22,10 @@ import (
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
 
-	"github.com/bitnami-labs/charts-syncer/api"
-	"github.com/bitnami-labs/charts-syncer/internal/cache/cachedisk"
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/repo/helmclassic"
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
 )
 
 var (

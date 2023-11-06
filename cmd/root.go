@@ -13,7 +13,7 @@ const (
 var (
 	rootUsage = `charts-syncer is a tool to synchronize chart repositories from a source repository to a target repository
 
-Find more information at: https://github.com/bitnami-labs/charts-syncer`
+Find more information at: https://github.com/bitnami/charts-syncer`
 
 	rootConfig   string
 	rootDryRun   bool

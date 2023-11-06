@@ -6,8 +6,8 @@ import (
 	"sort"
 	"testing"
 
-	intermediate "github.com/bitnami-labs/charts-syncer/pkg/client/intermediate"
-	"github.com/bitnami-labs/charts-syncer/pkg/client/types"
+	intermediate "github.com/bitnami/charts-syncer/pkg/client/intermediate"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/time"
 )

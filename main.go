@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/cmd"
+	"github.com/bitnami/charts-syncer/cmd"
 )
 
 func main() {

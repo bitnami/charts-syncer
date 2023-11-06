@@ -9,7 +9,7 @@ import (
 	"github.com/juju/errors"
 	"k8s.io/klog"
 
-	"github.com/bitnami-labs/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/internal/utils"
 )
 
 // Cache implements a Cacher using the local filesystem.

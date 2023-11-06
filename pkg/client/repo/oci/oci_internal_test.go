@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/bitnami-labs/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/api"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 )
 

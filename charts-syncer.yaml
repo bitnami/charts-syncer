@@ -45,7 +45,7 @@ target:
       password: "PASSWORD"
 # charts is an OPTIONAL list to specify a subset of charts to be synchronized
 # It is mandatory if the source repo is OCI and not autodiscovery is supported in that repository
-# More info here https://github.com/bitnami-labs/charts-syncer#charts-index-for-oci-based-repositories
+# More info here https://github.com/bitnami/charts-syncer#charts-index-for-oci-based-repositories
 charts:
   - redis
   - etcd
