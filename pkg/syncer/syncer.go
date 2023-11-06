@@ -33,7 +33,8 @@ type Syncer struct {
 	skipDependencies        bool
 	latestVersionOnly       bool
 	// list of charts to skip
-	skipCharts []string
+	skipCharts   []string
+	matchVersion string
 
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
@@ -102,6 +103,12 @@ func WithSkipDependencies(skipDependencies bool) Option {
 func WithLatestVersionOnly(latestVersionOnly bool) Option {
 	return func(s *Syncer) {
 		s.latestVersionOnly = latestVersionOnly
+	}
+}
+
+func WithMatchVersion(matchVersion string) Option {
+	return func(s *Syncer) {
+		s.matchVersion = matchVersion
 	}
 }
 

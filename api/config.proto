@@ -63,6 +63,7 @@ message Repo {
     // Whether to use a charts index to find charts
     bool use_charts_index = 6 [deprecated=true];
     bool disable_charts_index = 7;
+    string image_hints_file = 8;
 }
 
 

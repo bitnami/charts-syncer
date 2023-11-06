@@ -9,6 +9,7 @@ source:
     kind: HELM
     # url is the url of the chart repository
     url: http://localhost:8080 # local test source repo
+
     # auth is used if the source repository is protected with basic auth (Optional section)
     auth:
       # username is the username used to authenticate against the source chart repo
@@ -20,6 +21,9 @@ source:
     # Options for repositories of kind=OCI
     # disableChartsIndex: false
     # chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
+
+    # imageHintsFile specify the image matching rule file the Charts to move the container images rule too
+    # imageHintsFile: "example/image-hints.yaml"
 # target includes relevant information about the target chart repository
 target:
   # repoName is used to modify the README of the chart. Default value: `myrepo`

@@ -2,6 +2,12 @@ package syncer
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"time"
 
@@ -96,10 +102,21 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			continue
 		}
 
-		versions, err := s.cli.src.ListChartVersions(name)
+		versionsTmp, err := s.cli.src.ListChartVersions(name)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
+		}
+
+		// 先过滤满足条件的版本
+		var versions []string
+		matchVersionRe := regexp.MustCompile(s.matchVersion)
+		for _, v := range versionsTmp {
+			if matchVersionRe.MatchString(v) {
+				versions = append(versions, v)
+			} else {
+				klog.V(3).Infof("Skip the version %s that does not match", v)
+			}
 		}
 
 		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
@@ -128,6 +145,7 @@ func (s *Syncer) loadCharts(charts ...string) error {
 					errs = multierror.Append(errs, errors.Trace(err))
 					continue
 				}
+
 			}
 		}
 	}
@@ -204,6 +222,12 @@ func (s *Syncer) loadChart(name string, version string) error {
 		return errors.Trace(err)
 	}
 
+	if s.relocateContainerImages {
+		if err = modifyChartImageTag(tgz); err != nil {
+			return errors.Trace(err)
+		}
+	}
+
 	ch := &Chart{
 		Name:    name,
 		Version: version,
@@ -270,4 +294,35 @@ func shouldSkipChart(chartName string, skippedCharts []string) bool {
 		}
 	}
 	return false
+}
+
+func modifyChartImageTag(chartPath string) error {
+	//chartPath := "/Users/vista/project/vista/yihctl/cmd/tools/choerodon-platform-2.2.0.tgz"
+	cq, err := loader.Load(chartPath)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	// 如果没有设置 image.tag，默认设为 AppVersion
+	if cq.Values["image"] != nil && (cq.Values["image"]).(map[string]interface{})["tag"] == nil {
+		(cq.Values["image"]).(map[string]interface{})["tag"] = cq.Metadata.AppVersion
+		for idx, f := range cq.Raw {
+			if f.Name == "values.yaml" {
+				cq.Raw[idx].Data, _ = yaml.Marshal(cq.Values)
+
+				// 更新默认的 chart
+				err = os.Remove(chartPath)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				d := filepath.Dir(chartPath)
+				_, err = chartutil.Save(cq, d)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				break
+			}
+		}
+	}
+	return nil
 }
