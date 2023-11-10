@@ -108,14 +108,16 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 	u := *r.url
 	u.Path = path.Join(u.Path, chartName)
 
-	repo, err := name.ParseReference(u.Host + u.Path + ":" + version)
-	if err != nil {
-		return nil, fmt.Errorf("parsing repo %q: %w", chartName, err)
-	}
 	parseOpts := []name.Option{}
 	if r.insecure {
 		parseOpts = append(parseOpts, name.Insecure)
 	}
+
+	repo, err := name.ParseReference(u.Host + u.Path + ":" + version)
+	if err != nil {
+		return nil, errors.Errorf("failed parsing OCI reference: %s", err)
+	}
+
 	opts := []remote.Option{}
 	if r.username != "" && r.password != "" {
 		opts = append(opts, remote.WithAuth(&authn.Basic{
@@ -123,15 +125,15 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 			Password: r.password,
 		}))
 	}
+	if r.insecure {
+		remote.DefaultTransport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
 
 	image, err := remote.Image(repo, opts...)
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok {
-			if terr.StatusCode == http.StatusNotFound {
-				return nil, errors.Errorf("failed does not exists")
-			}
-		}
-		return nil, errors.Errorf("failed checking remote: %s", err)
+		return nil, errors.Errorf("failed to fetch %q manifest: %v", repo, err)
 	}
 
 	body, err := image.RawManifest()
@@ -169,14 +171,16 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	u := *r.url
 	u.Path = path.Join(u.Path, chartName)
 
-	repo, err := name.NewRepository(u.Host + u.Path)
-	if err != nil {
-		return nil, fmt.Errorf("parsing repo %q: %w", chartName, err)
-	}
 	parseOpts := []name.Option{}
 	if r.insecure {
 		parseOpts = append(parseOpts, name.Insecure)
 	}
+
+	repo, err := name.NewRepository(u.Host + u.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse repo %v", err)
+	}
+
 	opts := []remote.Option{}
 	if r.username != "" && r.password != "" {
 		opts = append(opts, remote.WithAuth(&authn.Basic{
@@ -192,12 +196,7 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 
 	tags, err := remote.List(repo, opts...)
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok {
-			if terr.StatusCode == http.StatusNotFound {
-				return nil, errors.Errorf("failed does not exists")
-			}
-		}
-		return nil, errors.Errorf("failed checking remote: %s", err)
+		return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
 	}
 
 	chartTags := []string{}
@@ -261,22 +260,17 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 
 	img, err := remote.Image(ref, opts...)
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok {
-			if terr.StatusCode == http.StatusNotFound {
-				return "", nil
-			}
-		}
-		return "", errors.Errorf("failed checking remote: %s", err)
+		return "", errors.Annotatef(err, "failed checking remote: %s", ref)
 	}
 
 	w, err := r.cache.Writer(id)
 	if err != nil {
-		return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
 	}
 
 	layers, err := img.Layers()
 	if err != nil {
-		return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
 	}
 
 	for _, l := range layers {
@@ -284,7 +278,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		if err != nil {
 			// Invalidate the cache
 			r.cache.Invalidate(id)
-			return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
+			return "", errors.Annotatef(err, "fetching %q chart", ref)
 		}
 		// https://helm.sh/docs/topics/registries/#helm-chart-manifest
 		if isHelmChartContentLayerMediaType(string(t)) {
@@ -293,7 +287,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 			if err != nil {
 				// Invalidate the cache
 				r.cache.Invalidate(id)
-				return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
+				return "", errors.Annotatef(err, "fetching %q chart", ref)
 			}
 		}
 	}
@@ -301,7 +295,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 	if err := w.Close(); err != nil {
 		// Invalidate the cache
 		r.cache.Invalidate(id)
-		return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
 	}
 
 	return r.cache.Path(id), nil
