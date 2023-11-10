@@ -287,7 +287,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 			return "", errors.Annotatef(err, "fetching %s:%s chart", chartName, version)
 		}
 		// https://helm.sh/docs/topics/registries/#helm-chart-manifest
-		if t == "application/vnd.cncf.helm.chart.content.v1.tar+gzip" {
+		if isHelmChartContentLayerMediaType(string(t)) {
 			c, err := l.Compressed()
 			_, err = io.Copy(w, c)
 			if err != nil {
