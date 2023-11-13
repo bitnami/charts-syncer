@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -130,7 +130,7 @@ func (r *Repo) getTagManifest(name, version string) (*ocispec.Manifest, error) {
 	defer resp.Body.Close()
 
 	status := resp.StatusCode
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Errorf("unexpected response — %d %q — from %s", status, http.StatusText(status), u.String())
 	}
@@ -190,7 +190,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	}
 	defer resp.Body.Close()
 	status := resp.StatusCode
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Errorf("unexpected response — %d %q — from %s", status, http.StatusText(status), u.String())
 	}
@@ -328,7 +328,7 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	// Preparing layers
 	fileName := filepath.Base(file)
 	fileMediaType := HelmChartContentLayerMediaType
-	fileBuffer, err := ioutil.ReadFile(file)
+	fileBuffer, err := os.ReadFile(file)
 	if err != nil {
 		return errors.Trace(err)
 	}

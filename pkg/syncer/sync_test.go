@@ -3,7 +3,6 @@ package syncer_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-dst-fake")
+			dstTmp, err := os.MkdirTemp("", "charts-syncer-tests-dst-fake")
 			if err != nil {
 				t.Fatalf("error creating temporary folder: %v", err)
 			}
@@ -314,7 +313,7 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Create temp folder and copy index.yaml
-			dstTmp, err := ioutil.TempDir("", "charts-syncer-tests-index-fake")
+			dstTmp, err := os.MkdirTemp("", "charts-syncer-tests-index-fake")
 			if err != nil {
 				t.Fatalf("error creating temporary folder: %v", err)
 			}
@@ -329,12 +328,12 @@ func TestSyncPendingChartsChartMuseum(t *testing.T) {
 			tTester := repo.NewClientTester(t, tc.targetRepo.GetRepo(), true, "")
 
 			// Replace placeholder URL with source url
-			index, err := ioutil.ReadFile(dstIndex)
+			index, err := os.ReadFile(dstIndex)
 			if err != nil {
 				t.Fatal(err)
 			}
 			newContents := strings.Replace(string(index), "TEST_PLACEHOLDER", fmt.Sprintf("%s%s", sTester.GetURL(), "/charts"), -1)
-			if err = ioutil.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
+			if err = os.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
 				t.Fatal(err)
 			}
 

@@ -2,7 +2,6 @@ package helmclassic
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -62,7 +61,7 @@ var reloadIndex = func(r *Repo) error {
 
 	// Create the index.yaml file to use the helm Go library, which does not
 	// expose a Loader from bytes.
-	f, err := ioutil.TempFile("", "index.*.yaml")
+	f, err := os.CreateTemp("", "index.*.yaml")
 	if err != nil {
 		return errors.Trace(err)
 	}

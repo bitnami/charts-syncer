@@ -1,7 +1,6 @@
 package chart
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -66,7 +65,7 @@ volumePermissions:
     repository: test/repo/custom-base-image
     tag: r0`
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	testTmpDir, err := os.MkdirTemp("", "charts-syncer-tests")
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
@@ -74,13 +73,13 @@ volumePermissions:
 	destValuesFilePath := path.Join(testTmpDir, ValuesFilename)
 
 	// Write file
-	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
+	err = os.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
 	if err != nil {
 		t.Fatalf("error writting destination file")
 	}
 
 	updateValuesFile(destValuesFilePath, target)
-	valuesFile, err := ioutil.ReadFile(destValuesFilePath)
+	valuesFile, err := os.ReadFile(destValuesFilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +111,7 @@ $ helm install my-release mytestrepo/ghost
 The above parameters map to the env variables defined in [bitnami/ghost](http://github.com/bitnami/bitnami-docker-ghost).
 	`
 	// Create temporary working directory
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	testTmpDir, err := os.MkdirTemp("", "charts-syncer-tests")
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
@@ -120,13 +119,13 @@ The above parameters map to the env variables defined in [bitnami/ghost](http://
 	destValuesFilePath := path.Join(testTmpDir, ReadmeFilename)
 
 	// Write file
-	err = ioutil.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
+	err = os.WriteFile(destValuesFilePath, []byte(originalValues), 0644)
 	if err != nil {
 		t.Fatalf("error writting destination file")
 	}
 
 	updateReadmeFile(destValuesFilePath, "https://charts.bitnami.com/bitnami", "https://my-new-chart-repo.com", "ghost", "mytestrepo")
-	readmeFile, err := ioutil.ReadFile(destValuesFilePath)
+	readmeFile, err := os.ReadFile(destValuesFilePath)
 	if err != nil {
 		t.Fatal(err)
 	}

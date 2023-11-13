@@ -2,7 +2,6 @@ package chart
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -17,7 +16,7 @@ import (
 func newChartPath(t *testing.T, file string, name string) string {
 	t.Helper()
 
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	testTmpDir, err := os.MkdirTemp("", "charts-syncer-tests")
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
@@ -94,7 +93,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 	}
 
 	// Test requirements file
-	requirements, err := ioutil.ReadFile(requirementsFile)
+	requirements, err := os.ReadFile(requirementsFile)
 	if err != nil {
 		t.Fatalf("error reading updated %s file", requirementsFile)
 	}
@@ -114,7 +113,7 @@ func TestUpdateRequirementsFile(t *testing.T) {
 
 	// Test requirements lock file
 	requirementsFileLock := path.Join(chartPath, RequirementsLockFilename)
-	requirementsLock, err := ioutil.ReadFile(requirementsFileLock)
+	requirementsLock, err := os.ReadFile(requirementsFileLock)
 	if err != nil {
 		t.Fatalf("error reading updated %s file", requirementsFileLock)
 	}
@@ -142,13 +141,13 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 		},
 	}
 
-	testTmpDir, err := ioutil.TempDir("", "charts-syncer-tests")
+	testTmpDir, err := os.MkdirTemp("", "charts-syncer-tests")
 	if err != nil {
 		t.Fatalf("error creating temporary: %s", testTmpDir)
 	}
 	defer os.RemoveAll(testTmpDir)
 
-	sourceFile, err := ioutil.ReadFile("../../testdata/kafka-chart.yaml")
+	sourceFile, err := os.ReadFile("../../testdata/kafka-chart.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +157,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(chartFile, sourceFile, 0644)
+	err = os.WriteFile(chartFile, sourceFile, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +167,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 	}
 
 	// Test Chart.yaml file
-	chartFileContent, err := ioutil.ReadFile(chartFile)
+	chartFileContent, err := os.ReadFile(chartFile)
 	if err != nil {
 		t.Fatalf("error reading updated %s file", chartFile)
 	}
@@ -188,7 +187,7 @@ func TestUpdateChartMetadataFile(t *testing.T) {
 
 	// Test Chart.lock file
 	chartFileLock := path.Join(chartPath, ChartLockFilename)
-	chartLock, err := ioutil.ReadFile(chartFileLock)
+	chartLock, err := os.ReadFile(chartFileLock)
 	if err != nil {
 		t.Fatalf("error reading updated %s file", chartFileLock)
 	}

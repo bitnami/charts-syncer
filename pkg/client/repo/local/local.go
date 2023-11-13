@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -102,13 +101,13 @@ func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
 		}
 	}
 
-	input, err := ioutil.ReadFile(filepath)
+	input, err := os.ReadFile(filepath)
 	if err != nil {
 		return errors.Annotatef(err, "reading %q", filepath)
 	}
 
 	out := path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version))
-	if err := ioutil.WriteFile(out, input, 0644); err != nil {
+	if err := os.WriteFile(out, input, 0644); err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}
 

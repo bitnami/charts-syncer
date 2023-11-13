@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -141,7 +141,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 	if emptyIndex {
 		indexFile = filepath.Join(testdataPath, "empty-index.yaml")
 	}
-	index, err := ioutil.ReadFile(indexFile)
+	index, err := os.ReadFile(indexFile)
 	if err != nil {
 		rt.t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, ch
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata")
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
-	chartPackage, err := ioutil.ReadFile(chartPackageFile)
+	chartPackage, err := os.ReadFile(chartPackageFile)
 	if err != nil {
 		rt.t.Fatal(err)
 	}
@@ -215,7 +215,7 @@ func chartMetadataFromTGZ(r io.Reader) (*Metadata, error) {
 		}
 	}
 
-	data, err := ioutil.ReadAll(t)
+	data, err := io.ReadAll(t)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -101,7 +100,7 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	}
 
 	// Create the file
-	out, err := ioutil.TempFile("", "index.*.yaml")
+	out, err := os.CreateTemp("", "index.*.yaml")
 	if err != nil {
 		klog.Fatal(err)
 	}

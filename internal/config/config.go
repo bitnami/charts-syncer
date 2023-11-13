@@ -3,8 +3,8 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/bitnami/charts-syncer/api"
@@ -130,7 +130,7 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 
 // yamlToProto unmarshals `path` into the provided proto message
 func yamlToProto(path string, v proto.Message) error {
-	yamlBytes, err := ioutil.ReadFile(path)
+	yamlBytes, err := os.ReadFile(path)
 	if err != nil {
 		return errors.Trace(err)
 	}

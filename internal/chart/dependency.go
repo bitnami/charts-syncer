@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -54,7 +53,7 @@ func GetChartLock(chartPath string) (*chart.Lock, error) {
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	lockContent, err := ioutil.ReadFile(lockFilePath)
+	lockContent, err := os.ReadFile(lockFilePath)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -68,7 +67,7 @@ func GetChartLock(chartPath string) (*chart.Lock, error) {
 // GetChartDependencies returns the chart chart.Dependencies from a chart in tgz format.
 func GetChartDependencies(filepath string, name string) ([]*chart.Dependency, error) {
 	// Create temporary working directory
-	chartPath, err := ioutil.TempDir("", "charts-syncer")
+	chartPath, err := os.MkdirTemp("", "charts-syncer")
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -181,7 +180,7 @@ func BuildDependencies(chartPath string, r client.ChartsReader, sourceRepo, targ
 // For helm v3 dependency management
 func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo) error {
 	chartFile := path.Join(chartPath, ChartFilename)
-	chartYamlContent, err := ioutil.ReadFile(chartFile)
+	chartYamlContent, err := os.ReadFile(chartFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -216,7 +215,7 @@ func updateChartMetadataFile(chartPath string, lock *chart.Lock, sourceRepo, tar
 // For helm v2 dependency management
 func updateRequirementsFile(chartPath string, lock *chart.Lock, sourceRepo, targetRepo *api.Repo) error {
 	requirementsFile := path.Join(chartPath, RequirementsFilename)
-	requirements, err := ioutil.ReadFile(requirementsFile)
+	requirements, err := os.ReadFile(requirementsFile)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -285,7 +284,7 @@ func writeChartFile(dest string, v interface{}) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	return ioutil.WriteFile(dest, data, 0644)
+	return os.WriteFile(dest, data, 0644)
 }
 
 // hashDeps generates a hash of the dependencies.

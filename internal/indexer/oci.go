@@ -3,7 +3,6 @@ package indexer
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"net/url"
 	"os"
 
@@ -33,8 +32,7 @@ type OciIndexerOpt func(opts *ociIndexerOpts)
 // WithIndexRef configures the charts index OCI reference instead of letting the library
 // using the default host/index:latest one.
 //
-// 	opt := WithIndexRef("my.oci.domain/index:prod")
-//
+//	opt := WithIndexRef("my.oci.domain/index:prod")
 func WithIndexRef(r string) OciIndexerOpt {
 	return func(opts *ociIndexerOpts) {
 		opts.reference = r
@@ -43,8 +41,7 @@ func WithIndexRef(r string) OciIndexerOpt {
 
 // WithBasicAuth configures basic authentication for the OCI host
 //
-// 	opt := WithBasicAuth("user", "pass")
-//
+//	opt := WithBasicAuth("user", "pass")
 func WithBasicAuth(user, pass string) OciIndexerOpt {
 	return func(opts *ociIndexerOpts) {
 		opts.username = user
@@ -54,8 +51,7 @@ func WithBasicAuth(user, pass string) OciIndexerOpt {
 
 // WithInsecure configures insecure connection
 //
-// 	opt := WithInsecure()
-//
+//	opt := WithInsecure()
 func WithInsecure() OciIndexerOpt {
 	return func(opts *ociIndexerOpts) {
 		opts.insecure = true
@@ -64,8 +60,7 @@ func WithInsecure() OciIndexerOpt {
 
 // WithHost configures the OCI host
 //
-// 	opt := WithHost("my.oci.domain")
-//
+//	opt := WithHost("my.oci.domain")
 func WithHost(h string) OciIndexerOpt {
 	return func(opts *ociIndexerOpts) {
 		opts.url = h
@@ -128,7 +123,7 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 		return nil, errors.Wrapf(err, "unable to download index")
 	}
 
-	data, err := ioutil.ReadFile(indexFile)
+	data, err := os.ReadFile(indexFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read index file")
 	}
