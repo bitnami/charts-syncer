@@ -105,13 +105,13 @@ func (r *Repo) List() ([]string, error) {
 
 // getTagManifest returns the manifests of a published tag
 func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, error) {
-	u := *r.url
-	u.Path = path.Join(u.Path, chartName)
-
 	parseOpts := []name.Option{}
 	if r.insecure {
 		parseOpts = append(parseOpts, name.Insecure)
 	}
+
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", chartName)
 
 	repo, err := name.ParseReference(u.Host + u.Path + ":" + version)
 	if err != nil {
@@ -169,7 +169,7 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	}
 
 	u := *r.url
-	u.Path = path.Join(u.Path, chartName)
+	u.Path = path.Join(u.Path, "/", chartName)
 
 	repo, err := name.NewRepository(u.Host + u.Path)
 	if err != nil {
