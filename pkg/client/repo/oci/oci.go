@@ -105,11 +105,6 @@ func (r *Repo) List() ([]string, error) {
 
 // getTagManifest returns the manifests of a published tag
 func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, error) {
-	parseOpts := []name.Option{}
-	if r.insecure {
-		parseOpts = append(parseOpts, name.Insecure)
-	}
-
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
@@ -228,14 +223,8 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		return r.cache.Path(id), nil
 	}
 
-	parseOpts := []name.Option{}
-	if r.insecure {
-		parseOpts = append(parseOpts, name.Insecure)
-	}
-
 	ref, err := name.ParseReference(
-		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version),
-		parseOpts...)
+		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version))
 	if err != nil {
 		return "", errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -298,14 +287,8 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(chartName string, version string) (bool, error) {
-	parseOpts := []name.Option{}
-	if r.insecure {
-		parseOpts = append(parseOpts, name.Insecure)
-	}
-
 	ref, err := name.ParseReference(
-		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version),
-		parseOpts...)
+		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version))
 	if err != nil {
 		return false, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
