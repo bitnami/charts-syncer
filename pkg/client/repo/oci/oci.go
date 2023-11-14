@@ -204,18 +204,6 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	return chartTags, nil
 }
 
-// GetDownloadURL returns the URL to download a chart
-func (r *Repo) GetDownloadURL(name string, version string) (string, error) {
-	digest, err := r.getChartDigest(name, version)
-	if err != nil {
-		return "", errors.Annotatef(err, "obtaining chart digest")
-	}
-	u := *r.url
-	// Form API endpoint URL from repository URL
-	u.Path = path.Join("v2", u.Path, name, "blobs", digest)
-	return u.String(), nil
-}
-
 // Fetch fetches a chart
 func (r *Repo) Fetch(chartName string, version string) (string, error) {
 	id := fmt.Sprintf("%s-%s.tgz", chartName, version)

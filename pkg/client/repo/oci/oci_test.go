@@ -1,9 +1,7 @@
 package oci_test
 
 import (
-	"net/url"
 	"os"
-	"path"
 	"reflect"
 	"sort"
 	"testing"
@@ -147,23 +145,6 @@ func TestReload(t *testing.T) {
 	err := c.Reload()
 	if err.Error() != expectedError {
 		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
-	}
-}
-
-func TestGetDownloadURL(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
-	u, err := url.Parse(ociRepo.Url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	u.Path = path.Join("v2", u.Path, "kafka/blobs/sha256:11e974d88391a39e4dd6d7d6c4350b237b1cca1bf32f2074bba41109eaa5f438")
-	want := u.String()
-	got, err := c.GetDownloadURL("kafka", "12.2.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Errorf("wrong download URL. got: %v, want: %v", got, want)
 	}
 }
 
