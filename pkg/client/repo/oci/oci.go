@@ -108,7 +108,8 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
-	repo, err := name.ParseReference(u.Host + u.Path + ":" + version)
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
 	if err != nil {
 		return nil, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -126,9 +127,9 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 		opts = append(opts, remote.WithTransport(transport))
 	}
 
-	image, err := remote.Image(repo, opts...)
+	image, err := remote.Image(ref, opts...)
 	if err != nil {
-		return nil, errors.Errorf("failed to fetch %q manifest: %v", repo, err)
+		return nil, errors.Errorf("failed to fetch %q manifest: %v", ref, err)
 	}
 
 	body, err := image.RawManifest()
@@ -211,8 +212,11 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		return r.cache.Path(id), nil
 	}
 
-	ref, err := name.ParseReference(
-		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version))
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", chartName)
+
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
 	if err != nil {
 		return "", errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -275,8 +279,12 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(chartName string, version string) (bool, error) {
-	ref, err := name.ParseReference(
-		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version))
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", chartName)
+
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
+
 	if err != nil {
 		return false, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -356,7 +364,8 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, strings.ReplaceAll(version, "+", "_"))
 	if err := memoryStore.StoreManifest(chartRef, manifestDesc, manifest); err != nil {
 		return errors.Trace(err)
 	}
