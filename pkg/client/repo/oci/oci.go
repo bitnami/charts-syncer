@@ -126,9 +126,9 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 		}))
 	}
 	if r.insecure {
-		remote.DefaultTransport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
 
 	image, err := remote.Image(repo, opts...)
@@ -171,11 +171,6 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	u := *r.url
 	u.Path = path.Join(u.Path, chartName)
 
-	parseOpts := []name.Option{}
-	if r.insecure {
-		parseOpts = append(parseOpts, name.Insecure)
-	}
-
 	repo, err := name.NewRepository(u.Host + u.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse repo %v", err)
@@ -189,9 +184,9 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 		}))
 	}
 	if r.insecure {
-		remote.DefaultTransport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
 
 	tags, err := remote.List(repo, opts...)
@@ -253,9 +248,9 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		}))
 	}
 	if r.insecure {
-		remote.DefaultTransport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
 
 	img, err := remote.Image(ref, opts...)
@@ -321,6 +316,11 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 			Username: r.username,
 			Password: r.password,
 		}))
+	}
+	if r.insecure {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
 
 	_, err = remote.Head(ref, opts...)
