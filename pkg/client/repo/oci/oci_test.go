@@ -1,9 +1,7 @@
 package oci_test
 
 import (
-	"net/url"
 	"os"
-	"path"
 	"reflect"
 	"sort"
 	"testing"
@@ -29,8 +27,18 @@ var (
 )
 
 func TestFetch(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
-	chartPath, err := c.Fetch("kafka", "12.2.1")
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
+
+	chartMetadata := &chart.Metadata{
+		Name:    "apache",
+		Version: "7.3.15",
+	}
+	if err := c.Upload("../../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
+		t.Fatal(err)
+	}
+
+	chartPath, err := c.Fetch("apache", "7.3.15")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +76,9 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
+
 	want := []string{}
 	got, err := c.List()
 	if err != nil {
@@ -82,9 +92,18 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
-	want := []string{"12.2.1"}
-	got, err := c.ListChartVersions("kafka")
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
+	chartMetadata := &chart.Metadata{
+		Name:    "apache",
+		Version: "7.3.15",
+	}
+	if err := c.Upload("../../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
+		t.Fatal(err)
+	}
+
+	want := []string{"7.3.15"}
+	got, err := c.ListChartVersions("apache")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,12 +115,22 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
+	oci.PrepareOciServer(t, ociRepo)
+	c := oci.PrepareTest(t, ociRepo)
+
+	chartMetadata := &chart.Metadata{
+		Name:    "apache",
+		Version: "7.3.15",
+	}
+	if err := c.Upload("../../../../testdata/apache-7.3.15.tgz", chartMetadata); err != nil {
+		t.Fatal(err)
+	}
+
 	want := types.ChartDetails{
 		PublishedAt: time.Now(),
-		Digest:      "sha256:11e974d88391a39e4dd6d7d6c4350b237b1cca1bf32f2074bba41109eaa5f438",
+		Digest:      "sha256:a51babb4da1164f35b0a3e8050a24c387db4dba46dbb96b78ef0c4a658efeb00",
 	}
-	got, err := c.GetChartDetails("kafka", "12.2.1")
+	got, err := c.GetChartDetails("apache", "7.3.15")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,23 +145,6 @@ func TestReload(t *testing.T) {
 	err := c.Reload()
 	if err.Error() != expectedError {
 		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
-	}
-}
-
-func TestGetDownloadURL(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
-	u, err := url.Parse(ociRepo.Url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	u.Path = path.Join("v2", u.Path, "kafka/blobs/sha256:11e974d88391a39e4dd6d7d6c4350b237b1cca1bf32f2074bba41109eaa5f438")
-	want := u.String()
-	got, err := c.GetDownloadURL("kafka", "12.2.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Errorf("wrong download URL. got: %v, want: %v", got, want)
 	}
 }
 

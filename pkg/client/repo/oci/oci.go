@@ -2,6 +2,7 @@ package oci
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -103,40 +104,35 @@ func (r *Repo) List() ([]string, error) {
 }
 
 // getTagManifest returns the manifests of a published tag
-func (r *Repo) getTagManifest(name, version string) (*ocispec.Manifest, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), getTimeout)
-	defer cancel()
-
+func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, error) {
 	u := *r.url
-	// Form API endpoint URL from repo url
-	u.Path = path.Join("v2", u.Path, name, "manifests", version)
-	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
-	req.Header.Set("Accept", ImageManifestMediaType)
+	u.Path = path.Join(u.Path, "/", chartName)
 
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
+
+	opts := []remote.Option{}
 	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
 	}
-	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureClient
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	defer resp.Body.Close()
 
-	status := resp.StatusCode
-	body, err := io.ReadAll(resp.Body)
+	image, err := remote.Image(ref, opts...)
 	if err != nil {
-		return nil, errors.Errorf("unexpected response — %d %q — from %s", status, http.StatusText(status), u.String())
+		return nil, errors.Errorf("failed to fetch %q manifest: %v", ref, err)
 	}
-	if status != http.StatusOK {
-		return nil, errors.Errorf("unexpected response — %d %q, %s — from %s", status, http.StatusText(status), string(body), u.String())
-	}
+
+	body, err := image.RawManifest()
 	tm := &ocispec.Manifest{}
 	if err := json.Unmarshal(body, tm); err != nil {
 		return nil, err
@@ -160,59 +156,43 @@ func (r *Repo) getChartDigest(name, version string) (string, error) {
 }
 
 // ListChartVersions lists all versions of a chart
-func (r *Repo) ListChartVersions(name string) ([]string, error) {
+func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	// If entries is populated use it to list the chart versions
 	// Otherwise, we need the charts list to be defined in the config file, retrieve all the tags for those chart names
 	// and verify which tags are real charts by checking its mimeType.
-	if _, ok := r.entries[name]; ok {
-		return r.entries[name], nil
+	if _, ok := r.entries[chartName]; ok {
+		return r.entries[chartName], nil
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), getTimeout)
-	defer cancel()
 
 	u := *r.url
-	// Form API endpoint URL from repository URL
-	u.Path = path.Join("v2", u.Path, name, "tags", "list")
-	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	u.Path = path.Join(u.Path, "/", chartName)
+
+	repo, err := name.NewRepository(u.Host + u.Path)
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, fmt.Errorf("failed to parse repo %v", err)
 	}
+
+	opts := []remote.Option{}
 	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
 	}
-	client := utils.DefaultClient
 	if r.insecure {
-		client = utils.InsecureClient
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
-	resp, err := client.Do(req)
+
+	tags, err := remote.List(repo, opts...)
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
 	}
-	defer resp.Body.Close()
-	status := resp.StatusCode
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Errorf("unexpected response — %d %q — from %s", status, http.StatusText(status), u.String())
-	}
-	// Valid response codes from OCI registries are listed here:
-	// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
-	switch status {
-	case http.StatusNotFound:
-		// If status not found 404, it could mean the asset has no release yet
-		// TODO (tpizarro): Use the NotFound error instead of just returning nil and handle the case in the caller
-		return []string{}, nil
-	case http.StatusOK:
-		// do nothing, just continue
-	default:
-		return nil, errors.Errorf("unexpected response — %d %q, %s — from %s", status, http.StatusText(status), string(body), u.String())
-	}
-	ot := &Tags{}
-	if err := json.Unmarshal(body, ot); err != nil {
-		return nil, err
-	}
+
 	chartTags := []string{}
-	for _, tag := range ot.Tags {
-		tm, err := r.getTagManifest(name, tag)
+	for _, tag := range tags {
+		tm, err := r.getTagManifest(chartName, tag)
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
@@ -225,58 +205,86 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	return chartTags, nil
 }
 
-// GetDownloadURL returns the URL to download a chart
-func (r *Repo) GetDownloadURL(name string, version string) (string, error) {
-	digest, err := r.getChartDigest(name, version)
-	if err != nil {
-		return "", errors.Annotatef(err, "obtaining chart digest")
-	}
-	u := *r.url
-	// Form API endpoint URL from repository URL
-	u.Path = path.Join("v2", u.Path, name, "blobs", digest)
-	return u.String(), nil
-}
-
 // Fetch fetches a chart
-func (r *Repo) Fetch(name string, version string) (string, error) {
-	statusHandlerFn := func(res *http.Response) error {
-		status := res.StatusCode
-		// Valid response codes from OCI registries are listed here:
-		// https://github.com/opencontainers/distribution-spec/blob/master/spec.md#endpoints
-		switch status {
-		case http.StatusOK:
-			return nil
-		default:
-			bodyStr := utils.HTTPResponseBody(res)
-			return errors.Errorf("got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
+func (r *Repo) Fetch(chartName string, version string) (string, error) {
+	id := fmt.Sprintf("%s-%s.tgz", chartName, version)
+	if r.cache.Has(id) {
+		return r.cache.Path(id), nil
+	}
+
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", chartName)
+
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
+	if err != nil {
+		return "", errors.Errorf("failed parsing OCI reference: %s", err)
+	}
+
+	opts := []remote.Option{}
+	if r.username != "" && r.password != "" {
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
+	}
+	if r.insecure {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
+	}
+
+	img, err := remote.Image(ref, opts...)
+	if err != nil {
+		return "", errors.Annotatef(err, "failed checking remote: %s", ref)
+	}
+
+	w, err := r.cache.Writer(id)
+	if err != nil {
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
+	}
+
+	layers, err := img.Layers()
+	if err != nil {
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
+	}
+
+	for _, l := range layers {
+		t, err := l.MediaType()
+		if err != nil {
+			// Invalidate the cache
+			r.cache.Invalidate(id)
+			return "", errors.Annotatef(err, "fetching %q chart", ref)
+		}
+		// https://helm.sh/docs/topics/registries/#helm-chart-manifest
+		if isHelmChartContentLayerMediaType(string(t)) {
+			c, err := l.Compressed()
+			_, err = io.Copy(w, c)
+			if err != nil {
+				// Invalidate the cache
+				r.cache.Invalidate(id)
+				return "", errors.Annotatef(err, "fetching %q chart", ref)
+			}
 		}
 	}
 
-	fetchOpts := []utils.FetchOption{
-		utils.WithFetchUsername(r.username),
-		utils.WithFetchPassword(r.password),
-		utils.WithFetchInsecure(r.insecure),
-		utils.WithFetchStatusHandler(statusHandlerFn),
-		utils.WithFetchURLBuilder(r.GetDownloadURL),
-	}
-	chartPath, err := utils.FetchAndCache(name, version, r.cache, fetchOpts...)
-	if err != nil {
-		return "", errors.Annotatef(err, "fetching %s:%s chart", name, version)
+	if err := w.Close(); err != nil {
+		// Invalidate the cache
+		r.cache.Invalidate(id)
+		return "", errors.Annotatef(err, "fetching %q chart", ref)
 	}
 
-	return chartPath, nil
+	return r.cache.Path(id), nil
 }
 
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(chartName string, version string) (bool, error) {
-	parseOpts := []name.Option{}
-	if r.insecure {
-		parseOpts = append(parseOpts, name.Insecure)
-	}
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", chartName)
 
-	ref, err := name.ParseReference(
-		fmt.Sprintf("%s:%s", path.Join(strings.TrimPrefix(r.url.String(), fmt.Sprintf("%s://", r.url.Scheme)), chartName), version),
-		parseOpts...)
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
+
 	if err != nil {
 		return false, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -287,6 +295,11 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 			Username: r.username,
 			Password: r.password,
 		}))
+	}
+	if r.insecure {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		opts = append(opts, remote.WithTransport(transport))
 	}
 
 	_, err = remote.Head(ref, opts...)
@@ -351,7 +364,8 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, version)
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, strings.ReplaceAll(version, "+", "_"))
 	if err := memoryStore.StoreManifest(chartRef, manifestDesc, manifest); err != nil {
 		return errors.Trace(err)
 	}
