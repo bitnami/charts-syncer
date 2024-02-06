@@ -8,25 +8,3 @@ You need go and the Go protocol buffers pluging:
 make gen # To generate Go code from protobuff definition
 make build # To actually build the binary
 ~~~
-
-## How to obtain diffs for a chart
-
-As stated in the [README](../README.md) file, the tool performs some change in the chart source code. Specifically these files:
-
-- values.yaml
-- values-production.yaml (if exists)
-- requirements.yaml (if requirements.lock exists, only for Helm v2 chart)
-- requirements.lock (if exists, only for Helm v2 chart)
-- Chart.yaml (if Chart.lock exists, only for Helm v3 chart)
-- Chart.lock (if exists, only for Helm v3 chart)
-- README.md (if exists)
-
-In order to get a `diff` view with the performed changes you can do the following:
-
-1. Fetch the chart package from the source chart repository
-1. Extract it
-1. Initialize a git repository and add the current status
-1. Execute `charts-syncer` tool
-1. Fetch the chart package from target chart repository
-1. Extract it in the same folder where the source chart was extracted
-1. Run `git diff`

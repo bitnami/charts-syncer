@@ -7,7 +7,10 @@ import (
 	"testing"
 
 	"github.com/bitnami/charts-syncer/api"
-	"github.com/bitnami/charts-syncer/pkg/client/repo/local"
+	localSource "github.com/bitnami/charts-syncer/pkg/client/source/local"
+	localTarget "github.com/bitnami/charts-syncer/pkg/client/target/local"
+
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/silent"
 )
 
 // FakeSyncerOpts allows to configure a Fake syncer.
@@ -57,7 +60,7 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	// Copy all testdata tgz files to the source temporary folder
 	// We are not adding charts in the entries only to avoid specifying
 	// the dependencies
-	matches, err := filepath.Glob("../../testdata/*.tgz")
+	matches, err := filepath.Glob("../../testdata/*.wrap.tgz")
 	if err != nil {
 		t.Fatalf("error listing tgz files: %v", err)
 	}
@@ -73,11 +76,11 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 		}
 	}
 
-	srcCli, err := local.New(srcTmp)
+	srcCli, err := localSource.New(srcTmp)
 	if err != nil {
 		t.Fatalf("error creating source client: %v", err)
 	}
-	dstCli, err := local.New(sopts.Destination)
+	dstCli, err := localTarget.New(sopts.Destination)
 	if err != nil {
 		t.Fatalf("error creating target client: %v", err)
 	}
@@ -90,5 +93,6 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 			dst: dstCli,
 		},
 		skipCharts: sopts.skipCharts,
+		logger:     silent.NewSectionLogger(),
 	}
 }

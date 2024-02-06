@@ -30,12 +30,6 @@ func TestLoad(t *testing.T) {
 	if target.GetRepo().GetKind() != api.Kind_CHARTMUSEUM {
 		t.Errorf("got: %s, want %s", target.GetRepo().GetKind(), "CHARTMUSEUM")
 	}
-	if target.GetContainerRegistry() != "test.registry.io" {
-		t.Errorf("got: %s, want %s", target.GetContainerRegistry(), "test.registry.io")
-	}
-	if target.GetContainerRepository() != "user/demo" {
-		t.Errorf("got: %s, want %s", target.GetContainerRepository(), "user/demo")
-	}
 }
 
 // Get auth properties from env vars
@@ -66,7 +60,7 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			&api.Auth{Username: "sUsername", Password: "sPassword"},
 			&api.Auth{Username: "tUsername", Password: "tPassword"},
 			&api.Containers_ContainerAuth{Username: "sUsername", Password: "sPassword", Registry: "sRegistry"},
-			&api.Containers_ContainerAuth{Username: "tUsername", Password: "tPassword", Registry: "test.registry.io"},
+			&api.Containers_ContainerAuth{Username: "tUsername", Password: "tPassword"},
 		},
 		"legacy-full-env-vars": {
 			"example-config-no-auth.yaml",
@@ -109,7 +103,6 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 				"SOURCE_REPO_AUTH_PASSWORD":       "",
 				"TARGET_REPO_AUTH_USERNAME":       "",
 				"TARGET_REPO_AUTH_PASSWORD":       "",
-				"SOURCE_CONTAINERS_AUTH_REGISTRY": "",
 				"SOURCE_CONTAINERS_AUTH_USERNAME": "",
 				"SOURCE_CONTAINERS_AUTH_PASSWORD": "",
 				"TARGET_CONTAINERS_AUTH_USERNAME": "",

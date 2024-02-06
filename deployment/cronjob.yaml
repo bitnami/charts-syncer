@@ -65,6 +65,11 @@ spec:
                   secretKeyRef:
                     name: charts-syncer-credentials
                     key: TARGET_CONTAINERS_AUTH_PASSWORD
+              - name: TARGET_CONTAINERS_AUTH_REGISTRY
+                valueFrom:
+                  secretKeyRef:
+                    name: charts-syncer-credentials
+                    key: TARGET_CONTAINERS_AUTH_REGISTRY
             volumeMounts:
               - name: config
                 mountPath: /charts-syncer.yaml

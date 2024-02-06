@@ -10,7 +10,5 @@ target:
   repo:
     kind: OCI
     url: http://localhost:9090/charts
-  containerRegistry: "k8s.container.registry.io"
-  containerRepository: "repository/demo/k8s"
 # skipCharts:
 #  - common

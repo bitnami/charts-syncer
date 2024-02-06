@@ -52,6 +52,7 @@ TARGET_REPO_AUTH_USERNAME='my_target_chart_repo_username' \
 TARGET_REPO_AUTH_PASSWORD='my_target_chart_repo_password' \
 TARGET_CONTAINERS_AUTH_USERNAME='my_target_container_registry_username' \
 TARGET_CONTAINERS_AUTH_PASSWORD='my_target_container_registry_password' \
+TARGET_CONTAINERS_AUTH_REGISTRY='target.registry.test.io' \
 kubectl apply -k ./deployment
 ```
 

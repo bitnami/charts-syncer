@@ -5,17 +5,21 @@ import (
 
 	"github.com/bitnami/charts-syncer/api"
 	"github.com/bitnami/charts-syncer/pkg/client"
-	"github.com/bitnami/charts-syncer/pkg/client/intermediate"
-	"github.com/bitnami/charts-syncer/pkg/client/repo"
+	cs "github.com/bitnami/charts-syncer/pkg/client/source"
+	ct "github.com/bitnami/charts-syncer/pkg/client/target"
+
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/silent"
+
 	"k8s.io/klog"
 )
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src client.ChartsReaderWriter
-	dst client.ChartsReaderWriter
+	src client.ChartsWrapper
+	dst client.ChartsUnwrapper
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -25,13 +29,12 @@ type Syncer struct {
 
 	cli *Clients
 
-	dryRun                  bool
-	autoDiscovery           bool
-	fromDate                string
-	insecure                bool
-	relocateContainerImages bool
-	skipDependencies        bool
-	latestVersionOnly       bool
+	dryRun            bool
+	autoDiscovery     bool
+	fromDate          string
+	insecure          bool
+	usePlainHTTP      bool
+	latestVersionOnly bool
 	// list of charts to skip
 	skipCharts []string
 
@@ -41,6 +44,8 @@ type Syncer struct {
 
 	// Storage directory for required artifacts
 	workdir string
+
+	logger log.SectionLogger
 }
 
 // Option is an option value used to create a new syncer instance.
@@ -50,6 +55,13 @@ type Option func(*Syncer)
 func WithDryRun(enable bool) Option {
 	return func(s *Syncer) {
 		s.dryRun = enable
+	}
+}
+
+// WithLogger configures the syncer to use a specific logger.
+func WithLogger(l log.SectionLogger) Option {
+	return func(s *Syncer) {
+		s.logger = l
 	}
 }
 
@@ -69,6 +81,13 @@ func WithFromDate(date string) Option {
 	}
 }
 
+// WithUsePlainHTTP configures the syncer to use plain HTTP
+func WithUsePlainHTTP(enable bool) Option {
+	return func(s *Syncer) {
+		s.usePlainHTTP = enable
+	}
+}
+
 // WithWorkdir configures the syncer to store artifacts in a specific directory.
 func WithWorkdir(dir string) Option {
 	return func(s *Syncer) {
@@ -80,21 +99,6 @@ func WithWorkdir(dir string) Option {
 func WithInsecure(enable bool) Option {
 	return func(s *Syncer) {
 		s.insecure = enable
-	}
-}
-
-// WithContainerImageRelocation configures the syncer to use relok8s to make the chart transformations and push the
-// container images to the target registry
-func WithContainerImageRelocation(enable bool) Option {
-	return func(s *Syncer) {
-		s.relocateContainerImages = enable
-	}
-}
-
-// WithSkipDependencies configures the syncer to skip dependencies sync
-func WithSkipDependencies(skipDependencies bool) Option {
-	return func(s *Syncer) {
-		s.skipDependencies = skipDependencies
 	}
 }
 
@@ -110,6 +114,7 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 	s := &Syncer{
 		source: source,
 		target: target,
+		logger: silent.NewSectionLogger(),
 	}
 
 	for _, o := range opts {
@@ -129,16 +134,7 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 
 	s.cli = &Clients{}
 	if source.GetRepo() != nil {
-		srcCli, err := repo.NewClient(source.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		s.cli.src = srcCli
-	} else if source.GetIntermediateBundlesPath() != "" {
-		// Specifically disable dependencies sync for intermediate scenarios
-		disableDependencySync(s)
-		// Create new intermediate bundles client
-		srcCli, err := intermediate.NewIntermediateClient(source.GetIntermediateBundlesPath())
+		srcCli, err := cs.NewClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
@@ -148,16 +144,7 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 	}
 
 	if target.GetRepo() != nil {
-		dstCli, err := repo.NewClient(target.GetRepo(), types.WithCache(s.workdir), types.WithInsecure(s.insecure))
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		s.cli.dst = dstCli
-	} else if target.GetIntermediateBundlesPath() != "" {
-		// Specifically disable dependencies sync for intermediate scenarios
-		disableDependencySync(s)
-		// Create new intermediate bundles client
-		dstCli, err := intermediate.NewIntermediateClient(target.GetIntermediateBundlesPath())
+		dstCli, err := ct.NewClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
@@ -166,10 +153,6 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 		return nil, errors.New("no target info defined in config file")
 	}
 
-	if s.relocateContainerImages {
-		// Specifically disable dependencies sync for relok8s scenario
-		disableDependencySync(s)
-	}
 	return s, nil
 }
 
@@ -179,11 +162,4 @@ func WithSkipCharts(charts []string) Option {
 	return func(s *Syncer) {
 		s.skipCharts = charts
 	}
-}
-
-func disableDependencySync(syncer *Syncer) {
-	if syncer.skipDependencies == false {
-		klog.Warningf("Ignoring skipDependencies option as dependency sync is not supported if container image relocation is true or syncing from/to intermediate directory ")
-	}
-	syncer.skipDependencies = true
 }

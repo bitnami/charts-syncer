@@ -22,17 +22,9 @@ source:
     # chartsIndex: my-oci-registry.io/my-project/my-custom-index:prod
 # target includes relevant information about the target chart repository
 target:
-  # repoName is used to modify the README of the chart. Default value: `myrepo`
-  repoName: myrepo
-  # containerRegistry is used to update the image registry section of the values.yaml file
-  # NOTE: If containerRegistry is not set (or not present), the registry sections won't be updated
-  containerRegistry: demo.registry.io
-  # containerRepository is used to update the image repository section of the values.yaml file
-  # NOTE: If containerRepository is not set (or not present), the repository sections won't be updated
-  containerRepository: tpizarro/demo
   repo:
-    # Kind specify the chart repository kind. Valid values are HELM, CHARTMUSEUM, and HARBOR
-    kind: CHARTMUSEUM
+    # Kind specify the chart repository kind. Valid values are LOCAL and OCI
+    kind: OCI
     # url is the url of the chart repository
     url: http://localhost:9090 # local test target repo
     # auth is used if the target repository is protected with basic auth (Optional section)
@@ -53,8 +45,3 @@ charts:
 # either "charts" or "skipCharts" can be used at once
 # skipCharts:
 #  - mariadb
-
-# Whether to also relocate the container images referenced by the Helm Chart
-# Note that this requires the Helm Chart to be compatible with relok8s tool by containing a .relok8s-images.yaml file
-# More info about the file here https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file
-relocateContainerImages: false

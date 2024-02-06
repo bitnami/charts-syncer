@@ -8,19 +8,15 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/juju/errors"
 	"github.com/mkmik/multierror"
-	"github.com/philopon/go-toposort"
 	"k8s.io/klog"
 
-	"github.com/bitnami/charts-syncer/internal/chart"
 	"github.com/bitnami/charts-syncer/internal/utils"
 )
 
 // Chart describes a chart, including dependencies
 type Chart struct {
-	Name         string
-	Version      string
-	Dependencies []string
-
+	Name    string
+	Version string
 	TgzPath string
 }
 
@@ -101,8 +97,11 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			errs = multierror.Append(errs, errors.Trace(err))
 			continue
 		}
-
-		klog.V(5).Infof("Found %d versions for %q chart: %v", len(versions), name, versions)
+		if len(versions) == 0 {
+			klog.V(5).Infof("Indexing chart %q SKIPPED (no versions found)...", name)
+			continue
+		}
+		klog.V(5).Infof("Found %d versions for %q chart", len(versions), name)
 		klog.V(3).Infof("Indexing %q charts...", name)
 		if s.latestVersionOnly {
 			vs := make([]*semver.Version, len(versions))
@@ -143,7 +142,6 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 	}
 
 	id := fmt.Sprintf("%s-%s", name, version)
-	klog.V(5).Infof("Details for %q chart: %+v", id, details)
 	if details.PublishedAt.Before(publishingThreshold) {
 		klog.V(5).Infof("Skipping %q chart: Published before %q", id, publishingThreshold.String())
 		return nil
@@ -172,32 +170,6 @@ func (s *Syncer) processVersion(name, version string, publishingThreshold time.T
 // loadChart loads a chart in the chart index map
 func (s *Syncer) loadChart(name string, version string) error {
 	id := fmt.Sprintf("%s-%s", name, version)
-	// loadChart is a recursive function and it will be invoked again for each
-	// dependency.
-	//
-	// It makes sense that different "tier1" charts use the same "tier2" chart
-	// dependencies. This check will make the method to skip already indexed
-	// charts.
-	//
-	// Example:
-	// `wordpress` is a "tier1" chart that depends on the "tier2" charts `mariadb`
-	// and `common`. `magento` is a "tier1" chart that depends on the "tier2"
-	// charts `mariadb` and `elasticsearch`.
-	//
-	// If we run charts-syncer for `wordpress` and `magento`, this check will
-	// avoid re-indexing `mariadb` twice.
-	if ch := s.getIndex().Get(id); ch != nil {
-		klog.V(5).Infof("Skipping %q chart: Already indexed", id)
-		return nil
-	}
-	// In the same way, dependencies may already exist in the target chart
-	// repository.
-	if ok, err := s.cli.dst.Has(name, version); err != nil {
-		return errors.Errorf("unable to explore target repo to check %q chart: %v", id, err)
-	} else if ok {
-		klog.V(5).Infof("Skipping %q chart: Already synced", id)
-		return nil
-	}
 
 	tgz, err := s.cli.src.Fetch(name, version)
 	if err != nil {
@@ -210,57 +182,8 @@ func (s *Syncer) loadChart(name string, version string) error {
 		TgzPath: tgz,
 	}
 
-	if !s.skipDependencies {
-		deps, err := chart.GetChartDependencies(tgz, name)
-		if err != nil {
-			return errors.Trace(err)
-		}
-
-		if len(deps) == 0 {
-			klog.V(4).Infof("Indexing %q chart", id)
-			return errors.Trace(s.getIndex().Add(id, ch))
-		}
-
-		var errs error
-		for _, dep := range deps {
-			depID := fmt.Sprintf("%s-%s", dep.Name, dep.Version)
-			if err := s.loadChart(dep.Name, dep.Version); err != nil {
-				errs = multierror.Append(errs, errors.Annotatef(err, "invalid %q chart dependency", depID))
-				continue
-			}
-			ch.Dependencies = append(ch.Dependencies, depID)
-		}
-		if errs != nil {
-			return errors.Trace(errs)
-		}
-	}
-
 	klog.V(4).Infof("Indexing %q chart", id)
 	return errors.Trace(s.getIndex().Add(id, ch))
-}
-
-// topologicalSortCharts returns the indexed charts, topologically sorted.
-func (s *Syncer) topologicalSortCharts() ([]*Chart, error) {
-	graph := toposort.NewGraph(len(s.getIndex()))
-	for name := range s.getIndex() {
-		graph.AddNode(name)
-	}
-	for name, ch := range s.getIndex() {
-		for _, dep := range ch.Dependencies {
-			graph.AddEdge(dep, name)
-		}
-	}
-
-	result, ok := graph.Toposort()
-	if !ok {
-		return nil, errors.Errorf("dependency cycle detected in charts")
-	}
-
-	charts := make([]*Chart, len(result))
-	for i, id := range result {
-		charts[i] = s.getIndex().Get(id)
-	}
-	return charts, nil
 }
 
 func shouldSkipChart(chartName string, skippedCharts []string) bool {

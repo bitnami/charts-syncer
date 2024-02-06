@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/bitnami/charts-syncer/internal/indexer/api"
 	"github.com/bitnami-labs/pbjson"
+	"github.com/bitnami/charts-syncer/internal/indexer/api"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"

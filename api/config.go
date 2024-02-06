@@ -9,8 +9,12 @@ import (
 // Validate validates the config file is correct
 func (c *Config) Validate() error {
 	if repo := c.GetSource().GetRepo(); repo != nil {
-		if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
-			return errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err)
+		switch k := repo.GetKind(); k {
+		case Kind_CHARTMUSEUM, Kind_HELM, Kind_HARBOR, Kind_OCI:
+			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
+				return errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err)
+			}
+		case Kind_LOCAL:
 		}
 	}
 	if repo := c.GetTarget().GetRepo(); repo != nil {
@@ -35,6 +39,11 @@ func (c *Config) Validate() error {
 		// so the user does not need to set it up
 		if auth.Username == "" || auth.Password == "" {
 			return errors.Errorf(`"target.containers.auth" "username"" and "password" are required"`)
+		}
+	}
+	if repo := c.GetTarget().GetRepo(); repo != nil {
+		if repo.GetKind() != Kind_OCI && repo.GetKind() != Kind_LOCAL {
+			return errors.Errorf(`"target.repo.kind" should be "OCI" or "LOCAL"`)
 		}
 	}
 

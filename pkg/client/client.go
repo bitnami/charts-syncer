@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"helm.sh/helm/v3/pkg/chart"
 )
@@ -15,13 +16,13 @@ type ChartsReader interface {
 	ListChartVersions(name string) ([]string, error)
 	Has(name string, version string) (bool, error)
 	GetChartDetails(name string, version string) (*types.ChartDetails, error)
-
 	// Reload reloads or refresh the client-side data, in case it needs it
 	Reload() error
 }
 
 // ChartsWriter defines the methods that a WriteOnly chart or bundle client should implement.
 type ChartsWriter interface {
+	GetUploadURL() string
 	Upload(filepath string, metadata *chart.Metadata) error
 }
 
@@ -29,4 +30,16 @@ type ChartsWriter interface {
 type ChartsReaderWriter interface {
 	ChartsReader
 	ChartsWriter
+}
+
+// ChartsUnwrapper defines the methods required to unwrap a chart
+type ChartsUnwrapper interface {
+	ChartsReader
+	Unwrap(filepath string, metadata *chart.Metadata, opts ...config.Option) error
+}
+
+// ChartsWrapper defines the methods required to wrap a chart
+type ChartsWrapper interface {
+	ChartsReader
+	Wrap(source string, destination string, opts ...config.Option) (string, error)
 }

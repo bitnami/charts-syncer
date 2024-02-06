@@ -12,8 +12,9 @@ type ChartDetails struct {
 
 // ClientOpts allows to configure a client
 type ClientOpts struct {
-	cacheDir string
-	insecure bool
+	cacheDir  string
+	insecure  bool
+	plainHTTP bool
 }
 
 // Option is an option value used to create a new syncer instance.
@@ -47,4 +48,19 @@ func (o *ClientOpts) GetInsecure() bool {
 		return false
 	}
 	return o.insecure
+}
+
+// WithUsePlainHTTP configures the client to use plain HTTP
+func WithUsePlainHTTP(enable bool) Option {
+	return func(s *ClientOpts) {
+		s.plainHTTP = enable
+	}
+}
+
+// GetUsePlainHTTP returns if the client is configured to use plain HTTP
+func (o *ClientOpts) GetUsePlainHTTP() bool {
+	if o == nil {
+		return false
+	}
+	return o.plainHTTP
 }

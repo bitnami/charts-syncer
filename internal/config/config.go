@@ -7,17 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bitnami/charts-syncer/api"
 	"github.com/bitnami-labs/pbjson"
+	"github.com/bitnami/charts-syncer/api"
 	"github.com/golang/protobuf/proto"
 	"github.com/juju/errors"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
-)
-
-const (
-	defaultRepoName = "myrepo"
 )
 
 // DefaultIndexName is the name for the OCI artifact with the index
@@ -74,11 +70,6 @@ func setDefaultOverrides(config *api.Config) error {
 		}
 	}
 
-	if config.GetTarget() != nil && config.GetTarget().GetRepoName() == "" {
-		klog.V(4).Infof("'target.repoName' property is empty. Using %q default value", defaultRepoName)
-		config.GetTarget().RepoName = defaultRepoName
-	}
-
 	// Container registry authentication override
 	if err := setAuthentication(config.GetSource(), config.GetTarget()); err != nil {
 		return err
@@ -116,10 +107,8 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		}
 
 		// Target container images OCI repository
-		// NOTE: the registry value is retrieved from target.Containerregistry instead of target.containers.auth.registry
-		// This is because as part of the target definition the registry is set to indicate where the images
-		// should be pushed to, so the authentication must match this registry
-		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containerregistry")
+
+		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containers.auth.registry")
 		if username != "" || password != "" {
 			target.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
 		}
@@ -156,9 +145,7 @@ func InitEnvBindings() error {
 	}{
 		// Container Authentication
 		{key: "source.containers.auth.registry"}, {key: "source.containers.auth.username"}, {key: "source.containers.auth.password"},
-		// NOTE: target registry will be retrieved from target.containerregistry instead since it indicates
-		// where the images are going to be pushed to so duplication is not needed
-		{key: "target.containers.auth.username"}, {key: "target.containers.auth.password"},
+		{key: "target.containers.auth.registry"}, {key: "target.containers.auth.username"}, {key: "target.containers.auth.password"},
 
 		// Helm Chart repository authentication. Maintaining previous name for compatibility reasons
 		{key: "source.repo.auth.username", envNameFallback: "SOURCE_AUTH_USERNAME"}, {key: "source.repo.auth.password", envNameFallback: "SOURCE_AUTH_PASSWORD"},

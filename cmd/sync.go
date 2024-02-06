@@ -3,19 +3,22 @@ package cmd
 import (
 	"github.com/bitnami/charts-syncer/api"
 	"github.com/bitnami/charts-syncer/internal/config"
+	klogLogger "github.com/bitnami/charts-syncer/internal/log"
 	"github.com/bitnami/charts-syncer/pkg/syncer"
 	"github.com/juju/errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/pterm"
 	"k8s.io/klog"
 )
 
 var (
 	syncFromDate          string
 	syncWorkdir           string
-	syncSkipDependencies  bool
 	syncLatestVersionOnly bool
+	usePlainHTTP          bool
 )
 
 var (
@@ -53,11 +56,18 @@ func initConfigFile() error {
 func newSyncCmd() *cobra.Command {
 	var c api.Config
 
+	usePlainLog := false
 	cmd := &cobra.Command{
-		Use:     "sync",
-		Short:   "Synchronizes two chart repositories",
-		Example: syncExample,
+		Use:           "sync",
+		Short:         "Synchronizes two chart repositories",
+		Example:       syncExample,
+		SilenceErrors: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// Disable klog if we are using the pretty cui
+			if !usePlainLog {
+				cmd.Flags().Lookup("alsologtostderr").Value.Set("false")
+				cmd.Flags().Lookup("logtostderr").Value.Set("false")
+			}
 			if err := initConfigFile(); err != nil {
 				return errors.Trace(err)
 			}
@@ -79,6 +89,14 @@ func newSyncCmd() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var parentLog log.SectionLogger
+			if usePlainLog {
+				parentLog = klogLogger.NewKlogSectionLogger()
+			} else {
+				parentLog = pterm.NewSectionLogger()
+			}
+			l := parentLog.StartSection("Syncing charts")
+
 			syncerOptions := []syncer.Option{
 				// TODO(jdrios): Some backends may not support discovery
 				syncer.WithAutoDiscovery(true),
@@ -86,24 +104,32 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithFromDate(syncFromDate),
 				syncer.WithWorkdir(syncWorkdir),
 				syncer.WithInsecure(rootInsecure),
-				syncer.WithContainerImageRelocation(c.RelocateContainerImages),
-				syncer.WithSkipDependencies(syncSkipDependencies),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),
+				syncer.WithUsePlainHTTP(usePlainHTTP),
+				syncer.WithLogger(l),
 			}
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
 			if err != nil {
 				return errors.Trace(err)
 			}
-
-			return errors.Trace(s.SyncPendingCharts(c.GetCharts()...))
+			if err := s.SyncPendingCharts(c.GetCharts()...); err != nil {
+				if err == syncer.ErrNoChartsToSync {
+					parentLog.Successf("There are no charts out of sync!")
+					return nil
+				}
+				return l.Failf("Error syncing charts: %v", err)
+			}
+			parentLog.Successf("Charts synced successfully")
+			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
 	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
-	cmd.Flags().BoolVar(&syncSkipDependencies, "skip-dependencies", false, "Skip syncing chart dependencies")
 	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
+	cmd.Flags().BoolVar(&usePlainHTTP, "use-plain-http", false, "Use plain HTTP instead of HTTPS")
+	cmd.Flags().BoolVar(&usePlainLog, "use-plain-log", false, "Use plain klog instead of the pretty logging")
 
 	return cmd
 }

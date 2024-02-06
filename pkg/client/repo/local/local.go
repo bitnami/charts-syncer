@@ -16,13 +16,17 @@ import (
 )
 
 var (
-	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)\\.tgz")
+	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)(\\.wrap)?\\.tgz")
 )
 
 // Repo allows to operate a chart repository.
 type Repo struct {
 	dir     string
 	entries map[string][]string
+}
+
+func (r *Repo) Dir() string {
+	return r.dir
 }
 
 // New creates a Repo object from an api.Repo object.
@@ -37,7 +41,7 @@ func New(dir string) (*Repo, error) {
 
 	// Populate entries from directory
 	entries := make(map[string][]string)
-	matches, err := filepath.Glob(filepath.Join(d, "*.tgz"))
+	matches, err := filepath.Glob(filepath.Join(d, "*.wrap.tgz"))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -71,7 +75,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
-	return path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version)), nil
+	return path.Join(r.dir, fmt.Sprintf("%s-%s.wrap.tgz", name, version)), nil
 }
 
 // Has checks if a repo has a specific chart
@@ -87,6 +91,11 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// GetUploadURL returns the URL to upload a chart
+func (r *Repo) GetUploadURL() string {
+	return r.dir
 }
 
 // Upload uploads a chart to the repo
@@ -106,7 +115,7 @@ func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
 		return errors.Annotatef(err, "reading %q", filepath)
 	}
 
-	out := path.Join(r.dir, fmt.Sprintf("%s-%s.tgz", name, version))
+	out := path.Join(r.dir, fmt.Sprintf("%s-%s.wrap.tgz", name, version))
 	if err := os.WriteFile(out, input, 0644); err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}

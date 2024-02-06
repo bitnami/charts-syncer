@@ -45,12 +45,6 @@ type RepoTester struct {
 	t        *testing.T
 	// Map of chart name to indexed versions, as returned by the charts API.
 	index map[string][]*helmclassic.ChartVersion
-
-	// Whether the repo should load an empty index or not
-	emptyIndex bool
-
-	// index.yaml to be loaded for testing purposes
-	indexFile string
 }
 
 func PushFileToOCI(t *testing.T, filepath string, ref string) {
@@ -97,7 +91,7 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create oci client
-	client, err := New(ociRepo, cache, false)
+	client, err := New(ociRepo, cache, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

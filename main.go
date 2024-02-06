@@ -11,14 +11,13 @@ import (
 
 func main() {
 	defer klog.Flush()
-
 	// Klog flags
 	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
 
 	// Override some flag defaults so they are shown in the help func.
 	klog.InitFlags(klogFlags)
 	klogFlags.Lookup("alsologtostderr").Value.Set("true")
-	klogFlags.Lookup("v").Value.Set("2")
+	klogFlags.Lookup("logtostderr").Value.Set("true")
 
 	command := cmd.New()
 

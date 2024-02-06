@@ -23,9 +23,8 @@ func TestLoadCharts(t *testing.T) {
 			desc:    "load apache and kafka",
 			entries: []string{"apache", "kafka"},
 			want: ChartIndex{
-				"apache-7.3.15":    &Chart{Name: "apache", Version: "7.3.15"},
-				"kafka-10.3.3":     &Chart{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}},
-				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
+				"apache-7.3.15": &Chart{Name: "apache", Version: "7.3.15"},
+				"kafka-10.3.3":  &Chart{Name: "kafka", Version: "10.3.3"},
 			},
 		},
 		{
@@ -49,41 +48,6 @@ func TestLoadCharts(t *testing.T) {
 			removeTgzPath(s.getIndex())
 
 			if diff := cmp.Diff(tc.want, s.getIndex()); diff != "" {
-				t.Errorf("want vs got diff:\n %+v", diff)
-			}
-		})
-	}
-}
-
-func TestTopologicalSortCharts(t *testing.T) {
-	testCases := []struct {
-		desc  string
-		index ChartIndex
-		want  []*Chart
-	}{
-		{
-			desc: "sort index to put dependencies first",
-			index: ChartIndex{
-				"kafka-10.3.3":     &Chart{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}},
-				"zookeeper-5.14.3": &Chart{Name: "zookeeper", Version: "5.14.3"},
-			},
-			want: []*Chart{
-				{Name: "zookeeper", Version: "5.14.3"},
-				{Name: "kafka", Version: "10.3.3", Dependencies: []string{"zookeeper-5.14.3"}},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			s := &Syncer{index: tc.index}
-
-			got, err := s.topologicalSortCharts()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("want vs got diff:\n %+v", diff)
 			}
 		})

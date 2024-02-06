@@ -12,8 +12,6 @@ source:
       registry: sRegistry
       username: user123
 target:
-  containerRegistry: test.registry.io
-  containerRepository: user/demo
   repo:
     kind: CHARTMUSEUM
     url: http://localhost:9090 # local test target repo
@@ -21,4 +19,5 @@ target:
       username: targetUserFile
   containers:
     auth:
+      registry: test.registry.io
       username: user456

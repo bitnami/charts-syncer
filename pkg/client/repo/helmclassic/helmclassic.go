@@ -181,6 +181,11 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 	return false, nil
 }
 
+// GetUploadURL returns the URL to upload a chart
+func (r *Repo) GetUploadURL() string {
+	return ""
+}
+
 // Upload uploads a chart to the repo
 func (r *Repo) Upload(_ string, _ *chart.Metadata) error {
 	return errors.Errorf("upload method is not supported yet")

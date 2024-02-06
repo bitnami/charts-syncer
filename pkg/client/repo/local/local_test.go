@@ -13,7 +13,7 @@ import (
 )
 
 func TestFetch(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestGetChartDetails(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,7 @@ func TestGetChartDetails(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	c, err := local.New("../../../../testdata/charts")
+	c, err := local.New("../../../../testdata/wraps")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestUpload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedChartPath := "../../../../testdata/charts/apache-7.3.15.tgz"
+	expectedChartPath := "../../../../testdata/wraps/apache-7.3.15.wrap.tgz"
 	if _, err := os.Stat(expectedChartPath); err != nil {
 		t.Errorf("chart package does not exist after upload method")
 	}

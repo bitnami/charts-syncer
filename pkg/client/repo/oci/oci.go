@@ -22,10 +22,11 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/juju/errors"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	orascontext "oras.land/oras-go/pkg/context"
+
 	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
 	"oras.land/oras-go/pkg/content"
-	orascontext "oras.land/oras-go/pkg/context"
 	"oras.land/oras-go/pkg/oras"
 
 	"github.com/bitnami/charts-syncer/api"
@@ -36,7 +37,6 @@ import (
 )
 
 const (
-	getTimeout = 1 * time.Minute
 	// HelmChartConfigMediaType is the reserved media type for the Helm chart manifest config
 	HelmChartConfigMediaType = "application/vnd.cncf.helm.config.v1+json"
 	// HelmChartContentLayerMediaType is the reserved media type for Helm chart package content
@@ -50,10 +50,11 @@ const (
 
 // Repo allows to operate a chart repository.
 type Repo struct {
-	url      *url.URL
-	username string
-	password string
-	insecure bool
+	url          *url.URL
+	username     string
+	password     string
+	insecure     bool
+	usePlainHTTP bool
 
 	entries        map[string][]string
 	cache          cache.Cacher
@@ -67,7 +68,7 @@ type Tags struct {
 }
 
 // New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
+func New(repo *api.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*Repo, error) {
 	// Init entries
 	entries, err := populateEntries(repo)
 	if err != nil {
@@ -80,12 +81,12 @@ func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	}
 	resolver := newDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, entries, resolver)
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool, entries map[string][]string, resolver remotes.Resolver) (*Repo, error) {
-	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure, entries: entries, dockerResolver: resolver}, nil
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool, usePlainHTTP bool, entries map[string][]string, resolver remotes.Resolver) (*Repo, error) {
+	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure, usePlainHTTP: usePlainHTTP, entries: entries, dockerResolver: resolver}, nil
 }
 
 // List lists all chart names in a repo
@@ -313,6 +314,11 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetUploadURL returns the upload URL
+func (r *Repo) GetUploadURL() string {
+	return fmt.Sprintf("%s%s", r.url.Host, r.url.Path)
 }
 
 // Upload uploads a chart to the repo

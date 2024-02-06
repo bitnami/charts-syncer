@@ -11,25 +11,22 @@ message Config {
     repeated string charts = 3;
     // Opposite of charts property. It indicates the list of charts to skip during sync
     repeated string skip_charts = 5;
-    bool relocate_container_images = 4;
 }
 
 // SourceRepo contains the required information of the source chart repository
 message Source {
-    oneof spec {
         Repo repo = 1;
-        string intermediate_bundles_path = 2;
-    }
+    
 
     // Ignored if the repo is an intermediate bundle since the images are inside the bundle
-    Containers containers = 3;
+    Containers containers = 2;
 }
 
 message Containers {
     ContainerAuth auth = 1;
 
     // ContainerAuth defines the authentication parameters required to access the source/target
-    // OCI registries during container image relocation
+    // OCI registries
     message ContainerAuth {
         string username = 1;
         string password = 2;
@@ -39,15 +36,9 @@ message Containers {
 
 // TargetRepo contains the required information of the target chart repository
 message Target {
-    oneof spec {
-        Repo repo = 1;
-        string intermediate_bundles_path = 5;
-    }
-    string container_registry = 2;
-    string container_repository = 3;
-    string repo_name = 4;
+    Repo repo = 1;
 
-    Containers containers = 6;
+    Containers containers = 2;
 }
 
 // Generic repo representation
