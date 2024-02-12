@@ -228,10 +228,7 @@ func findChartByVersion(chartVersions []*helmRepo.ChartVersion, version string) 
 // isValidUrl tests a string to determine if it is a well-structured url or not.
 func isValidURL(text string) bool {
 	_, err := url.ParseRequestURI(text)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // FileExists will test if a file exists

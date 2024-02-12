@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	versionRe = regexp.MustCompile("(.*)-(\\d+\\.\\d+\\.\\d+)(\\.wrap)?\\.tgz")
+	versionRe = regexp.MustCompile(`(.*)-(\d+\.\d+\.\d+)(\.wrap)?\.tgz`)
 )
 
 // Repo allows to operate a chart repository.
