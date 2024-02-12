@@ -47,6 +47,7 @@ type RepoTester struct {
 	index map[string][]*helmclassic.ChartVersion
 }
 
+// PushFileToOCI pushes a file to a OCI repository
 func PushFileToOCI(t *testing.T, filepath string, ref string) {
 	ctx := context.Background()
 	resolver := docker.NewResolver(docker.ResolverOptions{PlainHTTP: true})
@@ -76,6 +77,7 @@ func PushFileToOCI(t *testing.T, filepath string, ref string) {
 	}
 }
 
+// PrepareTest creates a client to interact with OCI servers
 func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Helper()
 
@@ -98,7 +100,8 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	return client
 }
 
-// Creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
+// PrepareHttpServer creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
+// Returns a client to interact with the server
 func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Helper()
 
@@ -108,7 +111,7 @@ func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	return PrepareTest(t, ociRepo)
 }
 
-// Starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
+// PrepareOciServer starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
 // This way we don't have to mimic all the low-level HTTP requests made by oras.
 func PrepareOciServer(t *testing.T, ociRepo *api.Repo) {
 	t.Helper()

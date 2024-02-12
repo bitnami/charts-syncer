@@ -30,8 +30,10 @@ const (
 
 var (
 	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
-	UnixEpoch      = time.Unix(0, 0)
-	DefaultClient  = &http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}
+	UnixEpoch = time.Unix(0, 0)
+	// DefaultClient is a default HTTP client
+	DefaultClient = &http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}
+	// InsecureClient is a default insecure HTTPS client
 	InsecureClient = &http.Client{Transport: &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
@@ -328,6 +330,7 @@ type fetchOptions struct {
 	urlBuilderFn    urlBuilder
 }
 
+// FetchOption defines a fetchOptions setting
 type FetchOption func(opts *fetchOptions)
 
 // WithFetchUsername configures a username for fetch operations

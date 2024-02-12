@@ -29,6 +29,8 @@ func WithFakeSyncerDestination(dir string) FakeSyncerOption {
 	}
 }
 
+// WithFakeSkipCharts configures the syncer to skip an explicit list of chart names
+// from the source chart repos.
 func WithFakeSkipCharts(charts []string) FakeSyncerOption {
 	return func(s *FakeSyncerOpts) {
 		s.skipCharts = charts

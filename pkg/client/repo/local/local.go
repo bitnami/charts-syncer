@@ -25,10 +25,6 @@ type Repo struct {
 	entries map[string][]string
 }
 
-func (r *Repo) Dir() string {
-	return r.dir
-}
-
 // New creates a Repo object from an api.Repo object.
 func New(dir string) (*Repo, error) {
 	d, err := filepath.Abs(dir)
@@ -53,6 +49,11 @@ func New(dir string) (*Repo, error) {
 	}
 
 	return &Repo{dir: d, entries: entries}, nil
+}
+
+// Dir returns the absolute path to the repository's directory
+func (r *Repo) Dir() string {
+	return r.dir
 }
 
 // List lists all chart names in a repo
