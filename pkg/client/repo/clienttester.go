@@ -26,7 +26,7 @@ type ClientTester interface {
 var NewClientTester = func(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) ClientTester {
 	switch repo.Kind {
 	case api.Kind_CHARTMUSEUM:
-		return chartmuseum.NewTester(t, repo, emptyIndex, indexFile)
+		return chartmuseum.NewTester(t, emptyIndex, indexFile)
 	default:
 		t.Errorf("unsupported repo kind %q", repo.Kind)
 		return nil

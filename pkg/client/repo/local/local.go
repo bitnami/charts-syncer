@@ -127,7 +127,7 @@ func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
 }
 
 // GetChartDetails returns the details of a chart
-func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
+func (r *Repo) GetChartDetails(_ string, _ string) (*types.ChartDetails, error) {
 	return &types.ChartDetails{
 		PublishedAt: utils.UnixEpoch,
 		Digest:      "deadbuff",

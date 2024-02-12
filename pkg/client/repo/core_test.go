@@ -14,7 +14,7 @@ func prepareHttpServer(t *testing.T, ociRepo *api.Repo) {
 	t.Helper()
 
 	// Create HTTP server
-	tester := oci.NewTester(t, ociRepo)
+	tester := oci.NewTester(t)
 	ociRepo.Url = tester.GetURL() + "/someproject/charts"
 }
 

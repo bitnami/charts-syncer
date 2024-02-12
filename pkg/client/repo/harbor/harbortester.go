@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
-
-	"github.com/bitnami/charts-syncer/api"
 )
 
 var (
@@ -41,12 +39,12 @@ type RepoTester struct {
 }
 
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
-func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string) *RepoTester {
+func NewTester(t *testing.T, emptyIndex bool, indexFile string) *RepoTester {
 	tester := &RepoTester{
 		t:          t,
 		username:   username,
 		password:   password,
-		helmTester: helmclassic.NewTester(t, repo, emptyIndex, indexFile, false),
+		helmTester: helmclassic.NewTester(t, emptyIndex, indexFile, false),
 		index:      make(map[string][]*helmclassic.ChartVersion),
 		emptyIndex: emptyIndex,
 		indexFile:  indexFile,

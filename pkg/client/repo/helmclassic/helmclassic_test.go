@@ -44,7 +44,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	}
 
 	// Create tester
-	tester := helmclassic.NewTester(t, cmRepo, false, dstIndex, true)
+	tester := helmclassic.NewTester(t, false, dstIndex, true)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder

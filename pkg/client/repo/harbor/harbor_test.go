@@ -47,7 +47,7 @@ func prepareTest(t *testing.T) (*harbor.Repo, error) {
 	}
 
 	// Create tester
-	tester := harbor.NewTester(t, harborRepo, false, dstIndex)
+	tester := harbor.NewTester(t, false, dstIndex)
 	harborRepo.Url = fmt.Sprintf("%s%s", tester.GetURL(), "/chartrepo/library")
 
 	// Replace placeholder

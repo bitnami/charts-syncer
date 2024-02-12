@@ -17,7 +17,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitnami/charts-syncer/api"
 	"gopkg.in/yaml.v2"
 )
 
@@ -65,7 +64,7 @@ type RepoTester struct {
 }
 
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
-func NewTester(t *testing.T, repo *api.Repo, emptyIndex bool, indexFile string, createServer bool) *RepoTester {
+func NewTester(t *testing.T, emptyIndex bool, indexFile string, createServer bool) *RepoTester {
 	t.Helper()
 	tester := &RepoTester{
 		t:          t,
@@ -116,7 +115,7 @@ func (rt *RepoTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetChart returns the chart info from the index
-func (rt *RepoTester) GetChart(w http.ResponseWriter, r *http.Request, chart string) {
+func (rt *RepoTester) GetChart(w http.ResponseWriter, _ *http.Request, chart string) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(rt.index[chart]); err != nil {
 		rt.t.Fatal(err)
@@ -129,7 +128,7 @@ func (rt *RepoTester) GetURL() string {
 }
 
 // GetIndex returns an index file
-func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyIndex bool, indexFile string) {
+func (rt *RepoTester) GetIndex(w http.ResponseWriter, _ *http.Request, emptyIndex bool, indexFile string) {
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(200)
 	_, filename, _, ok := runtime.Caller(1)
@@ -152,7 +151,7 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 }
 
 // GetChartPackage returns a packaged helm chart
-func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
+func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, _ *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {

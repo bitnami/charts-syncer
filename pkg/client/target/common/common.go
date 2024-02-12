@@ -40,8 +40,7 @@ func New(target *api.Target, chartWriter client.ChartsReaderWriter, insecure boo
 }
 
 // Unwrap unwraps a chart
-func (t *Target) Unwrap(file string, metadata *chart.Metadata, opts ...config.Option) error {
-
+func (t *Target) Unwrap(file string, _ *chart.Metadata, opts ...config.Option) error {
 	cfg := config.New(opts...)
 
 	wrapWorkdir, err := os.MkdirTemp(cfg.WorkDir, "charts-syncer")

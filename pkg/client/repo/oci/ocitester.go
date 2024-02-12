@@ -103,7 +103,7 @@ func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Helper()
 
 	// Create HTTP server
-	tester := NewTester(t, ociRepo)
+	tester := NewTester(t)
 	ociRepo.Url = tester.GetURL() + "/someproject/charts"
 	return PrepareTest(t, ociRepo)
 }
@@ -133,7 +133,7 @@ func PrepareOciServer(t *testing.T, ociRepo *api.Repo) {
 }
 
 // NewTester creates fake HTTP server to handle requests and return a RepoTester object with useful info for testing
-func NewTester(t *testing.T, repo *api.Repo) *RepoTester {
+func NewTester(t *testing.T) *RepoTester {
 	t.Helper()
 	tester := &RepoTester{
 		t:        t,
@@ -212,7 +212,7 @@ func (rt *RepoTester) GetURL() string {
 }
 
 // GetTagManifest returns the oci manifest of a specific tag
-func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, name, version string) {
+func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, _ *http.Request, name, version string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	_, filename, _, ok := runtime.Caller(1)
@@ -231,7 +231,7 @@ func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, nam
 }
 
 // GetTagsList returns the list of available tags for the specified asset
-func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name string) {
+func (rt *RepoTester) GetTagsList(w http.ResponseWriter, _ *http.Request, name string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	_, filename, _, ok := runtime.Caller(1)
@@ -266,7 +266,7 @@ func (rt *RepoTester) ReplyPing(w http.ResponseWriter) {
 }
 
 // GetChartPackage returns a packaged helm chart
-func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, name, digest string) {
+func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, _ *http.Request, name, digest string) {
 	w.WriteHeader(200)
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {

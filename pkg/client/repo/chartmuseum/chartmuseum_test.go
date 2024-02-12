@@ -46,7 +46,7 @@ func prepareTest(t *testing.T) (*chartmuseum.Repo, error) {
 	}
 
 	// Create tester
-	tester := chartmuseum.NewTester(t, cmRepo, false, dstIndex)
+	tester := chartmuseum.NewTester(t, false, dstIndex)
 	cmRepo.Url = tester.GetURL()
 
 	// Replace placeholder
