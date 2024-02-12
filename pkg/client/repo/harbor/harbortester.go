@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	harborRegex *regexp.Regexp = regexp.MustCompile(`(?m)\/chartrepo/library/charts\/(.*.tgz)`)
-	username    string         = "user"
-	password    string         = "password"
+	harborRegex = regexp.MustCompile(`(?m)\/chartrepo/library/charts\/(.*.tgz)`)
+	username    = "user"
+	password    = "password"
 )
 
 // RepoTester allows to unit test each repo implementation

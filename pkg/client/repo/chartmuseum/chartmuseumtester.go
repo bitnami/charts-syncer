@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	cmRegex           = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	username   string = "user"
-	password   string = "password"
-	repository string = "myrepo"
+	cmRegex    = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+	username   = "user"
+	password   = "password"
+	repository = "myrepo"
 )
 
 // RepoTester allows to unit test each repo implementation

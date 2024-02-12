@@ -21,9 +21,9 @@ import (
 )
 
 var (
-	helmRegex        = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
-	username  string = "user"
-	password  string = "password"
+	helmRegex = regexp.MustCompile(`(?m)\/charts\/(.*.tgz)`)
+	username  = "user"
+	password  = "password"
 )
 
 // Metadata in Chart.yaml files
