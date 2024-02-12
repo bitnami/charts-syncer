@@ -440,9 +440,8 @@ func ociReferenceExists(ociRef, username, password string) (bool, error) {
 	if err != nil {
 		if strings.Contains(err.Error(), "404 Not Found") {
 			return false, nil
-		} else {
-			return false, errors.Trace(err)
 		}
+		return false, errors.Trace(err)
 	}
 	return true, nil
 }
