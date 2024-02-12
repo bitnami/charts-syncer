@@ -10,7 +10,7 @@ import (
 )
 
 // Creates an HTTP server that knows how to reply to all OCI related requests
-func prepareHttpServer(t *testing.T, ociRepo *api.Repo) {
+func prepareHTTPServer(t *testing.T, ociRepo *api.Repo) {
 	t.Helper()
 
 	// Create HTTP server
@@ -86,7 +86,7 @@ func TestNewClient(t *testing.T) {
 
 			// For OCI kind we need first to init an HTTP server to mock responses during client initialization
 			if test.repo.Kind == api.Kind_OCI {
-				prepareHttpServer(t, test.repo)
+				prepareHTTPServer(t, test.repo)
 			}
 			c, err := NewClient(test.repo)
 			errText := ""

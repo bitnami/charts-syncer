@@ -25,7 +25,7 @@ var (
 )
 
 func TestFetch(t *testing.T) {
-	oci.PrepareOciServer(t, ociRepo)
+	oci.PrepareOCIServer(t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	chartMetadata := &chart.Metadata{
@@ -54,7 +54,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	oci.PrepareOciServer(t, ociRepo)
+	oci.PrepareOCIServer(t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	chartMetadata := &chart.Metadata{
@@ -75,7 +75,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	oci.PrepareOciServer(t, ociRepo)
+	oci.PrepareOCIServer(t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	want := []string{}
@@ -91,7 +91,7 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	oci.PrepareOciServer(t, ociRepo)
+	oci.PrepareOCIServer(t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",
@@ -114,7 +114,7 @@ func TestListChartVersions(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	c := oci.PrepareHttpServer(t, ociRepo)
+	c := oci.PrepareHTTPServer(t, ociRepo)
 	expectedError := "reload method is not supported yet"
 	err := c.Reload()
 	if err.Error() != expectedError {
@@ -123,7 +123,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	oci.PrepareOciServer(t, ociRepo)
+	oci.PrepareOCIServer(t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",

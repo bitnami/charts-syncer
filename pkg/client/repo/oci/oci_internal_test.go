@@ -24,7 +24,7 @@ var (
 func TestOciReferenceExists(t *testing.T) {
 	tests := []struct {
 		desc          string
-		ociPartialRef string // to be added to repo url returned by PrepareOciServer
+		ociPartialRef string // to be added to repo url returned by PrepareOCIServer
 		pushTestAsset bool
 		want          bool
 	}{
@@ -43,7 +43,7 @@ func TestOciReferenceExists(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			PrepareOciServer(t, ociRepo)
+			PrepareOCIServer(t, ociRepo)
 			u, err := url.Parse(ociRepo.Url)
 			if err != nil {
 				t.Fatal(err)

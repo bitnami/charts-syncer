@@ -100,9 +100,9 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 	return client
 }
 
-// PrepareHttpServer creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
+// PrepareHTTPServer creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
 // Returns a client to interact with the server
-func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
+func PrepareHTTPServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	t.Helper()
 
 	// Create HTTP server
@@ -111,9 +111,9 @@ func PrepareHttpServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	return PrepareTest(t, ociRepo)
 }
 
-// PrepareOciServer starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
+// PrepareOCIServer starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
 // This way we don't have to mimic all the low-level HTTP requests made by oras.
-func PrepareOciServer(t *testing.T, ociRepo *api.Repo) {
+func PrepareOCIServer(t *testing.T, ociRepo *api.Repo) {
 	t.Helper()
 
 	// Create OCI server as docker registry
