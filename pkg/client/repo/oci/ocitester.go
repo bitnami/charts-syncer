@@ -121,7 +121,7 @@ func PrepareOciServer(t *testing.T, ociRepo *api.Repo) {
 		t.Fatal(err)
 	}
 	dockerRegistryHost := "http://" + addr
-	config.HTTP.Addr = fmt.Sprintf(addr)
+	config.HTTP.Addr = addr
 	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
 	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
 	dockerRegistry, err := registry.NewRegistry(context.Background(), config)

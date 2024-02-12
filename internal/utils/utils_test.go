@@ -119,7 +119,14 @@ func TestGetDateThreshold(t *testing.T) {
 func TestGetDownloadURL(t *testing.T) {
 	sourceRepoURL := "https://repo-url.com/charts"
 	sourceIndex := helmRepo.NewIndexFile()
-	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", sourceRepoURL, "sha256:1234567890")
+	if err := sourceIndex.MustAdd(
+		&chart.Metadata{Name: "apache", Version: "7.3.15"},
+		"apache-7.3.15.tgz",
+		sourceRepoURL,
+		"sha256:1234567890",
+	); err != nil {
+		t.Fatal(err)
+	}
 	downloadURL, err := FindChartURL("apache", "7.3.15", sourceIndex, sourceRepoURL)
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +144,14 @@ func TestGetDownloadURL(t *testing.T) {
 
 func TestFindChartByVersion(t *testing.T) {
 	sourceIndex := helmRepo.NewIndexFile()
-	sourceIndex.Add(&chart.Metadata{Name: "apache", Version: "7.3.15"}, "apache-7.3.15.tgz", "https://repo-url.com/charts", "sha256:1234567890")
+	if err := sourceIndex.MustAdd(
+		&chart.Metadata{Name: "apache", Version: "7.3.15"},
+		"apache-7.3.15.tgz",
+		"https://repo-url.com/charts",
+		"sha256:1234567890",
+	); err != nil {
+		t.Fatal(err)
+	}
 	chart := findChartByVersion(sourceIndex.Entries["apache"], "7.3.15")
 	if chart.Name != "apache" {
 		t.Errorf("wrong chart, got: %s , want: %s", chart.Name, "apache")
