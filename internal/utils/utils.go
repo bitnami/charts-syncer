@@ -29,6 +29,9 @@ const (
 )
 
 var (
+	// MaxDecompressionSize established a high enough maximum tar size to decompres
+	// to prevent decompression bombs (8GB)
+	MaxDecompressionSize int64 = 8 * 1024 * 1024 * 1024
 	// UnixEpoch is the number of seconds that have elapsed since January 1, 1970
 	UnixEpoch = time.Unix(0, 0)
 	// DefaultClient is a default HTTP client
@@ -159,7 +162,7 @@ func Untar(tarball, targetDir string) error {
 			if err != nil {
 				return errors.Trace(err)
 			}
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+			if _, err := io.CopyN(outFile, tarReader, MaxDecompressionSize); err != nil && err != io.EOF {
 				_ = outFile.Close()
 				return errors.Trace(err)
 			}
