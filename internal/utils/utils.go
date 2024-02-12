@@ -191,7 +191,7 @@ func GetFileContentType(filepath string) (string, error) {
 	return contentType, err
 }
 
-// GetDateThreshold will parse a string date agains a fixed layout and return a time.Date value
+// GetDateThreshold will parse a string date against a fixed layout and return a time.Date value
 func GetDateThreshold(date string) (time.Time, error) {
 	if date == "" {
 		return UnixEpoch, nil
