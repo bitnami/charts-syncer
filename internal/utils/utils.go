@@ -115,6 +115,19 @@ func downloadIndex(repo *api.Repo) (string, error) {
 	return out.Name(), errors.Trace(err)
 }
 
+// To prevent the Zip Slip vulnerability.
+// See: https://security.snyk.io/research/zip-slip-vulnerability
+func sanitizeExtractPath(filePath string, destination string) (string, error) {
+	destpath := filepath.Join(destination, filePath)
+	if !strings.HasPrefix(
+		destpath,
+		fmt.Sprintf("%s%s", filepath.Clean(destination), string(os.PathSeparator)),
+	) {
+		return "", fmt.Errorf("illegal file path: %s", filePath)
+	}
+	return destpath, nil
+}
+
 // Untar extracts compressed archives
 func Untar(tarball, targetDir string) error {
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
@@ -140,8 +153,12 @@ func Untar(tarball, targetDir string) error {
 		if err != nil {
 			return errors.Trace(err)
 		}
-		path := filepath.Join(targetDir, header.Name)
-		targetFolder := filepath.Join(targetDir, filepath.Dir(header.Name))
+		// Sanitize the path to prevent Zip Slip
+		path, err := sanitizeExtractPath(header.Name, targetDir)
+		if err != nil {
+			return err
+		}
+		targetFolder := filepath.Dir(path)
 		// For some reason the for loop only iterates over files and not folders, so the switch below for folders is
 		// never executed and so we are creating the target folder at this point.
 		if _, err := os.Stat(targetFolder); err != nil {
