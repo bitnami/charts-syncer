@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+
 	"github.com/bitnami/charts-syncer/internal/indexer/api"
 )
 
