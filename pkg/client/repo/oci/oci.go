@@ -134,6 +134,10 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 	}
 
 	body, err := image.RawManifest()
+	if err != nil {
+		return nil, errors.Errorf("failed to get manifest from body: %v", err)
+	}
+
 	tm := &ocispec.Manifest{}
 	if err := json.Unmarshal(body, tm); err != nil {
 		return nil, err
@@ -260,6 +264,11 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		// https://helm.sh/docs/topics/registries/#helm-chart-manifest
 		if isHelmChartContentLayerMediaType(string(t)) {
 			c, err := l.Compressed()
+			if err != nil {
+				// Invalidate the cache
+				r.cache.Invalidate(id)
+				return "", errors.Annotatef(err, "fetching %q chart", ref)
+			}
 			_, err = io.Copy(w, c)
 			if err != nil {
 				// Invalidate the cache

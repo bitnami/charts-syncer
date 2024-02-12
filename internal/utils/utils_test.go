@@ -37,8 +37,8 @@ func TestChartExistInIndex(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error loading index.yaml: %v ", err)
 	}
-	versionExist, err := ChartExistInIndex("etcd", "4.7.4", index)
-	versionNotExist, err := ChartExistInIndex("etcd", "0.0.44", index)
+	versionExist := ChartExistInIndex("etcd", "4.7.4", index)
+	versionNotExist := ChartExistInIndex("etcd", "0.0.44", index)
 	if versionExist != true {
 		t.Errorf("version should exist but is not found")
 	}
@@ -129,7 +129,7 @@ func TestGetDownloadURL(t *testing.T) {
 		t.Errorf("wrong download URL, got: %s , want: %s", downloadURL, expectedDownloadURL)
 	}
 	expectedError := "unable to find chart url in index"
-	downloadURL, err = FindChartURL("apache", "0.0.333", sourceIndex, sourceRepoURL)
+	_, err = FindChartURL("apache", "0.0.333", sourceIndex, sourceRepoURL)
 	if err.Error() != expectedError {
 		t.Errorf("wrong error message, got: %s , want: %s", err.Error(), expectedError)
 	}

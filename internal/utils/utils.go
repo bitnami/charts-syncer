@@ -53,7 +53,7 @@ func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
 }
 
 // ChartExistInIndex checks if a specific chart version is present in the index file.
-func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (bool, error) {
+func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) bool {
 	chartVersionFound := false
 	if index.Entries[name] != nil {
 		klog.V(3).Infof("Chart %q exists in index.yaml file. Searching %q version", name, version)
@@ -65,13 +65,13 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) (
 			}
 		}
 		if !chartVersionFound {
-			return false, nil
+			return false
 		}
 	} else {
-		return false, nil
+		return false
 	}
 
-	return chartVersionFound, nil
+	return chartVersionFound
 }
 
 // downloadIndex will download the index.yaml file of a chart repository and return

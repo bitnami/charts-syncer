@@ -132,14 +132,21 @@ func TestUpload(t *testing.T) {
 	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
 		t.Fatal(err)
 	}
+
 	chartPath, err := c.Fetch("apache", "7.3.15")
+	if err != nil {
+		t.Fatalf("error fetching chart: %v", err)
+	}
+
 	if _, err := os.Stat(chartPath); err != nil {
 		t.Errorf("chart package does not exist")
 	}
+
 	contentType, err := utils.GetFileContentType(chartPath)
 	if err != nil {
 		t.Fatalf("error checking contentType of %s file", chartPath)
 	}
+
 	if contentType != "application/x-gzip" {
 		t.Errorf("incorrect content type, got: %s, want: %s.", contentType, "application/x-gzip")
 	}
