@@ -36,7 +36,7 @@ var (
 	// InsecureClient is a default insecure HTTPS client
 	InsecureClient = &http.Client{Transport: &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}, // #nosec G402
 	}
 )
 

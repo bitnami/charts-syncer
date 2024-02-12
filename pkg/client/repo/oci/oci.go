@@ -124,7 +124,7 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 	}
 	if r.insecure {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transport))
 	}
 
@@ -186,7 +186,7 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	}
 	if r.insecure {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transport))
 	}
 
@@ -235,7 +235,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 	}
 	if r.insecure {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transport))
 	}
 
@@ -308,7 +308,7 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 	}
 	if r.insecure {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transport))
 	}
 
