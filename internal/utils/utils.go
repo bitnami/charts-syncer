@@ -158,10 +158,12 @@ func Untar(tarball, targetDir string) error {
 				return errors.Trace(err)
 			}
 			if _, err := io.Copy(outFile, tarReader); err != nil {
-				outFile.Close()
+				_ = outFile.Close()
 				return errors.Trace(err)
 			}
-			outFile.Close()
+			if err := outFile.Close(); err != nil {
+				return errors.Trace(err)
+			}
 		// We don't want to process these extension header files.
 		case tar.TypeXGlobalHeader, tar.TypeXHeader:
 			continue

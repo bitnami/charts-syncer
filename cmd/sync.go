@@ -65,8 +65,8 @@ func newSyncCmd() *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// Disable klog if we are using the pretty cui
 			if !usePlainLog {
-				cmd.Flags().Lookup("alsologtostderr").Value.Set("false")
-				cmd.Flags().Lookup("logtostderr").Value.Set("false")
+				_ = cmd.Flags().Lookup("alsologtostderr").Value.Set("false")
+				_ = cmd.Flags().Lookup("logtostderr").Value.Set("false")
 			}
 			if err := initConfigFile(); err != nil {
 				return errors.Trace(err)

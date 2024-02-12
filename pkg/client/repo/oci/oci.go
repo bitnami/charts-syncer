@@ -258,7 +258,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		t, err := l.MediaType()
 		if err != nil {
 			// Invalidate the cache
-			r.cache.Invalidate(id)
+			_ = r.cache.Invalidate(id)
 			return "", errors.Annotatef(err, "fetching %q chart", ref)
 		}
 		// https://helm.sh/docs/topics/registries/#helm-chart-manifest
@@ -266,13 +266,13 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 			c, err := l.Compressed()
 			if err != nil {
 				// Invalidate the cache
-				r.cache.Invalidate(id)
+				_ = r.cache.Invalidate(id)
 				return "", errors.Annotatef(err, "fetching %q chart", ref)
 			}
 			_, err = io.Copy(w, c)
 			if err != nil {
 				// Invalidate the cache
-				r.cache.Invalidate(id)
+				_ = r.cache.Invalidate(id)
 				return "", errors.Annotatef(err, "fetching %q chart", ref)
 			}
 		}
@@ -280,7 +280,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 
 	if err := w.Close(); err != nil {
 		// Invalidate the cache
-		r.cache.Invalidate(id)
+		_ = r.cache.Invalidate(id)
 		return "", errors.Annotatef(err, "fetching %q chart", ref)
 	}
 

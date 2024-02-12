@@ -46,14 +46,14 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	if err != nil {
 		t.Fatalf("error creating temporary folder: %v", err)
 	}
-	t.Cleanup(func() { os.RemoveAll(srcTmp) })
+	t.Cleanup(func() { _ = os.RemoveAll(srcTmp) })
 
 	if sopts.Destination == "" {
 		dstTmp, err := os.MkdirTemp("", "charts-syncer-tests-dst-fake")
 		if err != nil {
 			t.Fatalf("error creating temporary folder: %v", err)
 		}
-		t.Cleanup(func() { os.RemoveAll(dstTmp) })
+		t.Cleanup(func() { _ = os.RemoveAll(dstTmp) })
 		sopts.Destination = dstTmp
 	}
 

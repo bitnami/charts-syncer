@@ -16,8 +16,8 @@ func main() {
 
 	// Override some flag defaults so they are shown in the help func.
 	klog.InitFlags(klogFlags)
-	klogFlags.Lookup("alsologtostderr").Value.Set("true")
-	klogFlags.Lookup("logtostderr").Value.Set("true")
+	_ = klogFlags.Lookup("alsologtostderr").Value.Set("true")
+	_ = klogFlags.Lookup("logtostderr").Value.Set("true")
 
 	command := cmd.New()
 
