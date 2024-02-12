@@ -14,7 +14,6 @@ func (c *Config) Validate() error {
 			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
 				return errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err)
 			}
-		case Kind_LOCAL:
 		}
 	}
 	if repo := c.GetTarget().GetRepo(); repo != nil {
@@ -23,7 +22,6 @@ func (c *Config) Validate() error {
 			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
 				return errors.Errorf(`"target.repo.url" should be a valid URL: %v`, err)
 			}
-		case Kind_LOCAL:
 		}
 	}
 
