@@ -215,7 +215,10 @@ func (rt *RepoTester) GetURL() string {
 func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, name, version string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	_, filename, _, _ := runtime.Caller(1)
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		rt.t.Fatal("couldn't get caller filename")
+	}
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get oci manifest from testdata folder
 	manifestFileName := fmt.Sprintf("%s-%s-oci-manifest.json", name, version)
@@ -231,7 +234,10 @@ func (rt *RepoTester) GetTagManifest(w http.ResponseWriter, r *http.Request, nam
 func (rt *RepoTester) GetTagsList(w http.ResponseWriter, r *http.Request, name string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	_, filename, _, _ := runtime.Caller(1)
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		rt.t.Fatal("couldn't get caller filename")
+	}
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
 	// Get oci manifest from testdata folder
 	tagsListFileName := fmt.Sprintf("%s-oci-tags-list.json", name)
@@ -262,9 +268,12 @@ func (rt *RepoTester) ReplyPing(w http.ResponseWriter) {
 // GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, name, digest string) {
 	w.WriteHeader(200)
-	_, filename, _, _ := runtime.Caller(1)
-	chartPackageName := fmt.Sprintf("%s-%s.tgz", name, digest)
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		rt.t.Fatal("couldn't get caller filename")
+	}
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata/oci")
+	chartPackageName := fmt.Sprintf("%s-%s.tgz", name, digest)
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
 	chartPackage, err := os.ReadFile(chartPackageFile)

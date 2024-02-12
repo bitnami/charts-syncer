@@ -132,7 +132,10 @@ func (rt *RepoTester) GetURL() string {
 func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyIndex bool, indexFile string) {
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(200)
-	_, filename, _, _ := runtime.Caller(1)
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		rt.t.Fatal("couldn't get caller filename")
+	}
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata")
 	// Get index from testdata folder
 	if indexFile == "" {
@@ -151,7 +154,10 @@ func (rt *RepoTester) GetIndex(w http.ResponseWriter, r *http.Request, emptyInde
 // GetChartPackage returns a packaged helm chart
 func (rt *RepoTester) GetChartPackage(w http.ResponseWriter, r *http.Request, chartPackageName string) {
 	w.WriteHeader(200)
-	_, filename, _, _ := runtime.Caller(1)
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		rt.t.Fatal("couldn't get caller filename")
+	}
 	testdataPath := path.Join(path.Dir(filename), "../../../../testdata")
 	// Get chart from testdata folder
 	chartPackageFile := path.Join(testdataPath, "charts", chartPackageName)
