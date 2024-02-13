@@ -1,3 +1,4 @@
+// Package cachedisk implements a Cacher using the local filesystem
 package cachedisk
 
 import (

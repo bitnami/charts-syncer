@@ -1,3 +1,4 @@
+// Package repo creates a new client for a given repository
 package repo
 
 import (

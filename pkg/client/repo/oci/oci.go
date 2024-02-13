@@ -1,3 +1,4 @@
+// Package oci implements a client for OCI repositories
 package oci
 
 import (

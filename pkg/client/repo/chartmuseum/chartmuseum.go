@@ -1,3 +1,4 @@
+// Package chartmuseum implements a client for ChartMuseum repositories
 package chartmuseum
 
 import (

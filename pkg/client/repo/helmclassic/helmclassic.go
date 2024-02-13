@@ -1,3 +1,4 @@
+// Package helmclassic implements a client for classic Helm repositories
 package helmclassic
 
 import (

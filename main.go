@@ -1,3 +1,4 @@
+// Package main serves as an entrypoint to the chart-syncer command line tool
 package main
 
 import (

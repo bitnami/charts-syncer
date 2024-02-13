@@ -1,3 +1,4 @@
+// Package config handles the configuration passed to the chart-syncer tool
 package config
 
 import (

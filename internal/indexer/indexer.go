@@ -1,3 +1,4 @@
+// Package indexer defines an interface to get the index from a repository
 package indexer
 
 import (

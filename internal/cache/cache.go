@@ -1,3 +1,4 @@
+// Package cache defines interfaces to support caching
 package cache
 
 import (

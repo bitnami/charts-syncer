@@ -1,3 +1,4 @@
+// Package local implements a client for local repositories
 package local
 
 import (

@@ -1,3 +1,4 @@
+// Package client defines interfaces for repository clients
 package client
 
 import (

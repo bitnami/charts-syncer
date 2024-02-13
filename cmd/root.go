@@ -1,3 +1,4 @@
+// Package cmd implements the command line for the chart-syncer tool
 package cmd
 
 import (

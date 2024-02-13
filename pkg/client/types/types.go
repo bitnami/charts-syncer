@@ -1,3 +1,4 @@
+// Package types defines common types used in repository clients
 package types
 
 import (

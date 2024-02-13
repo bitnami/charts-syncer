@@ -1,3 +1,4 @@
+// Package syncer implements types to sync charts between repositories
 package syncer
 
 import (

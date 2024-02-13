@@ -1,3 +1,4 @@
+// Package harbor implements a client for Harbor repositories
 package harbor
 
 import (
