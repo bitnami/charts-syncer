@@ -4,7 +4,7 @@ package utils
 import (
 	"archive/tar"
 	"compress/gzip"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 - we are not using it for security things
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -299,8 +299,9 @@ func HTTPResponseBody(res *http.Response) string {
 }
 
 // EncodeSha1 returns a SHA1 representation of the provided string
+// We are using it to generate ids for requests and caching
 func EncodeSha1(s string) string {
-	h := sha1.New()
+	h := sha1.New() // #nosec G401
 	h.Write([]byte(s))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
