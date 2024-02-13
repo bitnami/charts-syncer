@@ -1,13 +1,13 @@
 package syncer
 
 import (
+	goerrors "errors"
 	"fmt"
 	"sort"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/juju/errors"
-	"github.com/mkmik/multierror"
 	"k8s.io/klog"
 
 	"github.com/bitnami/charts-syncer/internal/utils"
@@ -94,7 +94,7 @@ func (s *Syncer) loadCharts(charts ...string) error {
 
 		versions, err := s.cli.src.ListChartVersions(name)
 		if err != nil {
-			errs = multierror.Append(errs, errors.Trace(err))
+			errs = goerrors.Join(errs, errors.Trace(err))
 			continue
 		}
 		if len(versions) == 0 {
@@ -117,14 +117,14 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			version := vs[len(vs)-1].String()
 			if err := s.processVersion(name, version, publishingThreshold); err != nil {
 				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
-				errs = multierror.Append(errs, errors.Trace(err))
+				errs = goerrors.Join(errs, errors.Trace(err))
 				continue
 			}
 		} else {
 			for _, version := range versions {
 				if err := s.processVersion(name, version, publishingThreshold); err != nil {
 					klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
-					errs = multierror.Append(errs, errors.Trace(err))
+					errs = goerrors.Join(errs, errors.Trace(err))
 					continue
 				}
 			}

@@ -1,13 +1,13 @@
 package syncer
 
 import (
+	goerrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/juju/errors"
-	"github.com/mkmik/multierror"
 	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
 	helmchart "helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
@@ -74,7 +74,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 		return s.loadCharts(names...)
 	}); err != nil {
 		s.logger.Warnf("There were some problems loading the information of the requested charts: %v", err)
-		errs = multierror.Append(errs, errors.Trace(err))
+		errs = goerrors.Join(errs, errors.Trace(err))
 	} else {
 		s.logger.Infof("Chart list loaded")
 	}
@@ -104,7 +104,7 @@ func (s *Syncer) SyncPendingCharts(names ...string) error {
 			return s.syncChart(ch, l)
 		}); err != nil {
 			s.logger.Warnf("Failed syncing %q chart: %v", id, err)
-			errs = multierror.Append(errs, errors.Trace(err))
+			errs = goerrors.Join(errs, errors.Trace(err))
 		}
 	}
 	return errors.Trace(errs)

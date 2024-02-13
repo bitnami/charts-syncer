@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"crypto/sha1" // #nosec G505 - we are not using it for security things
 	"crypto/tls"
+	goerrors "errors"
 	"fmt"
 	"io"
 	"net"
@@ -17,7 +18,6 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/mkmik/multierror"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
@@ -455,12 +455,12 @@ func FetchAndCache(name, version string, cache cache.Cacher, fopts ...FetchOptio
 
 	if _, err := io.Copy(w, res.Body); err != nil {
 		// Invalidate the cache
-		return "", errors.Trace(multierror.Append(err, cache.Invalidate(id)))
+		return "", errors.Trace(goerrors.Join(err, cache.Invalidate(id)))
 	}
 
 	if err := w.Close(); err != nil {
 		// Invalidate the cache
-		return "", errors.Trace(multierror.Append(err, cache.Invalidate(id)))
+		return "", errors.Trace(goerrors.Join(err, cache.Invalidate(id)))
 	}
 	if err := res.Body.Close(); err != nil {
 		return "", errors.Trace(err)
