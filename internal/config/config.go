@@ -2,17 +2,18 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"net/url"
 	"os"
 	"strings"
 
-	"github.com/bitnami-labs/pbjson"
 	"github.com/bitnami/charts-syncer/api"
-	"github.com/golang/protobuf/proto"
 	"github.com/juju/errors"
 	"github.com/spf13/viper"
+
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+
 	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 )
@@ -128,8 +129,7 @@ func yamlToProto(path string, v proto.Message) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	r := bytes.NewReader(jsonBytes)
-	err = pbjson.NewDecoder(r).Decode(v)
+	err = protojson.Unmarshal(jsonBytes, v)
 	return errors.Trace(err)
 }
 

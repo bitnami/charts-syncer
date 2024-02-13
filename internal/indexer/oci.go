@@ -1,17 +1,16 @@
 package indexer
 
 import (
-	"bytes"
 	"context"
 	"net/url"
 	"os"
 
-	"github.com/bitnami-labs/pbjson"
 	"github.com/bitnami/charts-syncer/internal/indexer/api"
 	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/klog"
 	"oras.land/oras-go/pkg/content"
 	"oras.land/oras-go/pkg/oras"
@@ -130,7 +129,8 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 
 	// Populate and return index
 	idx = &api.Index{}
-	if err := pbjson.NewDecoder(bytes.NewReader(data), pbjson.AllowUnknownFields(true)).Decode(idx); err != nil {
+	u := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err := u.Unmarshal(data, idx); err != nil {
 		return nil, errors.Wrapf(err, "unable to parse index file")
 	}
 	return idx, nil
