@@ -10,7 +10,7 @@ Sync chart packages and associated container images between chart repositories
     + [Sync all charts](#sync-all-helm-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
-    + [Sync charts and container images](#sync-charts-and-container-images)
+    + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
     + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
 - [Configuration](#configuration)
   * [Harbor example](#harbor-example)
@@ -50,22 +50,36 @@ $ charts-syncer sync --latest-version-only
 
 ## Advanced Usage
 
-### Sync Helm Charts and Container Images
+### Sync Helm Charts and Container Images to different registries
 
-By default, charts-syncer only sync Helm Charts packages, it does not copy the container images referenced by the chart. This
-feature can be enabled by setting the `relocateContainerImages: true` property in the config file i.e
+By default, charts-syncer syncs Helm Charts packages and their container images to the same registry specified in the `target.repo.url` property. If you require to configure a different destination registry for the images, this can be configured in the `target.containers.url` property:
 
 ```yaml
-# leverage .relok8s-images.yaml file inside the Charts to move the container images too
-relocateContainerImages: true
+#
+# Example config file
+#
 source:
-   ...
+  repo:
+    kind: OCI
+    url: http://localhost:8080
 target:
-   ...
+  # Container images registry authn
+  containers:
+    url: http://localhost:9090/containers
+    auth:
+      username: "USERNAME"
+      password: "PASSWORD"
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+    # Helm repository authentication
+    # auth:
+    #   username: "USERNAME"
+    #   password: "PASSWORD"
+charts:
+  - redis
+  - mariadb
 ```
-
-In order for this option to work it is required that the source Helm Charts includes a `.relok8s-images.yaml` file with information
-about where to find the images inside chart. For more information about this file please refer to [asset-relocation-tool-for-kubernetes readme](https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes#image-hints-file).
 
 ### Sync Helm Charts and associated container images between disconnected environments
 

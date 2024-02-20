@@ -15,7 +15,7 @@ message Config {
 
 // SourceRepo contains the required information of the source chart repository
 message Source {
-        Repo repo = 1;
+    Repo repo = 1;
     
 
     // Ignored if the repo is an intermediate bundle since the images are inside the bundle
@@ -24,7 +24,7 @@ message Source {
 
 message Containers {
     ContainerAuth auth = 1;
-
+    string url = 2;
     // ContainerAuth defines the authentication parameters required to access the source/target
     // OCI registries
     message ContainerAuth {

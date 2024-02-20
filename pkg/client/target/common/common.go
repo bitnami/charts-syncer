@@ -3,6 +3,7 @@ package common
 
 import (
 	"os"
+	"regexp"
 
 	"github.com/bitnami/charts-syncer/api"
 	"github.com/bitnami/charts-syncer/pkg/client"
@@ -12,11 +13,16 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 )
 
+var (
+	schemeRE = regexp.MustCompile(`^([a-z]+)://`)
+)
+
 // Target allows to operate a remote chart target
 type Target struct {
 	client.ChartsReaderWriter
 	username           string
 	password           string
+	containersURL      string
 	containersUsername string
 	containersPassword string
 	insecure           bool
@@ -32,11 +38,26 @@ func New(target *api.Target, chartWriter client.ChartsReaderWriter, insecure boo
 		s.username = repo.GetAuth().GetUsername()
 		s.password = repo.GetAuth().GetPassword()
 	}
-	if containers != nil && containers.GetAuth() != nil {
-		s.containersUsername = containers.GetAuth().GetUsername()
-		s.containersPassword = containers.GetAuth().GetPassword()
+	if containers != nil {
+		s.containersURL = containers.GetUrl()
+		if containers.GetAuth() != nil {
+			s.containersUsername = containers.GetAuth().GetUsername()
+			s.containersPassword = containers.GetAuth().GetPassword()
+		}
 	}
 	return s, nil
+}
+
+func (t *Target) getContainersUploadURL() string {
+	containersURL := t.containersURL
+	if containersURL == "" {
+		containersURL = t.GetUploadURL()
+	}
+
+	if schemeRE.MatchString(containersURL) {
+		containersURL = schemeRE.ReplaceAllString(containersURL, "")
+	}
+	return containersURL
 }
 
 // Unwrap unwraps a chart
@@ -50,7 +71,8 @@ func (t *Target) Unwrap(file string, _ *chart.Metadata, opts ...config.Option) e
 	}
 
 	defer os.RemoveAll(wrapWorkdir)
-	if _, err := unwrap.Chart(file, t.GetUploadURL(), "", unwrap.WithSayYes(true),
+
+	if _, err := unwrap.Chart(file, t.getContainersUploadURL(), t.GetUploadURL(), unwrap.WithSayYes(true),
 		unwrap.WithTempDirectory(wrapWorkdir),
 		unwrap.WithUsePlainHTTP(t.usePlainHTTP),
 		unwrap.WithLogger(cfg.Logger),

@@ -96,8 +96,14 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
 		// Validation will happen in a later stage config.Validate()
 		// For now we set the struct value if any of the properties is available
-		if username != "" || password != "" || registry != "" {
-			source.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
+		if username != "" || password != "" {
+			if registry == "" {
+				registry = viper.GetString("source.containers.url")
+			}
+			if source.GetContainers() == nil {
+				source.Containers = &api.Containers{}
+			}
+			source.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
 		}
 	}
 
@@ -109,10 +115,15 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 		}
 
 		// Target container images OCI repository
-
 		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containers.auth.registry")
 		if username != "" || password != "" {
-			target.Containers = &api.Containers{Auth: &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}}
+			if registry == "" {
+				registry = viper.GetString("target.containers.url")
+			}
+			if target.GetContainers() == nil {
+				target.Containers = &api.Containers{}
+			}
+			target.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
 		}
 	}
 
