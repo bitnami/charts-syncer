@@ -10,6 +10,7 @@ Sync chart packages and associated container images between chart repositories
     + [Sync all charts](#sync-all-helm-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
+    + [Sync only specific container platforms](#sync-only-specific-container-platforms)
     + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
     + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
 - [Configuration](#configuration)
@@ -49,6 +50,32 @@ $ charts-syncer sync --latest-version-only
 ```
 
 ## Advanced Usage
+
+### Sync only specific container platforms
+
+By default, all container platforms are sync-ed to the destination registry, but this behavior can by tweaked by defining a list of platforms to sync:
+
+```yaml
+#
+# Example config file
+#
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  # Container images registry authn
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+
+containerPlatforms:
+  - linux/amd64
+
+charts:
+  - redis
+  - mariadb
+```
 
 ### Sync Helm Charts and Container Images to different registries
 

@@ -103,6 +103,7 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithDryRun(rootDryRun),
 				syncer.WithFromDate(syncFromDate),
 				syncer.WithWorkdir(syncWorkdir),
+				syncer.WithContainerPlatforms(c.GetContainerPlatforms()),
 				syncer.WithInsecure(rootInsecure),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipCharts(c.SkipCharts),

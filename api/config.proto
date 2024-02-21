@@ -9,6 +9,8 @@ message Config {
     Target target = 2;
     // Helm Charts to include during sync
     repeated string charts = 3;
+    // Container platforms to sync
+    repeated string container_platforms = 4;
     // Opposite of charts property. It indicates the list of charts to skip during sync
     repeated string skip_charts = 5;
 }

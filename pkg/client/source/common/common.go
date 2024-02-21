@@ -53,6 +53,7 @@ func (t *Source) Wrap(tgz, destWrap string, opts ...config.Option) (string, erro
 	outputFile, err := wrap.Chart(tgz, wrap.WithFetchArtifacts(true),
 		wrap.WithInsecure(t.insecure), wrap.WithTempDirectory(wrapWorkdir),
 		wrap.WithAuth(t.username, t.password),
+		wrap.WithPlatforms(cfg.ContainerPlatforms),
 		wrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		wrap.WithOutputFile(destWrap),
 		wrap.WithLogger(l))

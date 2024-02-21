@@ -39,6 +39,8 @@ type Syncer struct {
 	// list of charts to skip
 	skipCharts []string
 
+	// list of container platforms to sync
+	containerPlatforms []string
 	// TODO(jdrios): Cache index in local filesystem to speed
 	// up re-runs
 	index ChartIndex
@@ -162,5 +164,13 @@ func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error
 func WithSkipCharts(charts []string) Option {
 	return func(s *Syncer) {
 		s.skipCharts = charts
+	}
+}
+
+// WithContainerPlatforms configures the syncer to sync chart containers for only
+// the specified list of platforms. Leaving a blank list syncs all.
+func WithContainerPlatforms(platforms []string) Option {
+	return func(s *Syncer) {
+		s.containerPlatforms = platforms
 	}
 }

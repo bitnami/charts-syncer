@@ -8,8 +8,9 @@ import (
 
 // Config is the configuration object for the client package
 type Config struct {
-	Logger  log.SectionLogger
-	WorkDir string
+	Logger             log.SectionLogger
+	WorkDir            string
+	ContainerPlatforms []string
 }
 
 // Option is a function that modifies the Config
@@ -19,6 +20,13 @@ type Option func(*Config)
 func WithWorkDir(workdir string) func(*Config) {
 	return func(c *Config) {
 		c.WorkDir = workdir
+	}
+}
+
+// WithContainerPlatforms sets the container platforms to sync
+func WithContainerPlatforms(containerPlatforms []string) func(*Config) {
+	return func(c *Config) {
+		c.ContainerPlatforms = containerPlatforms
 	}
 }
 
