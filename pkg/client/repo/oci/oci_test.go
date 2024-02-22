@@ -1,6 +1,7 @@
 package oci_test
 
 import (
+	"context"
 	"os"
 	"reflect"
 	"sort"
@@ -25,7 +26,9 @@ var (
 )
 
 func TestFetch(t *testing.T) {
-	oci.PrepareOCIServer(t, ociRepo)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	oci.PrepareOCIServer(ctx, t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	chartMetadata := &chart.Metadata{
@@ -54,7 +57,9 @@ func TestFetch(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	oci.PrepareOCIServer(t, ociRepo)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	oci.PrepareOCIServer(ctx, t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	chartMetadata := &chart.Metadata{
@@ -75,7 +80,9 @@ func TestHas(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	oci.PrepareOCIServer(t, ociRepo)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	oci.PrepareOCIServer(ctx, t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 
 	want := []string{}
@@ -91,7 +98,9 @@ func TestList(t *testing.T) {
 }
 
 func TestListChartVersions(t *testing.T) {
-	oci.PrepareOCIServer(t, ociRepo)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	oci.PrepareOCIServer(ctx, t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",
@@ -123,7 +132,9 @@ func TestReload(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	oci.PrepareOCIServer(t, ociRepo)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	oci.PrepareOCIServer(ctx, t, ociRepo)
 	c := oci.PrepareTest(t, ociRepo)
 	chartMetadata := &chart.Metadata{
 		Name:    "apache",

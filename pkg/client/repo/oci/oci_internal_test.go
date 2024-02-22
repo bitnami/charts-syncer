@@ -1,6 +1,7 @@
 package oci
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -43,7 +44,9 @@ func TestOciReferenceExists(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			PrepareOCIServer(t, ociRepo)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			PrepareOCIServer(ctx, t, ociRepo)
 			u, err := url.Parse(ociRepo.Url)
 			if err != nil {
 				t.Fatal(err)

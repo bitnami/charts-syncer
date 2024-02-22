@@ -3,6 +3,7 @@ package oci
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -111,11 +112,20 @@ func PrepareHTTPServer(t *testing.T, ociRepo *api.Repo) *Repo {
 	return PrepareTest(t, ociRepo)
 }
 
+func canConnectToHost(ctx context.Context, addr string) bool {
+	d := net.Dialer{Timeout: 60 * time.Second}
+	conn, err := d.DialContext(ctx, "tcp", addr)
+	if err == nil {
+		defer conn.Close()
+		return true
+	}
+	return false
+}
+
 // PrepareOCIServer starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
 // This way we don't have to mimic all the low-level HTTP requests made by oras.
-func PrepareOCIServer(t *testing.T, ociRepo *api.Repo) {
+func PrepareOCIServer(ctx context.Context, t *testing.T, ociRepo *api.Repo) {
 	t.Helper()
-
 	// Create OCI server as docker registry
 	config := &configuration.Configuration{}
 
@@ -127,11 +137,24 @@ func PrepareOCIServer(t *testing.T, ociRepo *api.Repo) {
 	config.HTTP.Addr = addr
 	config.HTTP.DrainTimeout = time.Duration(10) * time.Second
 	config.Storage = map[string]configuration.Parameters{"inmemory": map[string]interface{}{}}
-	dockerRegistry, err := registry.NewRegistry(context.Background(), config)
+	dockerRegistry, err := registry.NewRegistry(ctx, config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	go dockerRegistry.ListenAndServe()
+
+	// Wait for the server to be ready
+	connTimeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	for !canConnectToHost(connTimeoutCtx, addr) {
+		select {
+		case <-connTimeoutCtx.Done():
+			t.Fatal("timeout reached before we can connect to addr")
+			return
+		case <-time.After(500 * time.Millisecond):
+		}
+	}
+
 	ociRepo.Url = dockerRegistryHost + "/someproject/charts"
 }
 
