@@ -18,7 +18,7 @@ $(GOLANGCILINT):
 
 .PHONY: test
 test:
-	GO111MODULE=on go test ./...
+	GO111MODULE=on go test $(GO_TEST_FLAGS) ./...
 
 .PHONY: test-style
 test-style: $(GOLANGCILINT)
@@ -35,4 +35,4 @@ gen:
 	go generate github.com/bitnami/charts-syncer/...
 
 build: $(GO_SOURCES)
-	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./
+	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./cmd

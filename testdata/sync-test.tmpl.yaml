@@ -1,0 +1,24 @@
+source:
+  repo:
+    kind: OCI
+    url: {{ .SourceURL }}
+    auth:
+      username: {{ .SourceUser }}
+      password: {{ .SourcePassword }}
+    disableChartsIndex: {{ .SourceIndex }}
+
+target:
+  repo:
+    kind: OCI
+    url: {{ .TargetURL }}
+    auth:
+      username: {{ .TargetUser }}
+      password: {{ .TargetPassword }}
+    disableChartsIndex: {{ .TargetIndex }}
+
+{{ if .Charts -}}
+charts:
+{{- range .Charts }}
+  - {{ . }}
+{{- end }}
+{{- end }}

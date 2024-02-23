@@ -1,10 +1,12 @@
 // Package cmd implements the command line for the chart-syncer tool
-package cmd
+package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 )
 
 const (
@@ -22,6 +24,14 @@ Find more information at: https://github.com/bitnami/charts-syncer`
 )
 
 func newRootCmd() *cobra.Command {
+	// Klog flags
+	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
+
+	// Override some flag defaults so they are shown in the help func.
+	klog.InitFlags(klogFlags)
+	_ = klogFlags.Lookup("alsologtostderr").Value.Set("true")
+	_ = klogFlags.Lookup("logtostderr").Value.Set("true")
+
 	cmd := &cobra.Command{
 		Use:   "charts-syncer",
 		Short: "tool to synchronize helm chart repositories",
@@ -29,10 +39,12 @@ func newRootCmd() *cobra.Command {
 		// Do not show the Usage page on every raised error
 		SilenceUsage: true,
 	}
-
 	cmd.PersistentFlags().BoolVar(&rootDryRun, "dry-run", false, "Only shows the charts pending to be synced without syncing them")
 	cmd.PersistentFlags().StringVarP(&rootConfig, "config", "c", "", fmt.Sprintf("Config file. Defaults to ./%s or $HOME/%s)", defaultCfgFile, defaultCfgFile))
 	cmd.PersistentFlags().BoolVar(&rootInsecure, "insecure", false, "Allow insecure SSL connections")
+
+	// Register klog flags so they appear on the command's help
+	cmd.PersistentFlags().AddGoFlagSet(klogFlags)
 
 	// Add subcommands
 	cmd.AddCommand(

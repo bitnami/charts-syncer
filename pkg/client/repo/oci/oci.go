@@ -492,11 +492,11 @@ func newDockerResolver(u *url.URL, username, password string, insecure bool) rem
 		client = utils.InsecureClient
 	}
 	opts := docker.ResolverOptions{
-		Hosts: func(s string) ([]docker.RegistryHost, error) {
+		Hosts: func(_ string) ([]docker.RegistryHost, error) {
 			return []docker.RegistryHost{
 				{
 					Authorizer: docker.NewDockerAuthorizer(
-						docker.WithAuthCreds(func(s string) (string, string, error) {
+						docker.WithAuthCreds(func(_ string) (string, string, error) {
 							return username, password, nil
 						})),
 					Host:         u.Host,

@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"github.com/bitnami/charts-syncer/api"
@@ -62,7 +62,7 @@ func newSyncCmd() *cobra.Command {
 		Short:         "Synchronizes two chart repositories",
 		Example:       syncExample,
 		SilenceErrors: false,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			// Disable klog if we are using the pretty cui
 			if !usePlainLog {
 				_ = cmd.Flags().Lookup("alsologtostderr").Value.Set("false")
@@ -88,7 +88,7 @@ func newSyncCmd() *cobra.Command {
 
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var parentLog log.SectionLogger
 			if usePlainLog {
 				parentLog = klogLogger.NewKlogSectionLogger()
