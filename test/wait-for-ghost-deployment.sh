@@ -20,8 +20,8 @@ wait_for_string_in_pod() {
     local -r sleep_time="${5:-5}"
 
     for ((i = 1 ; i <= retries ; i+=1 )); do
-        matches=$(kubectl logs ${pod} | grep "${string}" | wc -l)
-        if [ ${matches} -ge ${repetitions} ]; then
+        matches=$(kubectl logs "${pod}" | grep -c "${string}")
+        if [ "${matches}" -ge "${repetitions}" ]; then
             break
         fi
         sleep "$sleep_time"
@@ -30,6 +30,6 @@ wait_for_string_in_pod() {
 
 ## Wait until Ghost is up and running
 ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].metadata.name}')
-wait_for_string_in_pod ${ghostPod} "Your site is now available on" 2
+wait_for_string_in_pod "${ghostPod}" "Your site is now available on" 2
 # Even after printing that message in the log, the service is not available yet
 sleep 5

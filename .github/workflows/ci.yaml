@@ -1,0 +1,129 @@
+name: CI
+on:
+  workflow_dispatch:
+  push: 
+    branches:
+       - v2
+  pull_request:
+    branches:
+      - v2
+    types:
+      - assigned 
+      - opened 
+      - synchronize 
+      - reopened
+
+env:
+  KIND_VERSION: "0.12.0"
+  KUBECTL_VERSION: "1.22.0"
+
+jobs:
+  Validate:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        with:
+          fetch-depth: 0
+      - name: Set Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Set Golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+
+      - name: Set Shellcheck
+        run: sudo apt-get -qq update && sudo apt-get install -y shellcheck
+
+      - name: Verify scripts
+        run: |
+           shellcheck test/*.sh
+
+      - name: Build
+        run: make build
+      - name: Lint
+        run: make test-style
+
+      - name: Test
+        run: make test
+
+  Build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        with:
+          fetch-depth: 0
+      - name: Set Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Build
+        run: make build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: charts-syncer-binary
+          path: dist/charts-syncer
+
+  Integration:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        with:
+          fetch-depth: 0
+      - name: Get Harbor Local IP
+        run: |
+           echo "HARBOR_IP=$(hostname -I | cut -d" " -f1)" >> $GITHUB_ENV
+      - uses: actions/download-artifact@v4
+        with:
+            name: charts-syncer-binary
+            path: /tmp/dist
+      - name: Install Kind
+        run: |
+           curl -LO https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-Linux-amd64
+           chmod +x kind-Linux-amd64
+           sudo mv kind-Linux-amd64 /usr/local/bin/kind
+      - name: Create kind cluster
+        run: |
+           ./test/kind-create-cluster.sh
+           echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+      - name: Set Helm
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
+        with:
+          version: v3.12.1
+      - name: Run Registry
+        run: |
+           cd test/harbor
+           openssl genrsa -traditional -out private_key.pem 4096
+           openssl req -new -x509 -key private_key.pem -out root.crt -days 3650 -subj "/C=CN/ST=State/L=CN/O=organization/OU=organizational unit/CN=example.com/emailAddress=example@example.com"
+           cp private_key.pem config/core/private_key.pem
+           cp root.crt config/registry/root.crt
+           echo "HARBOR_IP=$HARBOR_IP" >> .env.github
+           docker-compose --env-file .env.github config
+           docker-compose --env-file .env.github up -d
+      - name: Install Kubectl
+        run: |
+           curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+           chmod +x kubectl
+           sudo mv kubectl /usr/local/bin
+      - name: Install wait-for-port
+        run: |
+           curl -LO https://github.com/bitnami/wait-for-port/releases/download/v1.0/wait-for-port.zip
+           unzip wait-for-port.zip
+           chmod +x wait-for-port
+           sudo mv wait-for-port /usr/local/bin/
+           
+      - name: Add bitnami Helm
+        run: |
+           helm repo add bitnami https://charts.bitnami.com/bitnami
+           helm repo update
+      - run: |
+           chmod +x /tmp/dist/charts-syncer
+           ./test/run-charts-syncer.sh
+      - run: ./test/install-ghost.sh
+      - run: ./test/wait-for-ghost-deployment.sh
+      - run: ./test/run-verifications.sh

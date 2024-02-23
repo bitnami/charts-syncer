@@ -6,13 +6,17 @@ source:
     kind: "HELM"
     url: "https://charts.bitnami.com/bitnami"
 target:
-  containerRegistry: "docker.io"
-  containerRepository: "bitnami"
+  containers:
+    auth:
+      username: admin
+      password: dummypassword
+
   repo:
-    kind: "CHARTMUSEUM"
-    url: "http://127.0.0.1:8080"
+    kind: "OCI"
+    url: "http://localhost:8080/library"
     auth:
       username: "admin"
       password: "dummypassword"
+
 charts:
   - ghost
