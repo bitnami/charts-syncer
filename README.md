@@ -137,16 +137,8 @@ source:
   #     username: "USERNAME"
   #     password: "PASSWORD"
 target:
-  repoName: myrepo
-  containerRegistry: k8s.container.registry.io
-  containerRepository: repository/demo/k8s
-  # Container images registry authn
-  # containers:
-  #   auth:
-  #     username: "USERNAME"
-  #     password: "PASSWORD"
   repo:
-    kind: CHARTMUSEUM
+    kind: OCI
     url: http://localhost:9090
     # Helm repository authentication
     # auth:
@@ -186,36 +178,7 @@ Container images registries
 - `TARGET_CONTAINERS_AUTH_USERNAME`
 - `TARGET_CONTAINERS_AUTH_PASSWORD`
 
-Current available Kinds are `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI`. Below you can find the compatibility matrix between source and targets repositories.
-
-| Source Repo | Target Repo | Supported          |
-|-------------|-------------|--------------------|
-| HELM        | HELM        | :x:                |
-| HELM        | CHARTMUSEUM | :white_check_mark: |
-| HELM        | HARBOR      | :white_check_mark: |
-| HELM        | OCI         | :white_check_mark: |
-| HELM        | LOCAL       | :white_check_mark: |
-| CHARTMUSEUM | HELM        | :x:                |
-| CHARTMUSEUM | CHARTMUSEUM | :white_check_mark: |
-| CHARTMUSEUM | HARBOR      | :white_check_mark: |
-| CHARTMUSEUM | OCI         | :white_check_mark: |
-| CHARTMUSEUM | LOCAL       | :white_check_mark: |
-| HARBOR      | HELM        | :x:                |
-| HARBOR      | CHARTMUSEUM | :white_check_mark: |
-| HARBOR      | HARBOR      | :white_check_mark: |
-| HARBOR      | OCI         | :white_check_mark: |
-| HARBOR      | LOCAL       | :white_check_mark: |
-| OCI         | HELM        | :x:                |
-| OCI         | CHARTMUSEUM | :white_check_mark: |
-| OCI         | HARBOR      | :white_check_mark: |
-| OCI         | OCI         | :white_check_mark: |
-| OCI         | LOCAL       | :white_check_mark: |
-| LOCAL       | HELM        | :x:                |
-| LOCAL       | CHARTMUSEUM | :white_check_mark: |
-| LOCAL       | HARBOR      | :white_check_mark: |
-| LOCAL       | OCI         | :white_check_mark: |
-| LOCAL       | LOCAL       | :white_check_mark: |
-
+Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` for the Source Repo and `OCI` and `LOCAL` for the Target Repo.
 
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
@@ -229,7 +192,7 @@ https://$HARBOR_DOMAIN/chartrepo/$HARBOR_PROJECT
 So if HARBOR_DOMAIN=my.harbor.com and HARBOR_PROJECT=my-project, you would need to specify this repo in the config file like:
 
 ```yaml
-target:
+source:
  repo:
    kind: HARBOR
    url: https://my.harbor.com/chartrepo/my-project
@@ -356,22 +319,20 @@ The values of the parameters `containerRegistry` and `containerRepositories` fro
 
 In order to migrate a chart from one repository to another and retrieve the images from a new container registry, this tool performs the following changes in the chart code:
 
-#### Update *values.yaml* and *values-production.yaml* (if exists)
+#### Update *values.yaml*
 
-These files are updated with the new container registry where the chart should pull the images from.
+This file is updated with the new container registry where the chart should pull the images from.
 
-#### Update dependencies files
+### Update *Chart.yaml*
 
-For Helm v2, these files are *requirements.yaml* and *requirements.lock*.
-For Helm v3, these files are *Chart.yaml* and *Chart.lock*
+This file will get its `images` annotation rewritten to point to the new relocated container images.
 
-If the chart has any dependency, they should be registered in these files that will be updated to retrieve the dependencies from the target repository.
+### Update *Images.lock*
 
-#### Update *README.md*
+If present, the [Images.lock](https://github.com/vmware-labs/distribution-tooling-for-helm/tree/main?tab=readme-ov-file#creating-an-images-lock)
+ will be relocated to point to the new container images.
 
-README files for bitnami charts include a TL;DR; section with instructions to add the helm repository to the helm CLI and a simple command to deploy the chart.
-
-As the chart repository URL and chart repository name should have changed, the instructions in the README should be updated too.
+ If the file does not exist, it will be created.
 
 ------
 
@@ -385,11 +346,8 @@ source:
     kind: HELM
     url: https://charts.bitnami.com/bitnami
 target:
-  repoName: myrepo
-  containerRegistry: "my.registry.io"
-  containerRepository: "test"
   repo:
-    kind: CHARTMUSEUM
+    kind: OCI
     url: http://localhost:8080
 ```
 
@@ -402,118 +360,109 @@ diff --git a/values.yaml b/values.yaml
 index dff53b1..a9d5884 100755
 --- a/values.yaml
 +++ b/values.yaml
-@@ -12,8 +12,8 @@
- ## ref: https://hub.docker.com/r/bitnami/ghost/tags/
+@@ -68,8 +68,8 @@
+ ## @param image.debug Enable image debug mode
  ##
  image:
 -  registry: docker.io
 -  repository: bitnami/ghost
-+  registry: my.registry.io
-+  repository: test/ghost
-   tag: 3.22.2-debian-10-r0
++  registry: localhost:80
++  repository: library/bitnami/ghost
+   tag: 5.79.4-debian-12-r2
+   digest: ""
    ## Specify a imagePullPolicy
-   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-@@ -40,8 +40,8 @@ image:
- ##
- volumePermissions:
+@@ -608,8 +608,8 @@
+   ## @param volumePermissions.image.pullSecrets OS Shell + Utility image pull secrets
+   ##
    image:
 -    registry: docker.io
--    repository: bitnami/minideb
-+    registry: my.registry.io
-+    repository: test/minideb
-     tag: buster
-     pullPolicy: Always
-     ## Optionally specify an array of imagePullSecrets.
+-    repository: bitnami/os-shell
++    registry: localhost:80
++    repository: library/bitnami/os-shell
+     tag: 12-debian-12-r15
+     digest: ""
+     pullPolicy: IfNotPresent
 ```
 
-#### requirements.lock (only for Helm v2 charts)
+
+#### Chart.yaml
 
 ```diff
-diff --git a/requirements.lock b/requirements.lock
-index ae8a2c5..ea23e53 100755
---- a/requirements.lock
-+++ b/requirements.lock
-@@ -1,9 +1,9 @@
- dependencies:
- - name: common
--  repository: https://charts.bitnami.com/bitnami
-+  repository: http://localhost:8080
-   version: 0.3.1
- - name: mariadb
--  repository: https://charts.bitnami.com/bitnami
-+  repository: http://localhost:8080
-   version: 7.6.1
--digest: sha256:9893236041ef5bdf2e972db020e72e8d68100eac4e280b9066d6e16c4061bcb3
--generated: "2020-07-06T18:13:45.662082005Z"
-+digest: sha256:fbd22a3fc7b93ce6875a37902a3c8ccbb5dd3db2611ec9860b99e49d9f23196e
-+generated: "2020-07-07T12:57:28.573258+02:00"
+diff --git a/Chart.yaml b/Chart.yaml
+--- a/Chart.yaml
++++ b/Chart.yaml
+@@ -2,9 +2,9 @@
+   category: CMS
+   images: |
+     - name: ghost
+-      image: docker.io/bitnami/ghost:5.79.4-debian-12-r2
++      image: localhost:80/library/bitnami/ghost:5.79.4-debian-12-r2
+     - name: os-shell
+-      image: docker.io/bitnami/os-shell:12-debian-12-r15
++      image: localhost:80/library/bitnami/os-shell:12-debian-12-r15
+   licenses: Apache-2.0
+ apiVersion: v2
+ appVersion: 5.79.4
 ```
 
-#### Chart.lock (only for Helm v3 charts)
+#### Images.lock
 
 ```diff
-diff --git a/Chart.lock b/Chart.lock
-index ae1c198..eeed9a7 100644
---- a/Chart.lock
-+++ b/Chart.lock
-@@ -1,6 +1,6 @@
- dependencies:
- - name: zookeeper
--  repository: https://charts.bitnami.com/bitnami
-+  repository: http://127.0.0.1:8080
-   version: 5.21.9
--digest: sha256:3157eeec51b30e4011b34043df2dfac383a4bd11f76c85d07f54414a21dffc19
--generated: "2020-09-29T12:51:56.872354+02:00"
-+digest: sha256:8aef6388d327cdf9b8f5714aadfe8112b2e2ff53494e86dbd42946d742d33ff0
-+generated: "2020-09-30T16:15:20.548388+02:00"
+--- /dev/null	2024-02-23 14:30:30
++++ b/Images.lock	2024-02-22 10:51:59
+@@ -0,0 +1,50 @@
++apiVersion: v0
++kind: ImagesLock
++metadata:
++  generatedAt: "2024-02-22T09:46:03.681760496Z"
++  generatedBy: Distribution Tooling for Helm
++chart:
++  name: ghost
++  version: 19.10.2
++  appVersion: 5.79.4
++images:
++- name: ghost
++  image: localhost:80/library/bitnami/ghost:5.79.4-debian-12-r2
++  chart: ghost
++  digests:
++  - digest: sha256:950c0bcbdcd9e97fb6db96c70cde4408ab30e658e5568445f4a1a9734cc9cc68
++    arch: linux/amd64
++  - digest: sha256:c7ba15d98097bc06baf80091fba8f0b0c2a05fd4d94f3bec4ea4c92c3202e3b6
++    arch: linux/arm64
++- name: os-shell
++  image: localhost:80/library/bitnami/os-shell:12-debian-12-r15
++  chart: ghost
++  digests:
++  - digest: sha256:fbb2bf7afc15ff68e89b36c24cf3210a47729246f1943db056ae3c9a0c2f278d
++    arch: linux/amd64
++  - digest: sha256:051cc71e48d8d901f2958e3f323977964c2373a153a9e2b6183c3dbd2cd2075c
++    arch: linux/arm64
++- name: mysql
++  image: localhost:80/library/bitnami/mysql:8.0.36-debian-12-r7
++  chart: mysql
++  digests:
++  - digest: sha256:af4f8a296ed5081a5c91d262f06c897ac956714009a71192ee36b22742f23b9d
++    arch: linux/amd64
++  - digest: sha256:1b15bdfd66ad9acc14a6a81d570c39eb607e53a73242f13e91d63c64496b2b2f
++    arch: linux/arm64
++- name: mysqld-exporter
++  image: localhost:80/library/bitnami/mysqld-exporter:0.15.1-debian-12-r7
++  chart: mysql
++  digests:
++  - digest: sha256:cc417c3577774bd439bc8cef6aeced1ef1019192964b763116072fafad16b73a
++    arch: linux/amd64
++  - digest: sha256:81ead00a80c63f562ff028c3fc2772354f8354085fe0ffb5ba29b04f6d4a2f4a
++    arch: linux/arm64
++- name: os-shell
++  image: localhost:80/library/bitnami/os-shell:12-debian-12-r15
++  chart: mysql
++  digests:
++  - digest: sha256:fbb2bf7afc15ff68e89b36c24cf3210a47729246f1943db056ae3c9a0c2f278d
++    arch: linux/amd64
++  - digest: sha256:051cc71e48d8d901f2958e3f323977964c2373a153a9e2b6183c3dbd2cd2075c
++    arch: linux/arm64
 ```
 
-#### README.md
-
-~~~diff
-diff --git a/README.md b/README.md
-index 3fa7d7b..504894e 100755
---- a/README.md
-+++ b/README.md
-@@ -5,8 +5,8 @@
- ## TL;DR;
-
- ```console
--$ helm repo add bitnami https://charts.bitnami.com/bitnami
--$ helm install my-release bitnami/ghost
-+$ helm repo add myrepo http://localhost:8080
-+$ helm install my-release myrepo/ghost
- ```
-
- ## Introduction
-@@ -29,7 +29,7 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
- To install the chart with the release name `my-release`:
-
- ```console
--$ helm install my-release bitnami/ghost
-+$ helm install my-release myrepo/ghost
- ```
-
- The command deploys Ghost on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
-@@ -168,7 +168,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
- ```console
- $ helm install my-release \
-   --set ghostUsername=admin,ghostPassword=password,mariadb.mariadbRootPassword=secretpassword \
--    bitnami/ghost
-+    myrepo/ghost
- ```
-
- The above command sets the Ghost administrator account username and password to `admin` and `password` respectively. Additionally, it sets the MariaDB `root` user password to `secretpassword`.
-@@ -176,7 +176,7 @@ The above command sets the Ghost administrator account username and password to
- Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
-
- ```console
--$ helm install my-release -f values.yaml bitnami/ghost
-+$ helm install my-release -f values.yaml myrepo/ghost
- ```
-~~~
-
-> In order to obtain these diffs check the [developer docs](docs/development.md).
 
 ## Deploy to Kubernetes
 
