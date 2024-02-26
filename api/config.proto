@@ -13,6 +13,9 @@ message Config {
     repeated string container_platforms = 4;
     // Opposite of charts property. It indicates the list of charts to skip during sync
     repeated string skip_charts = 5;
+    // Do not sync chart and container artifacts (signatures and metadata)
+    bool skip_artifacts = 6;
+
 }
 
 // SourceRepo contains the required information of the source chart repository

@@ -43,7 +43,8 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 
 	wrappedChartPath, err := s.cli.src.Wrap(ch.TgzPath,
 		filepath.Join(workdir, "wraps", fmt.Sprintf("%s-%s.wrap.tgz", ch.Name, ch.Version)),
-		config.WithLogger(l), config.WithWorkDir(workdir), config.WithContainerPlatforms(s.containerPlatforms),
+		config.WithLogger(l), config.WithWorkDir(workdir),
+		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
 	)
 	if err != nil {
 		return errors.Annotatef(err, "unable to move chart %q with charts-syncer", id)

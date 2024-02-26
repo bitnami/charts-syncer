@@ -11,6 +11,7 @@ type Config struct {
 	Logger             log.SectionLogger
 	WorkDir            string
 	ContainerPlatforms []string
+	SkipArtifacts      bool
 }
 
 // Option is a function that modifies the Config
@@ -20,6 +21,13 @@ type Option func(*Config)
 func WithWorkDir(workdir string) func(*Config) {
 	return func(c *Config) {
 		c.WorkDir = workdir
+	}
+}
+
+// WithSkipArtifacts sets the skip artifacts flag
+func WithSkipArtifacts(skipArtifacts bool) func(*Config) {
+	return func(c *Config) {
+		c.SkipArtifacts = skipArtifacts
 	}
 }
 

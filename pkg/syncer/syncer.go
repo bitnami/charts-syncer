@@ -45,6 +45,9 @@ type Syncer struct {
 	// up re-runs
 	index ChartIndex
 
+	// skip syncing artifacts
+	skipArtifacts bool
+
 	// Storage directory for required artifacts
 	workdir string
 
@@ -88,6 +91,13 @@ func WithFromDate(date string) Option {
 func WithUsePlainHTTP(enable bool) Option {
 	return func(s *Syncer) {
 		s.usePlainHTTP = enable
+	}
+}
+
+// WithSkipArtifacts configures the syncer to skip syncing artifacts
+func WithSkipArtifacts(skip bool) Option {
+	return func(s *Syncer) {
+		s.skipArtifacts = skip
 	}
 }
 

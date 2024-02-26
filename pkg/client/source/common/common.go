@@ -50,7 +50,9 @@ func (t *Source) Wrap(tgz, destWrap string, opts ...config.Option) (string, erro
 	}
 	defer os.RemoveAll(wrapWorkdir)
 
-	outputFile, err := wrap.Chart(tgz, wrap.WithFetchArtifacts(true),
+	fetchArtifacts := !cfg.SkipArtifacts
+
+	outputFile, err := wrap.Chart(tgz, wrap.WithFetchArtifacts(fetchArtifacts),
 		wrap.WithInsecure(t.insecure), wrap.WithTempDirectory(wrapWorkdir),
 		wrap.WithAuth(t.username, t.password),
 		wrap.WithPlatforms(cfg.ContainerPlatforms),

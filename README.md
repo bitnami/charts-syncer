@@ -8,6 +8,7 @@ Sync chart packages and associated container images between chart repositories
     + [Sync all charts](#sync-all-helm-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
+    + [Skip syncing artifacts](#skip-syncing-artifacts)
     + [Sync only specific container platforms](#sync-only-specific-container-platforms)
     + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
     + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
@@ -74,6 +75,44 @@ charts:
   - redis
   - mariadb
 ```
+
+### Skip syncing artifacts
+
+If your chart and docker images include artifacts such as signatures or metadata, they will be synced to the destination repository. If you want to disable this behavior, you can opt out by setting `skipArtifacts` to true:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+charts:
+  - redis
+
+skipArtifacts: true
+```
+
+This is especially useful when you filter the container platforms to sync, which would invalidate the signatures. Using `skipArtifacts: true` will prevent syncing the now invalid signatures:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+charts:
+  - redis
+skipArtifacts: true
+containerPlatforms:
+  - linux/amd64
+```
+
 
 ### Sync Helm Charts and Container Images to different registries
 
