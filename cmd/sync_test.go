@@ -87,7 +87,7 @@ func TestSync(t *testing.T) {
 	}
 }
 
-func prepareSourceRepo(ctx context.Context, t *testing.T) {
+func prepareSourceRepo(_ context.Context, t *testing.T) {
 	oci.PrepareOCIServer(context.Background(), t, ociSourceRepo)
 	cs := oci.PrepareTest(t, ociSourceRepo)
 
