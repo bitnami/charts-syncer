@@ -3,7 +3,7 @@ SHELL      = /usr/bin/env bash
 OUTPUT = ./dist/charts-syncer
 GO_SOURCES = $(shell find . -type f -name '*.go')
 VERSION := $(or $(VERSION), dev)
-LDFLAGS="-X github.com/bitnami/charts-syncer/cmd.version=$(VERSION)"
+LDFLAGS="-X main.version=$(VERSION)"
 GOPATH ?= $(shell go env GOPATH)
 export GOBIN := $(abspath $(GOPATH)/bin)
 export GO111MODULE := on
