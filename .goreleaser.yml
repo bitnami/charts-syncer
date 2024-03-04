@@ -6,10 +6,10 @@ builds:
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
-    main: ./main.go
+    main: ./cmd/
     binary: charts-syncer
     ldflags:
-      - -X github.com/bitnami/charts-syncer/cmd.version={{.Version}}
+      - -X main.version={{.Version}}
 dockers:
   -
     ids:
