@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/bitnami/charts-syncer)](https://goreportcard.com/report/github.com/bitnami/charts-syncer)
+[![CI](https://github.com/bitnami/charts-syncer/actions/workflows/ci.yaml/badge.svg)](https://github.com/bitnami/charts-syncer/actions/workflows/ci.yaml)
+
 # charts-syncer
 
 Sync chart packages and associated container images between chart repositories
