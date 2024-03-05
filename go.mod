@@ -21,13 +21,16 @@ require (
 	github.com/spf13/viper v1.18.2
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v2 v2.4.0
-	helm.sh/helm/v3 v3.14.0
+	helm.sh/helm/v3 v3.14.2
 	k8s.io/klog v1.0.0
 	oras.land/oras-go v1.2.5
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require github.com/vmware-labs/distribution-tooling-for-helm v0.3.3-0.20240209160753-32d4a5383ed7
+require (
+	github.com/stretchr/testify v1.8.4
+	github.com/vmware-labs/distribution-tooling-for-helm v0.3.3-0.20240209160753-32d4a5383ed7
+)
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
@@ -150,7 +153,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
