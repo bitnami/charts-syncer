@@ -21,9 +21,9 @@ jobs:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY }}
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.21.x
+          go-version: 1.21.9
       - name: Release
         uses: goreleaser/goreleaser-action@v5
         with:
