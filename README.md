@@ -225,6 +225,25 @@ Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` f
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
 
+### Google Artifact Registry example (Tanzu Application Catalog hosted registry)
+
+The Google Artifact Registry (GAR) is the default option for Tanzu Application Catalog hosted registries.
+
+Tanzu Application Catalog provides the JSON file with the credentials. The recommended option for `chart-syncer` configuration is to use the `base64` approach. For the commands below it is required to have `jq` tool installed.
+
+```console
+$ cat _json_key.json | jq .password -r > _json_key-password.json
+$ cat _json_key-password.json | base64
+```
+
+The `username` is `_json_key_base64` and the `password` is the output of the previous command.
+
+If you need to log in to a registry, this command is also useful:
+
+```console
+$ cat _json_key-password.json | docker login -u _json_key --password-stdin https://YOUR_REGISTRY
+```
+
 ### Harbor example
 
 In the case of HARBOR kind repos, be aware that chart repository URLs are:
