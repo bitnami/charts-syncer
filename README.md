@@ -232,8 +232,7 @@ The Google Artifact Registry (GAR) is the default option for Tanzu Application C
 Tanzu Application Catalog provides the JSON file with the credentials. The recommended option for `chart-syncer` configuration is to use the `base64` approach. For the commands below it is required to have `jq` tool installed.
 
 ```console
-$ cat _json_key.json | jq .password -r > _json_key-password.json
-$ cat _json_key-password.json | base64
+$ cat _json_key.json | base64
 ```
 
 The `username` is `_json_key_base64` and the `password` is the output of the previous command.
@@ -241,7 +240,32 @@ The `username` is `_json_key_base64` and the `password` is the output of the pre
 If you need to log in to a registry, this command is also useful:
 
 ```console
-$ cat _json_key-password.json | docker login -u _json_key --password-stdin https://YOUR_REGISTRY
+$ cat _json_key.json | docker login -u _json_key --password-stdin https://YOUR_REGISTRY
+```
+
+See below an example of configuration file using GAR and Debian 12 Helm charts and containers:
+
+```yamlsource:
+source:
+  repo:
+    kind: OCI
+    url: us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/charts/debian-12
+    auth:
+      username: _json_key_base64
+      password: PASSWORD_BASE64
+  containers:
+    auth:
+      registry: us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/containers/debian-12
+      username: _json_key_base64
+      password: PASSWORD_BASE64
+
+target:
+  repo:
+    kind: OCI
+    url: https://YOUR_REGISTRY/tac-charts
+    auth:
+      username: ${TARGET_REPO_AUTH_USERNAME} # Username for target repo authentication
+      password: ${TARGET_REPO_AUTH_PASSWORD} # Password for target repo authentication
 ```
 
 ### Harbor example
