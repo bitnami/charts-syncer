@@ -249,13 +249,13 @@ See below an example of configuration file using GAR and Debian 12 Helm charts a
 source:
   repo:
     kind: OCI
-    url: us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/charts/debian-12
+    url: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/charts/debian-12
     auth:
       username: _json_key_base64
       password: PASSWORD_BASE64
   containers:
     auth:
-      registry: us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/containers/debian-12
+      registry: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/containers/debian-12
       username: _json_key_base64
       password: PASSWORD_BASE64
 
