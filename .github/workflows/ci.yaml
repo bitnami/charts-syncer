@@ -103,8 +103,8 @@ jobs:
            cp private_key.pem config/core/private_key.pem
            cp root.crt config/registry/root.crt
            echo "HARBOR_IP=$HARBOR_IP" >> .env.github
-           docker-compose --env-file .env.github config
-           docker-compose --env-file .env.github up -d
+           docker compose --env-file .env.github config
+           docker compose --env-file .env.github up -d
       - name: Install Kubectl
         run: |
            curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
