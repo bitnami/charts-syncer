@@ -195,11 +195,11 @@ charts:
 #  - mariadb
 ```
 
-> Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
->
+> [!TIP]
+> Note that the `repo.url` property you need to specify is the same one you would use to add the repo to Helm with the `helm repo add command`.
 > Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
 
-Credentials for the Helm Chart repositories and container images registries can be provided using config file or the following environment variables:
+Credentials for the Helm Chart repositories and container images registries can be provided using a config file or the following environment variables:
 
 Helm Chart repositories
 
@@ -222,6 +222,7 @@ Container images registries
 
 Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` for the Source Repo and `OCI` and `LOCAL` for the Target Repo.
 
+> [!NOTE]
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
 
@@ -398,7 +399,8 @@ The important thing is that the image name is specified with `registry`, `reposi
 
 The values of the parameters `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. If these parameters are unset, the associated properties won't be modified. The `tag` property remains unchanged.
 
-> :warning: Be aware that this tool expects the images to be already present in the target container registry.
+> [!WARNING]
+> Be aware that this tool expects the images to be already present in the target container registry.
 
 ## Changes performed in a chart
 
@@ -555,7 +557,7 @@ Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob
 
 ## How to build
 
-> Check the [developer docs](docs/development.md).
+Check the [developer docs](docs/development.md).
 
 ## License
 
