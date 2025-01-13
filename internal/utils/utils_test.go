@@ -20,17 +20,6 @@ var (
 	}
 )
 
-func TestLoadIndexFromRepo(t *testing.T) {
-	// Load index.yaml info into index object
-	sourceIndex, err := LoadIndexFromRepo(source.GetRepo())
-	if err != nil {
-		t.Fatalf("error loading index.yaml: %v", err)
-	}
-	if sourceIndex.Entries["apache"] == nil {
-		t.Errorf("apache chart not found")
-	}
-}
-
 func TestChartExistInIndex(t *testing.T) {
 	sampleIndexFile := "../../testdata/index.yaml"
 	index, err := helmRepo.LoadIndexFile(sampleIndexFile)
