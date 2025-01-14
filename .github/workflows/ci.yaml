@@ -116,12 +116,8 @@ jobs:
            unzip wait-for-port.zip
            chmod +x wait-for-port
            sudo mv wait-for-port /usr/local/bin/
-           
-      - name: Add bitnami Helm
+      - name: Run charts-syncer
         run: |
-           helm repo add bitnami https://charts.bitnami.com/bitnami
-           helm repo update
-      - run: |
            chmod +x /tmp/dist/charts-syncer
            ./test/run-charts-syncer.sh
       - run: ./test/install-ghost.sh
