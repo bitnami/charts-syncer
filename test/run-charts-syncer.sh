@@ -7,7 +7,8 @@ set -o pipefail
 # Constants
 ROOT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null && pwd)"
 
-## Wait for chartmuseum service (Timeout in 30s)
-wait-for-port --state=inuse 8080
+## Wait for harbor service (Timeout in 60s)
+wait-for-port --state=inuse --timeout=60 8080
+sleep 30
 
 /tmp/dist/charts-syncer --config "${ROOT_DIR}/test/test-config.yaml" sync --latest-version-only --insecure --use-plain-http

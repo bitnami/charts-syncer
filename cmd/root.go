@@ -10,14 +10,13 @@ import (
 )
 
 const (
-	defaultCfgFile = "charts-syncer.yaml"
+	defaultCfgFile string = "charts-syncer.yaml"
+	rootUsage      string = `charts-syncer is a tool to synchronize chart repositories from a source repository to a target repository
+
+	Find more information at: https://github.com/bitnami/charts-syncer`
 )
 
 var (
-	rootUsage = `charts-syncer is a tool to synchronize chart repositories from a source repository to a target repository
-
-Find more information at: https://github.com/bitnami/charts-syncer`
-
 	rootConfig   string
 	rootDryRun   bool
 	rootInsecure bool
