@@ -4,11 +4,11 @@ on:
   push:
     tags:
       - "v*.*.*"
-
+# Remove all permissions by default
+permissions: {}
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,3 +31,15 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # If the CI Pipeline does not succeed we should notify the interested agents
+  notify:
+    name: Send notification
+    needs:
+      - release
+    if: ${{ always() && needs.release.result == 'failure' }}
+    uses: bitnami/support/.github/workflows/gchat-notification.yml@main
+    with:
+      workflow: ${{ github.workflow }}
+      job-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      webhook-url: ${{ secrets.GCHAT_CONTENT_ALERTS_WEBHOOK_URL }}

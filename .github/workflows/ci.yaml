@@ -1,18 +1,19 @@
 name: CI
 on:
   workflow_dispatch:
-  push: 
+  push:
     branches:
        - v2
   pull_request:
     branches:
       - v2
     types:
-      - assigned 
-      - opened 
-      - synchronize 
+      - assigned
+      - opened
+      - synchronize
       - reopened
-
+# Remove all permissions by default
+permissions: {}
 env:
   KIND_VERSION: "0.12.0"
   KUBECTL_VERSION: "1.22.0"
