@@ -12,6 +12,7 @@ Sync chart packages and associated container images between chart repositories
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
     + [Skip syncing artifacts](#skip-syncing-artifacts)
+    + [Skip syncing images](#skip-syncing-images)
     + [Sync only specific container platforms](#sync-only-specific-container-platforms)
     + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
     + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
@@ -116,6 +117,24 @@ containerPlatforms:
   - linux/amd64
 ```
 
+### Skip syncing images
+
+By default images referenced in charts will be synced and their refences in the chart will be updated to the target repo. If you want to disable this behavior, you can opt out by setting `skipImages` to true:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+charts:
+  - redis
+
+skipImages: true
+```
 
 ### Sync Helm Charts and Container Images to different registries
 

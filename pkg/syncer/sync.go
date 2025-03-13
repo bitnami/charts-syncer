@@ -45,6 +45,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		filepath.Join(workdir, "wraps", fmt.Sprintf("%s-%s.wrap.tgz", ch.Name, ch.Version)),
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
+		config.WithSkipImages(s.skipImages),
 	)
 	if err != nil {
 		return errors.Annotatef(err, "unable to move chart %q with charts-syncer", id)
@@ -57,7 +58,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 
 	klog.V(3).Infof("Uploading %q chart...", id)
 
-	if err := s.cli.dst.Unwrap(wrappedChartPath, metadata, config.WithLogger(l), config.WithWorkDir(workdir)); err != nil {
+	if err := s.cli.dst.Unwrap(wrappedChartPath, metadata, config.WithLogger(l), config.WithWorkDir(workdir), config.WithSkipImages(s.skipImages)); err != nil {
 		klog.Errorf("unable to upload %q chart: %+v", id, err)
 		return errors.Trace(err)
 	}

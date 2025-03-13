@@ -48,6 +48,9 @@ type Syncer struct {
 	// skip syncing artifacts
 	skipArtifacts bool
 
+	// skip syncing images
+	skipImages bool
+
 	// Storage directory for required artifacts
 	workdir string
 
@@ -98,6 +101,13 @@ func WithUsePlainHTTP(enable bool) Option {
 func WithSkipArtifacts(skip bool) Option {
 	return func(s *Syncer) {
 		s.skipArtifacts = skip
+	}
+}
+
+// WithSkipImages configures the syncer to skip syncing images
+func WithSkipImages(skip bool) Option {
+	return func(s *Syncer) {
+		s.skipImages = skip
 	}
 }
 
