@@ -249,19 +249,20 @@ Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` f
 
 The Google Artifact Registry (GAR) is the default option for Tanzu Application Catalog hosted registries.
 
-Tanzu Application Catalog provides the JSON file with the credentials. The recommended option for `chart-syncer` configuration is to use the `base64` approach. For the commands below it is required to have `jq` tool installed.
-
-```console
-$ cat _json_key.json | base64
-```
-
-The `username` is `_json_key_base64` and the `password` is the output of the previous command.
-
-If you need to log in to a registry, this command is also useful:
+Before running the charts syncer, it's recommended to test registry connectivity. You can do that by downloading the JSON file with credentials and try logging in with docker cli:
 
 ```console
 $ cat _json_key.json | docker login -u _json_key --password-stdin https://YOUR_REGISTRY
 ```
+
+Tanzu Application Catalog credentials are in JSON multiline format. The simplest and recommended option for using `chart-syncer` configuration is to `base64` encode this credentials on a single line
+
+```console
+$ cat _json_key.json | base64
+ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3Rfa......
+```
+
+The output from the previous command is a long single line of base64 encoded content. That will be the registry password. The registry username is the special name `_json_key_base64` that hints Google that credentials are base64 encoded.
 
 See below an example of configuration file using GAR and Debian 12 Helm charts and containers:
 
@@ -272,12 +273,12 @@ source:
     url: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/charts/debian-12
     auth:
       username: _json_key_base64
-      password: PASSWORD_BASE64
+      password: __YOUR_BASE64_ENCODED_PASSWORD_HERE__
   containers:
     auth:
       registry: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/containers/debian-12
       username: _json_key_base64
-      password: PASSWORD_BASE64
+      password: __YOUR_BASE64_ENCODED_PASSWORD_HERE__
 
 target:
   repo:
