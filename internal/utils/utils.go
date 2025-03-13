@@ -152,7 +152,11 @@ func untarEntry(tarReader *tar.Reader, header *tar.Header, targetDir string) err
 			}
 		}
 	case tar.TypeReg:
-		outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+		mode := header.Mode
+		if mode < 0 || mode > 0777 {
+			return fmt.Errorf("invalid file mode: %d", mode)
+		}
+		outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(mode))
 		if err != nil {
 			return errors.Trace(err)
 		}
