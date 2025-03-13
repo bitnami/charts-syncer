@@ -10,17 +10,6 @@ builds:
     binary: charts-syncer
     ldflags:
       - -X main.version={{.Version}}
-dockers:
-  -
-    ids:
-      - release
-    dockerfile: Dockerfile
-    image_templates:
-      - "gcr.io/bitnami-labs/charts-syncer:{{ .Tag }}"
-      - "gcr.io/bitnami-labs/charts-syncer:latest"
-    build_flag_templates:
-      - "--build-arg"
-      - "IMAGE_VERSION={{ .Tag }}"
 archives:
   - format: tar.gz
     name_template: >-
