@@ -13,7 +13,7 @@ spec:
           containers:
           - name: charts-syncer
             imagePullPolicy: Always
-            image: gcr.io/bitnami-labs/charts-syncer:v0.14.0
+            image: bitnami/charts-syncer:v2.0.2
             args: ["sync", "--config", "/charts-syncer.yaml", "-v", "4", "--latest-version-only"]
             env:
               # Helm Chart source repository credentials
