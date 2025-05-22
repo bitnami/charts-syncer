@@ -8,7 +8,7 @@ images:
   - name: bitnami/charts-syncer
     # Set this value to the latest release
     # https://github.com/bitnami/charts-syncer/releases
-    newTag: v2.0.2
+    newTag: 2.1.1
 
 resources:
   - cronjob.yaml
