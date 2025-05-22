@@ -10,10 +10,15 @@ spec:
     spec:
       template:
         spec:
+          securityContext:
+            fsGroup: 1001
+            fsGroupChangePolicy: OnRootMismatch
+            supplementalGroups: []
+            sysctls: []
           containers:
           - name: charts-syncer
             imagePullPolicy: Always
-            image: bitnami/charts-syncer:v2.0.2
+            image: bitnami/charts-syncer:2.1.1
             args: ["sync", "--config", "/charts-syncer.yaml", "-v", "4", "--latest-version-only"]
             env:
               # Helm Chart source repository credentials
@@ -70,12 +75,31 @@ spec:
                   secretKeyRef:
                     name: charts-syncer-credentials
                     key: TARGET_CONTAINERS_AUTH_REGISTRY
+            securityContext:
+              runAsUser: 1001
+              runAsGroup: 1001
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              privileged: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              seLinuxOptions: {}
+              seccompProfile:
+                type: RuntimeDefault
             volumeMounts:
               - name: config
                 mountPath: /charts-syncer.yaml
                 subPath: charts-syncer.yaml
+              - name: empty-dir
+                mountPath: /tmp
+              - name: empty-dir
+                mountPath: /.charts-syncer
           restartPolicy: OnFailure
           volumes:
+            - name: empty-dir
+              emptyDir: {}
             - name: config
               configMap:
                 name: charts-syncer-config
