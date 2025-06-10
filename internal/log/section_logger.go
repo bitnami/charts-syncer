@@ -12,7 +12,7 @@ type SectionLogger struct {
 
 // ExecuteStep executes a function while showing an indeterminate progress animation
 func (l *SectionLogger) ExecuteStep(title string, fn func() error) error {
-	klog.Infof(title)
+	klog.Info(title)
 	return fn()
 }
 
