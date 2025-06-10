@@ -1,18 +1,11 @@
 module github.com/bitnami/charts-syncer
 
-go 1.23.0
-
-toolchain go1.23.7
-
-// Needed so we can require asset-relocation-tool-for-kubernetes packages
-// https://github.com/vmware-tanzu/asset-relocation-tool-for-kubernetes/issues/89
-replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200403124456-7b932d16ab90
+go 1.24.2
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/containerd/containerd v1.7.27
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-containerregistry v0.19.1
 	github.com/juju/errors v1.0.0
@@ -21,17 +14,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.18.2
+	github.com/stretchr/testify v1.10.0
+	github.com/vmware-labs/distribution-tooling-for-helm v0.4.3
 	google.golang.org/protobuf v1.35.2
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.3
 	k8s.io/klog v1.0.0
 	oras.land/oras-go v1.2.5
 	sigs.k8s.io/yaml v1.4.0
-)
-
-require (
-	github.com/stretchr/testify v1.10.0
-	github.com/vmware-labs/distribution-tooling-for-helm v0.4.3
 )
 
 require (
@@ -88,6 +78,7 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -199,7 +190,7 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.32.2 // indirect
 	k8s.io/apiextensions-apiserver v0.32.2 // indirect
 	k8s.io/apimachinery v0.32.2 // indirect
