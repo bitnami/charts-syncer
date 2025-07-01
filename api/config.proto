@@ -5,18 +5,21 @@ option go_package = "github.com/bitnami/charts-syncer/api;api";
 
 // Config file structure
 message Config {
-    Source source = 1;
+    // DEPRECATED: Use sources instead
+    Source source = 1 [deprecated=true];
     Target target = 2;
-    // Helm Charts to include during sync
-    repeated string charts = 3;
+    // DEPRECATED: Use charts field in individual sources instead
+    repeated string charts = 3 [deprecated=true];
     // Container platforms to sync
     repeated string container_platforms = 4;
-    // Opposite of charts property. It indicates the list of charts to skip during sync
-    repeated string skip_charts = 5;
+    // DEPRECATED: Use skip_charts field in individual sources instead
+    repeated string skip_charts = 5 [deprecated=true];
     // Do not sync chart and container artifacts (signatures and metadata)
     bool skip_artifacts = 6;
     // Do not sync chart images
     bool skip_images = 7;
+    // Multiple source configurations
+    repeated Source sources = 8;
 }
 
 // SourceRepo contains the required information of the source chart repository
@@ -26,6 +29,12 @@ message Source {
 
     // Ignored if the repo is an intermediate bundle since the images are inside the bundle
     Containers containers = 2;
+
+    // Helm Charts to include during sync from this specific source
+    repeated string charts = 3;
+
+    // Charts to skip during sync from this specific source
+    repeated string skip_charts = 4;
 }
 
 message Containers {

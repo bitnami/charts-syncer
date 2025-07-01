@@ -1,0 +1,78 @@
+#
+# Example config file with multiple sources - skopeo principle
+# Each source can specify its own charts and skip_charts
+#
+sources:
+  - repo:
+      kind: HELM
+      url: http://charts.bitnami.com/bitnami
+      auth:
+        username: user1
+        password: password1
+    containers:
+      auth:
+        registry: registry1.example.com
+        username: user1
+        password: password1
+    # Charts to sync from Bitnami repository
+    charts:
+      - apache
+      - nginx
+      - mysql
+      - redis
+  - repo:
+      kind: CHARTMUSEUM
+      url: http://localhost:8080
+      auth:
+        username: user2
+        password: password2
+    containers:
+      auth:
+        registry: registry2.example.com
+        username: user2
+        password: password2
+    # Only sync specific charts from local ChartMuseum
+    charts:
+      - custom-app
+      - internal-service
+  - repo:
+      kind: OCI
+      url: oci://ghcr.io/helm-charts
+      auth:
+        username: user3
+        password: password3
+    # Sync all charts from this OCI registry except deprecated ones
+    skip_charts:
+      - old-deprecated-chart
+      - legacy-app
+
+target:
+  repo:
+    kind: OCI
+    url: oci://my-registry.example.com/charts
+    auth:
+      username: target-user
+      password: target-password
+  containers:
+    auth:
+      registry: my-registry.example.com
+      username: target-user
+      password: target-password
+
+# Global fallback charts (used only if source doesn't specify its own)
+# These will be ignored since all sources above have their own chart specifications
+charts:
+  - fallback-chart
+
+# Global fallback skip_charts (used only if source doesn't specify its own)
+skip_charts:
+  - global-deprecated-chart
+
+# Container platforms to sync
+container_platforms:
+  - linux/amd64
+  - linux/arm64
+
+# Optional: skip artifacts and images
+skip_artifacts: false
+skip_images: false

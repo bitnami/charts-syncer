@@ -84,18 +84,21 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Source *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	// DEPRECATED: Use sources instead
+	Source *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"` // Deprecated: Do not use.
 	Target *Target `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
-	// Helm Charts to include during sync
-	Charts []string `protobuf:"bytes,3,rep,name=charts,proto3" json:"charts,omitempty"`
+	// DEPRECATED: Use charts field in individual sources instead
+	Charts []string `protobuf:"bytes,3,rep,name=charts,proto3" json:"charts,omitempty"` // Deprecated: Do not use.
 	// Container platforms to sync
 	ContainerPlatforms []string `protobuf:"bytes,4,rep,name=container_platforms,json=containerPlatforms,proto3" json:"container_platforms,omitempty"`
-	// Opposite of charts property. It indicates the list of charts to skip during sync
-	SkipCharts []string `protobuf:"bytes,5,rep,name=skip_charts,json=skipCharts,proto3" json:"skip_charts,omitempty"`
+	// DEPRECATED: Use skip_charts field in individual sources instead
+	SkipCharts []string `protobuf:"bytes,5,rep,name=skip_charts,json=skipCharts,proto3" json:"skip_charts,omitempty"` // Deprecated: Do not use.
 	// Do not sync chart and container artifacts (signatures and metadata)
 	SkipArtifacts bool `protobuf:"varint,6,opt,name=skip_artifacts,json=skipArtifacts,proto3" json:"skip_artifacts,omitempty"`
 	// Do not sync chart images
 	SkipImages bool `protobuf:"varint,7,opt,name=skip_images,json=skipImages,proto3" json:"skip_images,omitempty"`
+	// Multiple source configurations
+	Sources []*Source `protobuf:"bytes,8,rep,name=sources,proto3" json:"sources,omitempty"`
 }
 
 func (x *Config) Reset() {
@@ -179,6 +182,13 @@ func (x *Config) GetSkipImages() bool {
 	return false
 }
 
+func (x *Config) GetSources() []*Source {
+	if x != nil {
+		return x.Sources
+	}
+	return nil
+}
+
 // SourceRepo contains the required information of the source chart repository
 type Source struct {
 	state         protoimpl.MessageState
@@ -188,6 +198,10 @@ type Source struct {
 	Repo *Repo `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
 	// Ignored if the repo is an intermediate bundle since the images are inside the bundle
 	Containers *Containers `protobuf:"bytes,2,opt,name=containers,proto3" json:"containers,omitempty"`
+	// Helm Charts to include during sync from this specific source
+	Charts []string `protobuf:"bytes,3,rep,name=charts,proto3" json:"charts,omitempty"`
+	// Charts to skip during sync from this specific source
+	SkipCharts []string `protobuf:"bytes,4,rep,name=skip_charts,json=skipCharts,proto3" json:"skip_charts,omitempty"`
 }
 
 func (x *Source) Reset() {
@@ -232,6 +246,20 @@ func (x *Source) GetRepo() *Repo {
 func (x *Source) GetContainers() *Containers {
 	if x != nil {
 		return x.Containers
+	}
+	return nil
+}
+
+func (x *Source) GetCharts() []string {
+	if x != nil {
+		return x.Charts
+	}
+	return nil
+}
+
+func (x *Source) GetSkipCharts() []string {
+	if x != nil {
+		return x.SkipCharts
 	}
 	return nil
 }

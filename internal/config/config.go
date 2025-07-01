@@ -57,10 +57,14 @@ func Load(config *api.Config) error {
 }
 
 func setDefaultOverrides(config *api.Config) error {
-	if repo := config.GetSource().GetRepo(); repo != nil {
-		if !repo.GetDisableChartsIndex() && repo.GetChartsIndex() == "" {
-			if err := setDefaultChartsIndex(config); err != nil {
-				return err
+	// Handle both old single source and new multiple sources format
+	sources := config.GetEffectiveSources()
+	for _, source := range sources {
+		if repo := source.GetRepo(); repo != nil {
+			if !repo.GetDisableChartsIndex() && repo.GetChartsIndex() == "" {
+				if err := setDefaultChartsIndexForSource(source); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -73,57 +77,140 @@ func setDefaultOverrides(config *api.Config) error {
 	}
 
 	// Container registry authentication override
-	if err := setAuthentication(config.GetSource(), config.GetTarget()); err != nil {
+	if err := setAuthenticationForMultipleSources(config); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+func setDefaultChartsIndexForSource(source *api.Source) error {
+	u, err := url.Parse(source.GetRepo().GetUrl())
+	if err != nil {
+		return err
+	}
+
+	uri := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
+	ref := fmt.Sprintf("%s/%s:%s", uri, DefaultIndexName, DefaultIndexTag)
+	klog.V(4).Infof("'source.repo.chartsIndex' property is empty. Using %q default value", ref)
+	source.GetRepo().ChartsIndex = ref
+
+	return nil
+}
+
 // Sets the authentication configuration for container images and Helm Chart repositories
 // It reads the configuration from the viper config repository which values might come from the config file, env vars or flags
-func setAuthentication(source *api.Source, target *api.Target) error {
-	// Source Chart and container images authentication
-	if source != nil {
-		// Helm Chart authentication
-		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
-		username, password := viper.GetString("source.repo.auth.username"), viper.GetString("source.repo.auth.password")
-		if username != "" && password != "" && source.GetRepo() != nil {
-			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
-		}
+func setAuthenticationForMultipleSources(config *api.Config) error {
+	sources := config.GetEffectiveSources()
 
-		// Container images OCI repository authentication
-		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
-		// Validation will happen in a later stage config.Validate()
-		// For now we set the struct value if any of the properties is available
-		if username != "" || password != "" {
-			if registry == "" {
-				registry = viper.GetString("source.containers.url")
-			}
-			if source.GetContainers() == nil {
-				source.Containers = &api.Containers{}
-			}
-			source.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
+	// Handle authentication for multiple sources
+	for i, source := range sources {
+		if err := setSourceAuthentication(source, i); err != nil {
+			return err
 		}
 	}
 
-	// Target Chart and container images authentication
-	if target != nil {
-		username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
-		if username != "" && password != "" && target.GetRepo() != nil {
-			target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+	// Handle target authentication (unchanged)
+	if err := setTargetAuthentication(config.GetTarget()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setSourceAuthentication(source *api.Source, index int) error {
+	if source == nil {
+		return nil
+	}
+
+	// For backward compatibility, try the old format first, then try indexed format
+	var username, password, registry string
+
+	if index == 0 {
+		// For the first source, also check the old single source format
+		username = viper.GetString("source.repo.auth.username")
+		password = viper.GetString("source.repo.auth.password")
+		registry = viper.GetString("source.containers.auth.registry")
+	}
+
+	// Try indexed format (e.g., sources.0.repo.auth.username)
+	if username == "" {
+		username = viper.GetString(fmt.Sprintf("sources.%d.repo.auth.username", index))
+	}
+	if password == "" {
+		password = viper.GetString(fmt.Sprintf("sources.%d.repo.auth.password", index))
+	}
+	if registry == "" {
+		registry = viper.GetString(fmt.Sprintf("sources.%d.containers.auth.registry", index))
+	}
+
+	// Set Helm Chart authentication
+	if username != "" && password != "" && source.GetRepo() != nil {
+		source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+	}
+
+	// Container images OCI repository authentication
+	containerUsername := viper.GetString(fmt.Sprintf("sources.%d.containers.auth.username", index))
+	containerPassword := viper.GetString(fmt.Sprintf("sources.%d.containers.auth.password", index))
+
+	// For backward compatibility with first source
+	if index == 0 {
+		if containerUsername == "" {
+			containerUsername = viper.GetString("source.containers.auth.username")
+		}
+		if containerPassword == "" {
+			containerPassword = viper.GetString("source.containers.auth.password")
+		}
+	}
+
+	if containerUsername != "" || containerPassword != "" {
+		if registry == "" {
+			registry = viper.GetString(fmt.Sprintf("sources.%d.containers.url", index))
+			if registry == "" && index == 0 {
+				registry = viper.GetString("source.containers.url")
+			}
 		}
 
-		// Target container images OCI repository
-		username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containers.auth.registry")
-		if username != "" || password != "" {
-			if registry == "" {
-				registry = viper.GetString("target.containers.url")
-			}
-			if target.GetContainers() == nil {
-				target.Containers = &api.Containers{}
-			}
-			target.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
+		if source.Containers == nil {
+			source.Containers = &api.Containers{}
+		}
+		source.Containers.Auth = &api.Containers_ContainerAuth{
+			Username: containerUsername,
+			Password: containerPassword,
+			Registry: registry,
+		}
+	}
+
+	return nil
+}
+
+func setTargetAuthentication(target *api.Target) error {
+	if target == nil {
+		return nil
+	}
+
+	// Target Chart and container images authentication (unchanged logic)
+	username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
+	if username != "" && password != "" && target.GetRepo() != nil {
+		target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+	}
+
+	// Container images OCI repository authentication
+	username, password, registry := viper.GetString("target.containers.auth.username"), viper.GetString("target.containers.auth.password"), viper.GetString("target.containers.auth.registry")
+	// Validation will happen in a later stage config.Validate()
+	// For now we set the struct value if any of the properties is available
+	if username != "" || password != "" {
+		if registry == "" {
+			registry = viper.GetString("target.containers.url")
+		}
+
+		if target.Containers == nil {
+			target.Containers = &api.Containers{}
+		}
+		target.Containers.Auth = &api.Containers_ContainerAuth{
+			Username: username,
+			Password: password,
+			Registry: registry,
 		}
 	}
 

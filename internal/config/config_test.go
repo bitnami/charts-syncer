@@ -172,3 +172,75 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 		})
 	}
 }
+
+// Test loading configuration with multiple sources
+func TestLoadMultipleSources(t *testing.T) {
+	var syncConfig api.Config
+	cfgFile := "../../testdata/example-config-multiple-sources.yaml"
+	viper.SetConfigFile(cfgFile)
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err != nil {
+		t.Fatalf("error reading config file: %+v", err)
+	}
+	if err := Load(&syncConfig); err != nil {
+		t.Fatalf("error loading config file: %v", err)
+	}
+
+	sources := syncConfig.GetSources()
+	if len(sources) != 3 {
+		t.Errorf("expected 3 sources, got %d", len(sources))
+	}
+
+	// Check first source
+	if sources[0].GetRepo().GetKind() != api.Kind_HELM {
+		t.Errorf("first source: got kind %s, want HELM", sources[0].GetRepo().GetKind())
+	}
+	if sources[0].GetRepo().GetUrl() != "http://charts.bitnami.com/bitnami" {
+		t.Errorf("first source: got URL %s, want http://charts.bitnami.com/bitnami", sources[0].GetRepo().GetUrl())
+	}
+
+	// Check second source
+	if sources[1].GetRepo().GetKind() != api.Kind_CHARTMUSEUM {
+		t.Errorf("second source: got kind %s, want CHARTMUSEUM", sources[1].GetRepo().GetKind())
+	}
+	if sources[1].GetRepo().GetUrl() != "http://localhost:8080" {
+		t.Errorf("second source: got URL %s, want http://localhost:8080", sources[1].GetRepo().GetUrl())
+	}
+
+	// Check third source
+	if sources[2].GetRepo().GetKind() != api.Kind_OCI {
+		t.Errorf("third source: got kind %s, want OCI", sources[2].GetRepo().GetKind())
+	}
+	if sources[2].GetRepo().GetUrl() != "oci://ghcr.io/helm-charts" {
+		t.Errorf("third source: got URL %s, want oci://ghcr.io/helm-charts", sources[2].GetRepo().GetUrl())
+	}
+
+	target := syncConfig.Target
+	if target.GetRepo().GetKind() != api.Kind_OCI {
+		t.Errorf("target: got kind %s, want OCI", target.GetRepo().GetKind())
+	}
+}
+
+// Test backward compatibility with old single source format
+func TestLoadBackwardCompatibility(t *testing.T) {
+	var syncConfig api.Config
+	cfgFile := "../../testdata/example-config.yaml"
+	viper.SetConfigFile(cfgFile)
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err != nil {
+		t.Fatalf("error reading config file: %+v", err)
+	}
+	if err := Load(&syncConfig); err != nil {
+		t.Fatalf("error loading config file: %v", err)
+	}
+
+	// Test that effective sources work with old format
+	sources := syncConfig.GetEffectiveSources()
+	if len(sources) != 1 {
+		t.Errorf("expected 1 effective source, got %d", len(sources))
+	}
+
+	if sources[0].GetRepo().GetKind() != api.Kind_HELM {
+		t.Errorf("effective source: got kind %s, want HELM", sources[0].GetRepo().GetKind())
+	}
+}
