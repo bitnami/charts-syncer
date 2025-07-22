@@ -18,7 +18,7 @@ require (
 	github.com/vmware-labs/distribution-tooling-for-helm v0.4.3
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.17.3
+	helm.sh/helm/v3 v3.17.4
 	k8s.io/klog v1.0.0
 	oras.land/oras-go v1.2.5
 	sigs.k8s.io/yaml v1.4.0
