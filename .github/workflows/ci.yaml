@@ -19,14 +19,14 @@ env:
 
 jobs:
   Validate:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v3
         with:
           fetch-depth: 0
       - name: Set Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '^1.25'
 
@@ -49,14 +49,14 @@ jobs:
         run: make test
 
   Build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v3
         with:
           fetch-depth: 0
       - name: Set Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '^1.25'
 
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v3
         with:
           fetch-depth: 0
       - name: Get Harbor Local IP
@@ -92,7 +92,7 @@ jobs:
            ./test/kind-create-cluster.sh
            echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
       - name: Set Helm
-        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
         with:
           version: v3.12.1
       - name: Run Registry
@@ -116,12 +116,8 @@ jobs:
            unzip wait-for-port.zip
            chmod +x wait-for-port
            sudo mv wait-for-port /usr/local/bin/
-           
-      - name: Add bitnami Helm
+      - name: Run charts-syncer
         run: |
-           helm repo add bitnami https://charts.bitnami.com/bitnami
-           helm repo update
-      - run: |
            chmod +x /tmp/dist/charts-syncer
            ./test/run-charts-syncer.sh
       - run: ./test/install-ghost.sh

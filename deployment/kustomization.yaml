@@ -5,10 +5,10 @@ namespace: charts-syncer
 commonLabels:
   app: charts-syncer
 images:
-  - name: gcr.io/bitnami-labs/charts-syncer
+  - name: bitnami/charts-syncer
     # Set this value to the latest release
     # https://github.com/bitnami/charts-syncer/releases
-    newTag: v0.20.1
+    newTag: 2.1.1
 
 resources:
   - cronjob.yaml
@@ -27,7 +27,7 @@ secretGenerator:
     envs:
       - config/secrets.env
     # You can also generate credentials from a file using files: directive
-    # useful if you are loading creds from a GCR/ACR service account p12/json file
+    # useful if you are loading creds from a GAR/ACR service account p12/json file
     # files:
-    #  - target-password=config/my_gcr_creds.json
+    #  - target-password=config/my_gar_creds.json
 

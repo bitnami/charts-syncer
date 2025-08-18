@@ -12,6 +12,7 @@ type Config struct {
 	WorkDir            string
 	ContainerPlatforms []string
 	SkipArtifacts      bool
+	SkipImages         bool
 }
 
 // Option is a function that modifies the Config
@@ -28,6 +29,13 @@ func WithWorkDir(workdir string) func(*Config) {
 func WithSkipArtifacts(skipArtifacts bool) func(*Config) {
 	return func(c *Config) {
 		c.SkipArtifacts = skipArtifacts
+	}
+}
+
+// WithSkipImages sets the skip image flag
+func WithSkipImages(skipImages bool) func(*Config) {
+	return func(c *Config) {
+		c.SkipImages = skipImages
 	}
 }
 

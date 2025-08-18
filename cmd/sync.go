@@ -107,8 +107,10 @@ func newSyncCmd() *cobra.Command {
 				syncer.WithInsecure(rootInsecure),
 				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
 				syncer.WithSkipArtifacts(c.GetSkipArtifacts()),
+				syncer.WithSkipImages(c.GetSkipImages()),
 				syncer.WithSkipCharts(c.SkipCharts),
 				syncer.WithUsePlainHTTP(usePlainHTTP),
+
 				syncer.WithLogger(l),
 			}
 			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)

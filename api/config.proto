@@ -15,7 +15,8 @@ message Config {
     repeated string skip_charts = 5;
     // Do not sync chart and container artifacts (signatures and metadata)
     bool skip_artifacts = 6;
-
+    // Do not sync chart images
+    bool skip_images = 7;
 }
 
 // SourceRepo contains the required information of the source chart repository

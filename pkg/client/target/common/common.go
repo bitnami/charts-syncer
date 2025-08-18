@@ -78,6 +78,8 @@ func (t *Target) Unwrap(file string, _ *chart.Metadata, opts ...config.Option) e
 		unwrap.WithLogger(cfg.Logger),
 		unwrap.WithAuth(t.username, t.password), unwrap.WithInsecure(t.insecure),
 		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
+		unwrap.WithSkipImageRelocation(cfg.SkipImages),
+		unwrap.WithSkipPullImages(cfg.SkipImages),
 	); err != nil {
 		return errors.Trace(err)
 	}

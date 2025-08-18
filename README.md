@@ -12,6 +12,7 @@ Sync chart packages and associated container images between chart repositories
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
 - [Advanced Usage](#advanced-usage)
     + [Skip syncing artifacts](#skip-syncing-artifacts)
+    + [Skip syncing images](#skip-syncing-images)
     + [Sync only specific container platforms](#sync-only-specific-container-platforms)
     + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
     + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
@@ -116,6 +117,24 @@ containerPlatforms:
   - linux/amd64
 ```
 
+### Skip syncing images
+
+By default images referenced in charts will be synced and their refences in the chart will be updated to the target repo. If you want to disable this behavior, you can opt out by setting `skipImages` to true:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+charts:
+  - redis
+
+skipImages: true
+```
 
 ### Sync Helm Charts and Container Images to different registries
 
@@ -195,11 +214,11 @@ charts:
 #  - mariadb
 ```
 
-> Note that the `repo.url` property you need to specify is the same one you would use to add the repo to helm with the `helm repo add command`.
->
+> [!TIP]
+> Note that the `repo.url` property you need to specify is the same one you would use to add the repo to Helm with the `helm repo add command`.
 > Example: `helm repo add bitnami https://charts.bitnami.com/bitnami`.
 
-Credentials for the Helm Chart repositories and container images registries can be provided using config file or the following environment variables:
+Credentials for the Helm Chart repositories and container images registries can be provided using a config file or the following environment variables:
 
 Helm Chart repositories
 
@@ -222,6 +241,7 @@ Container images registries
 
 Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` for the Source Repo and `OCI` and `LOCAL` for the Target Repo.
 
+> [!NOTE]
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
 
@@ -229,19 +249,20 @@ Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` f
 
 The Google Artifact Registry (GAR) is the default option for Tanzu Application Catalog hosted registries.
 
-Tanzu Application Catalog provides the JSON file with the credentials. The recommended option for `chart-syncer` configuration is to use the `base64` approach. For the commands below it is required to have `jq` tool installed.
-
-```console
-$ cat _json_key.json | base64
-```
-
-The `username` is `_json_key_base64` and the `password` is the output of the previous command.
-
-If you need to log in to a registry, this command is also useful:
+Before running the charts syncer, it's recommended to test registry connectivity. You can do that by downloading the JSON file with credentials and try logging in with docker cli:
 
 ```console
 $ cat _json_key.json | docker login -u _json_key --password-stdin https://YOUR_REGISTRY
 ```
+
+Tanzu Application Catalog credentials are in JSON multiline format. The simplest and recommended option for using `chart-syncer` configuration is to `base64` encode this credentials on a single line
+
+```console
+$ cat _json_key.json | base64
+ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3Rfa......
+```
+
+The output from the previous command is a long single line of base64 encoded content. That will be the registry password. The registry username is the special name `_json_key_base64` that hints Google that credentials are base64 encoded.
 
 See below an example of configuration file using GAR and Debian 12 Helm charts and containers:
 
@@ -252,12 +273,12 @@ source:
     url: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/charts/debian-12
     auth:
       username: _json_key_base64
-      password: PASSWORD_BASE64
+      password: __YOUR_BASE64_ENCODED_PASSWORD_HERE__
   containers:
     auth:
       registry: https://us-east1-docker.pkg.dev/vmw-app-catalog/hosted-registry-YOUR_ID/containers/debian-12
       username: _json_key_base64
-      password: PASSWORD_BASE64
+      password: __YOUR_BASE64_ENCODED_PASSWORD_HERE__
 
 target:
   repo:
@@ -398,7 +419,8 @@ The important thing is that the image name is specified with `registry`, `reposi
 
 The values of the parameters `containerRegistry` and `containerRepositories` from the configuration file will be used to update the `registry` and `repository` properties in the values.yaml. If these parameters are unset, the associated properties won't be modified. The `tag` property remains unchanged.
 
-> :warning: Be aware that this tool expects the images to be already present in the target container registry.
+> [!WARNING]
+> Be aware that this tool expects the images to be already present in the target container registry.
 
 ## Changes performed in a chart
 
@@ -555,11 +577,11 @@ Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob
 
 ## How to build
 
-> Check the [developer docs](docs/development.md).
+Check the [developer docs](docs/development.md).
 
 ## License
 
-Copyright &copy; 2024 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+Copyright &copy; 2025 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 

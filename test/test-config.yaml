@@ -3,8 +3,8 @@
 #
 source:
   repo:
-    kind: "HELM"
-    url: "https://charts.bitnami.com/bitnami"
+    kind: "OCI"
+    url: "https://registry-1.docker.io/bitnamicharts"
 target:
   containers:
     auth:

@@ -53,6 +53,7 @@ func (t *Source) Wrap(tgz, destWrap string, opts ...config.Option) (string, erro
 	fetchArtifacts := !cfg.SkipArtifacts
 
 	outputFile, err := wrap.Chart(tgz, wrap.WithFetchArtifacts(fetchArtifacts),
+		wrap.WithSkipPullImages(cfg.SkipImages),
 		wrap.WithInsecure(t.insecure), wrap.WithTempDirectory(wrapWorkdir),
 		wrap.WithAuth(t.username, t.password),
 		wrap.WithPlatforms(cfg.ContainerPlatforms),
