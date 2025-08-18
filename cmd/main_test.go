@@ -31,7 +31,7 @@ func execCommand(args ...string) CmdResult {
 	var buffStdout, buffStderr bytes.Buffer
 	code := 0
 
-	cmd := exec.Command(os.Args[0], args...)
+	cmd := exec.Command(os.Args[0], args...) //nolint:gosec
 	cmd.Stdout = &buffStdout
 	cmd.Stderr = &buffStderr
 

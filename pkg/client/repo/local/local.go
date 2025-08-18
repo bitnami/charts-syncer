@@ -32,7 +32,7 @@ func New(dir string) (*Repo, error) {
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	if err := os.MkdirAll(d, 0755); err != nil {
+	if err = os.MkdirAll(d, 0755); err != nil {
 		return nil, errors.Trace(err)
 	}
 

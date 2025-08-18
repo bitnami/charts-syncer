@@ -40,7 +40,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 
 			s := syncer.NewFake(t, syncer.WithFakeSyncerDestination(dstTmp), syncer.WithFakeSkipCharts(tc.skippedEntries))
 
-			if err := s.SyncPendingCharts(tc.entries...); err != nil {
+			if err = s.SyncPendingCharts(tc.entries...); err != nil {
 				t.Error(err)
 			}
 

@@ -118,7 +118,7 @@ func verifyChart(repo *oci.Repo, name, version string) error {
 		return err
 	}
 
-	if _, err := os.Stat(chartPath); err != nil {
+	if _, err = os.Stat(chartPath); err != nil {
 		return fmt.Errorf("chart package does not exist: %w", err)
 	}
 	defer os.Remove(chartPath)

@@ -64,8 +64,8 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) b
 	if index.Entries[name] != nil {
 		klog.V(3).Infof("Chart %q exists in index.yaml file. Searching %q version", name, version)
 		for i := range index.Entries[name] {
-			if index.Entries[name][i].Metadata.Version == version {
-				klog.V(3).Infof("Version %q found for chart %q in index.yaml file", index.Entries[name][i].Metadata.Version, name)
+			if index.Entries[name][i].Version == version {
+				klog.V(3).Infof("Version %q found for chart %q in index.yaml file", index.Entries[name][i].Version, name)
 				chartVersionFound = true
 				break
 			}
@@ -138,16 +138,16 @@ func untarEntry(tarReader *tar.Reader, header *tar.Header, targetDir string) err
 	targetFolder := filepath.Dir(path)
 	// For some reason the for loop only iterates over files and not folders, so the switch below for folders is
 	// never executed and so we are creating the target folder at this point.
-	if _, err := os.Stat(targetFolder); err != nil {
-		if err := os.MkdirAll(targetFolder, 0755); err != nil {
+	if _, err = os.Stat(targetFolder); err != nil {
+		if err = os.MkdirAll(targetFolder, 0755); err != nil {
 			return err
 		}
 	}
 	switch header.Typeflag {
 	// Related to previous comment. It seems this block of code is never executed.
 	case tar.TypeDir:
-		if _, err := os.Stat(path); err != nil {
-			if err := os.Mkdir(path, 0755); err != nil {
+		if _, err = os.Stat(path); err != nil {
+			if err = os.Mkdir(path, 0755); err != nil {
 				return errors.Trace(err)
 			}
 		}
@@ -156,15 +156,15 @@ func untarEntry(tarReader *tar.Reader, header *tar.Header, targetDir string) err
 		if mode < 0 || mode > 0777 {
 			return fmt.Errorf("invalid file mode: %d", mode)
 		}
-		outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(mode))
+		outFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(mode)) //nolint:gosec
 		if err != nil {
 			return errors.Trace(err)
 		}
-		if _, err := io.CopyN(outFile, tarReader, MaxDecompressionSize); err != nil && err != io.EOF {
+		if _, err = io.CopyN(outFile, tarReader, MaxDecompressionSize); err != nil && err != io.EOF {
 			_ = outFile.Close()
 			return errors.Trace(err)
 		}
-		if err := outFile.Close(); err != nil {
+		if err = outFile.Close(); err != nil {
 			return errors.Trace(err)
 		}
 	// We don't want to process these extension header files.
@@ -202,7 +202,7 @@ func Untar(tarball, targetDir string) error {
 			return errors.Trace(err)
 		}
 
-		if err := untarEntry(tarReader, header, targetDir); err != nil {
+		if err = untarEntry(tarReader, header, targetDir); err != nil {
 			return errors.Trace(err)
 		}
 	}
@@ -455,7 +455,7 @@ func FetchAndCache(name, version string, cache cache.Cacher, fopts ...FetchOptio
 
 	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
 	if opts.statusHandlerFn != nil {
-		if err := opts.statusHandlerFn(res); err != nil {
+		if err = opts.statusHandlerFn(res); err != nil {
 			return "", errors.Trace(err)
 		}
 	}

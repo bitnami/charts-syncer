@@ -208,7 +208,8 @@ func chartMetadataFromTGZ(r io.Reader) (*Metadata, error) {
 
 	// Iterate over tar until the metadata file
 	for {
-		h, err := t.Next()
+		var h *tar.Header
+		h, err = t.Next()
 		if err != nil {
 			return nil, err
 		}

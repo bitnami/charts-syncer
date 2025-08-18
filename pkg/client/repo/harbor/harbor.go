@@ -77,7 +77,7 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 
 	// Invalidate cache to avoid inconsistency between an old cache result and
 	// the chart repo
-	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
+	if err = r.cache.Invalidate(filepath.Base(file)); err != nil {
 		return errors.Trace(err)
 	}
 
@@ -95,7 +95,7 @@ func (r *Repo) Upload(file string, _ *chart.Metadata) error {
 	}
 
 	contentType := mpw.FormDataContentType()
-	if err := mpw.Close(); err != nil {
+	if err = mpw.Close(); err != nil {
 		return errors.Trace(err)
 	}
 

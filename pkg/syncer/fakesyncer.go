@@ -51,7 +51,8 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	t.Cleanup(func() { _ = os.RemoveAll(srcTmp) })
 
 	if sopts.Destination == "" {
-		dstTmp, err := os.MkdirTemp("", "charts-syncer-tests-dst-fake")
+		var dstTmp string
+		dstTmp, err = os.MkdirTemp("", "charts-syncer-tests-dst-fake")
 		if err != nil {
 			t.Fatalf("error creating temporary folder: %v", err)
 		}
@@ -67,7 +68,8 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 		t.Fatalf("error listing tgz files: %v", err)
 	}
 	for _, sourceFile := range matches {
-		input, err := os.ReadFile(sourceFile)
+		var input []byte
+		input, err = os.ReadFile(sourceFile)
 		if err != nil {
 			t.Fatalf("error reading %q chart: %v", sourceFile, err)
 		}
