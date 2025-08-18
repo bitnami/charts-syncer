@@ -72,7 +72,7 @@ var reloadIndex = func(r *Repo) error {
 	if _, err = io.Copy(f, res.Body); err != nil {
 		return errors.Trace(err)
 	}
-	if err := f.Close(); err != nil {
+	if err = f.Close(); err != nil {
 		return errors.Trace(err)
 	}
 

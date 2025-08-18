@@ -111,8 +111,8 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 		return nil, errors.Wrapf(err, "unable to create temporary indexer directory")
 	}
 	defer func() {
-		err := os.RemoveAll(dir)
-		if e == nil {
+		err = os.RemoveAll(dir)
+		if e == nil && err != nil {
 			e = err
 		}
 	}()
@@ -130,7 +130,7 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 	// Populate and return index
 	idx = &api.Index{}
 	u := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err := u.Unmarshal(data, idx); err != nil {
+	if err = u.Unmarshal(data, idx); err != nil {
 		return nil, errors.Wrapf(err, "unable to parse index file")
 	}
 	return idx, nil

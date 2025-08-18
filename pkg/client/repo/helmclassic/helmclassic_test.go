@@ -39,7 +39,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	t.Cleanup(func() { os.RemoveAll(dstTmp) })
 	dstIndex := filepath.Join(dstTmp, "index.yaml")
 	srcIndex := filepath.Join("../../../../testdata", indexFileName)
-	if err := utils.CopyFile(dstIndex, srcIndex); err != nil {
+	if err = utils.CopyFile(dstIndex, srcIndex); err != nil {
 		t.Fatal(err)
 	}
 
@@ -53,7 +53,7 @@ func prepareTest(t *testing.T, indexFileName string) *helmclassic.Repo {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newContents := strings.Replace(string(index), "TEST_PLACEHOLDER", u, -1)
+	newContents := strings.ReplaceAll(string(index), "TEST_PLACEHOLDER", u)
 	if err = os.WriteFile(dstIndex, []byte(newContents), 0); err != nil {
 		t.Fatal(err)
 	}

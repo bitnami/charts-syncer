@@ -44,7 +44,7 @@ func TestFetch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(chartPath); err != nil {
+	if _, err = os.Stat(chartPath); err != nil {
 		t.Errorf("chart package does not exist")
 	}
 	contentType, err := utils.GetFileContentType(chartPath)
@@ -149,7 +149,7 @@ func TestUpload(t *testing.T) {
 		t.Fatalf("error fetching chart: %v", err)
 	}
 
-	if _, err := os.Stat(chartPath); err != nil {
+	if _, err = os.Stat(chartPath); err != nil {
 		t.Errorf("chart package does not exist")
 	}
 

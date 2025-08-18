@@ -347,7 +347,7 @@ func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
 	}
 	defer f.Close()
 
-	if err := r.cache.Store(f, filepath.Base(file)); err != nil {
+	if err = r.cache.Store(f, filepath.Base(file)); err != nil {
 		return errors.Trace(err)
 	}
 
