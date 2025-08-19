@@ -78,7 +78,7 @@ jobs:
       - name: Get Harbor Local IP
         run: |
            echo "HARBOR_IP=$(hostname -I | cut -d" " -f1)" >> $GITHUB_ENV
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
             name: charts-syncer-binary
             path: /tmp/dist
