@@ -6,7 +6,7 @@ set -o pipefail
 
 # Constants
 FAILED_TEST=0
-EXPECTED_REGISTRY='localhost:8080/library/bitnami'
+EXPECTED_REGISTRY='localhost:5000/library/bitnami'
 
 ## Check that Ghost deployment is using the expected registry
 ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].spec.containers[0].image}')

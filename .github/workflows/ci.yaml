@@ -75,9 +75,9 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v3
         with:
           fetch-depth: 0
-      - name: Get Harbor Local IP
+      - name: Get Registry Local IP
         run: |
-           echo "HARBOR_IP=$(hostname -I | cut -d" " -f1)" >> $GITHUB_ENV
+          echo "REGISTRY_IP=$(hostname -I | cut -d" " -f1)" >> $GITHUB_ENV
       - uses: actions/download-artifact@v5
         with:
             name: charts-syncer-binary
@@ -95,16 +95,9 @@ jobs:
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
           version: v3.12.1
-      - name: Run Registry
+      - name: Run OCI Registry
         run: |
-           cd test/harbor
-           openssl genrsa -traditional -out private_key.pem 4096
-           openssl req -new -x509 -key private_key.pem -out root.crt -days 3650 -subj "/C=CN/ST=State/L=CN/O=organization/OU=organizational unit/CN=example.com/emailAddress=example@example.com"
-           cp private_key.pem config/core/private_key.pem
-           cp root.crt config/registry/root.crt
-           echo "HARBOR_IP=$HARBOR_IP" >> .env.github
-           docker compose --env-file .env.github config
-           docker compose --env-file .env.github up -d
+           docker run --name local-registry -p 5000:5000 -d registry:2
       - name: Install Kubectl
         run: |
            curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
