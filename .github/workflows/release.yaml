@@ -9,8 +9,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      dockerhub_image_name: docker.io/bitnami/charts-syncer
-      ghcr_image_name: ghcr.io/bitnami-labs/charts-syncer
+      dockerhub_image_name: docker.io/miruiz145/charts-syncer
+      ghcr_image_name: ghcr.io/migruiz4/charts-syncer
     steps:
       - name: Checkout
         uses: actions/checkout@v5
