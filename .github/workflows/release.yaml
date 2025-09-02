@@ -8,7 +8,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-
+    env:
+      dockerhub_image_name: docker.io/bitnami/charts-syncer
+      ghcr_image_name: ghcr.io/bitnami-labs/charts-syncer
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -18,6 +20,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '^1.25'
+      # Setup env for multi-arch builds
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.0.0
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: arm64,arm
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+      # Build
       - name: Release
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -25,3 +36,34 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Build & Publish multi-arch image
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2.0.0
+        with:
+          username: ${{ secrets.BITNAMI_USERNAME }}
+          password: ${{ secrets.BITNAMI_PASSWORD }}
+      - name: Login to GHRC
+        uses: docker/login-action@v2.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata (tags, labels)
+        id: metadata
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: |
+            ${{ env.dockerhub_image_name }}
+            ${{ env.ghcr_image_name }}
+          tags: |
+            type=raw,value=${{ env.VERSION_TAG }}
+            type=raw,value=latest
+      - name: Build and push image
+        id: docker_build
+        uses: docker/build-push-action@v3.2.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
