@@ -17,7 +17,7 @@ ARG APP_VERSION
 ENV OS_ARCH="${TARGETARCH:-amd64}"
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder ./charts-syncer /opt/bitnami/charts-syncer/bin/charts-syncer
+COPY dist/release_linux_${OS_ARCH}*/charts-syncer /opt/bitnami/charts-syncer/bin/charts-syncer
 COPY --from=builder /rootfs /
 
 ENV APP_VERSION="${APP_VERSION}" \

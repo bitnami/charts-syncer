@@ -1,4 +1,4 @@
-name: goreleaser
+name: Release
 
 on:
   push:
@@ -10,12 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       dockerhub_image_name: docker.io/bitnami/charts-syncer
-      ghcr_image_name: ghcr.io/bitnami-labs/charts-syncer
+      ghcr_image_name: ghcr.io/bitnami/charts-syncer
     steps:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Unshallow
         run: git fetch --prune --unshallow
+      # Obtain the release version from the tag without the 'v' prefix
+      - name: Write release version
+        run: |
+          VERSION_TAG=${GITHUB_REF_NAME#v}
+          echo Version: $VERSION_TAG
+          echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -23,9 +29,6 @@ jobs:
       # Setup env for multi-arch builds
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.0.0
-        with:
-          image: tonistiigi/binfmt:latest
-          platforms: arm64,arm
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
       # Build
@@ -55,15 +58,21 @@ jobs:
           images: |
             ${{ env.dockerhub_image_name }}
             ${{ env.ghcr_image_name }}
+          # Image tags: 'latest', '2' and the tagged version without the 'v' prefix
           tags: |
+            type=raw,value=2
             type=raw,value=${{ env.VERSION_TAG }}
             type=raw,value=latest
       - name: Build and push image
         id: docker_build
         uses: docker/build-push-action@v3.2.0
+        env:
+          # Disable attestation to prevent 'unknown/unknown' artifacts in GHCR
+          BUILDX_NO_DEFAULT_ATTESTATIONS: 1
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
