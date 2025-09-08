@@ -15,7 +15,7 @@ Sync chart packages and associated container images between chart repositories
     + [Skip syncing images](#skip-syncing-images)
     + [Sync only specific container platforms](#sync-only-specific-container-platforms)
     + [Sync Helm Charts and Container Images to different registries](#sync-helm-charts-and-container-images-to-different-registries)
-    + [Sync charts between repositories without direct connectivity](#sync-charts-between-repositories-without-direct-connectivity)
+    + [Sync charts between repositories without direct connectivity](#sync-helm-charts-and-associated-container-images-between-disconnected-environments)
 - [Configuration](#configuration)
   * [Harbor example](#harbor-example)
   * [OCI example](#oci-example)
