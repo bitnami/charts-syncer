@@ -23,7 +23,7 @@ jobs:
           echo Version: $VERSION_TAG
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '^1.25'
       # Setup env for multi-arch builds
