@@ -53,7 +53,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract image metadata (tags, labels)
         id: metadata
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v5.8.0
         with:
           images: |
             ${{ env.dockerhub_image_name }}
