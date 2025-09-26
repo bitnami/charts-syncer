@@ -19,8 +19,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Unshallow
-        run: git fetch --prune --unshallow
+        with:
+          fetch-depth: 0
+      # when workflow_dispatch -> ensure we checkout the tag's commit
+      - name: Checkout tag (if manual)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          git fetch --prune --unshallow --tags || git fetch --prune --tags
+          git checkout "refs/tags/${TAG}"
       # Obtain the release version from the tag without the 'v' prefix
       - name: Write release version
         run: |
