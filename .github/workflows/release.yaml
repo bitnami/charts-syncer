@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v2.1.4)"
+        required: true
 
 jobs:
   release:
@@ -19,7 +24,12 @@ jobs:
       # Obtain the release version from the tag without the 'v' prefix
       - name: Write release version
         run: |
-          VERSION_TAG=${GITHUB_REF_NAME#v}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RAW_TAG="${{ github.event.inputs.tag }}"
+          else
+            RAW_TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION_TAG="${RAW_TAG#v}"
           echo Version: $VERSION_TAG
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
       - name: Set up Go
