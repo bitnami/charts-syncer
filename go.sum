@@ -695,6 +695,8 @@ github.com/vbatts/tar-split v0.12.1 h1:CqKoORW7BUWBe7UL/iqTVvkTBOF8UvOMKOIZykxnn
 github.com/vbatts/tar-split v0.12.1/go.mod h1:eF6B6i6ftWQcDqEn3/iGFRFRo8cBIMSJVOpnNdfTMFA=
 github.com/vmware-labs/distribution-tooling-for-helm v0.4.8 h1:HmvCAlnXaQ3XC38UETtWZvDDGPYqRVjHTiULzJWtj7Q=
 github.com/vmware-labs/distribution-tooling-for-helm v0.4.8/go.mod h1:+BViIwNOcMGJnxYQWXJRBKt3OLuQ06VMnxWxuztIP0c=
+github.com/vmware-labs/distribution-tooling-for-helm v0.4.9 h1:+0MA2i3jPZ5V7bc3SJsy2Mi81Z9py6iFKkNTLGPnmd8=
+github.com/vmware-labs/distribution-tooling-for-helm v0.4.9/go.mod h1:+BViIwNOcMGJnxYQWXJRBKt3OLuQ06VMnxWxuztIP0c=
 github.com/vmware-labs/yaml-jsonpath v0.3.2 h1:/5QKeCBGdsInyDCyVNLbXyilb61MXGi9NP674f9Hobk=
 github.com/vmware-labs/yaml-jsonpath v0.3.2/go.mod h1:U6whw1z03QyqgWdgXxvVnQ90zN1BWz5V+51Ewf8k+rQ=
 github.com/vmware-tanzu/carvel-imgpkg v0.38.3 h1:vVnqCPFEZ2NQcoTywg/va91qRyCuu46wBYAETqoyez4=
