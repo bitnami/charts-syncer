@@ -2,23 +2,14 @@
 package harbor
 
 import (
-	"bytes"
-	"io"
-	"mime/multipart"
-	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/bitnami/charts-syncer/api"
 	"github.com/bitnami/charts-syncer/internal/cache"
-	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
-	"helm.sh/helm/v3/pkg/chart"
-	"k8s.io/klog"
 )
 
 // Repo allows to operate a chart repository.
@@ -58,75 +49,6 @@ func (r *Repo) GetUploadURL() string {
 	u := *r.url
 	u.Path = strings.Replace(u.Path, "/chartrepo/", "/api/chartrepo/", 1) + "/charts"
 	return u.String()
-}
-
-// Upload uploads a chart to the repo
-func (r *Repo) Upload(file string, _ *chart.Metadata) error {
-	f, err := os.Open(file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer f.Close()
-
-	body := &bytes.Buffer{}
-	mpw := multipart.NewWriter(body)
-	cw, err := mpw.CreateFormFile("chart", file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	// Invalidate cache to avoid inconsistency between an old cache result and
-	// the chart repo
-	if err = r.cache.Invalidate(filepath.Base(file)); err != nil {
-		return errors.Trace(err)
-	}
-
-	// Write file to the multipart and cache writers at the same time.
-	cachew, err := r.cache.Writer(filepath.Base(file))
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer cachew.Close()
-
-	w := io.MultiWriter(cw, cachew)
-	_, err = io.Copy(w, f)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	contentType := mpw.FormDataContentType()
-	if err = mpw.Close(); err != nil {
-		return errors.Trace(err)
-	}
-
-	u := r.GetUploadURL()
-	req, err := http.NewRequest("POST", u, body)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	req.Header.Add("content-type", contentType)
-	if r.username != "" && r.password != "" {
-		req.SetBasicAuth(r.username, r.password)
-	}
-
-	reqID := utils.EncodeSha1(u + file)
-	klog.V(4).Infof("[%s] POST %q", reqID, u)
-	client := utils.DefaultClient
-	if r.insecure {
-		client = utils.InsecureClient
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return errors.Annotatef(err, "uploading %q chart", file)
-	}
-	defer res.Body.Close()
-	if ok := res.StatusCode >= 200 && res.StatusCode <= 299; !ok {
-		bodyStr := utils.HTTPResponseBody(res)
-		return errors.Errorf("unable to fetch index.yaml, got HTTP Status: %s, Resp: %v", res.Status, bodyStr)
-	}
-	klog.V(4).Infof("[%s] HTTP Status: %s", reqID, res.Status)
-
-	return nil
 }
 
 // Fetch downloads a chart from the repo

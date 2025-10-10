@@ -1,9 +1,7 @@
 package harbor_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,7 +16,6 @@ import (
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/harbor"
-	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 )
 
@@ -175,43 +172,5 @@ func TestGetUploadURL(t *testing.T) {
 	got := c.GetUploadURL()
 	if got != want {
 		t.Errorf("wrong upload URL. got: %v, want: %v", got, want)
-	}
-}
-
-func TestUpload(t *testing.T) {
-	c, err := prepareTest(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = c.Upload("../../../../testdata/apache-7.3.15.tgz", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Check the chart really was added to the service's index.
-	req, err := http.NewRequest("GET", harborRepo.Url+"/apache", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth(harborRepo.Auth.Username, harborRepo.Auth.Password)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	charts := []*helmclassic.ChartVersion{}
-	if err := json.NewDecoder(resp.Body).Decode(&charts); err != nil {
-		t.Fatal(err)
-	}
-	if got, want := len(charts), 1; got != want {
-		t.Fatalf("got: %q, want: %q", got, want)
-	}
-	if got, want := charts[0].Name, "apache"; got != want {
-		t.Errorf("got: %q, want: %q", got, want)
-	}
-	if got, want := charts[0].Version, "7.3.15"; got != want {
-		t.Errorf("got: %q, want: %q", got, want)
 	}
 }

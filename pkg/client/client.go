@@ -17,14 +17,11 @@ type ChartsReader interface {
 	ListChartVersions(name string) ([]string, error)
 	Has(name string, version string) (bool, error)
 	GetChartDetails(name string, version string) (*types.ChartDetails, error)
-	// Reload reloads or refresh the client-side data, in case it needs it
-	Reload() error
 }
 
 // ChartsWriter defines the methods that a WriteOnly chart or bundle client should implement.
 type ChartsWriter interface {
 	GetUploadURL() string
-	Upload(filepath string, metadata *chart.Metadata) error
 }
 
 // ChartsReaderWriter defines the methods that a chart or bundle client should implement

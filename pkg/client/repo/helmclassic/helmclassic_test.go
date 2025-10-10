@@ -197,12 +197,3 @@ func TestGetIndexURL(t *testing.T) {
 		t.Errorf("wrong index URL. got: %v, want: %v", got, want)
 	}
 }
-
-func TestUpload(t *testing.T) {
-	c := prepareTest(t, "index.yaml")
-	expectedError := "upload method is not supported yet"
-	err := c.Upload("../../../testdata/apache-7.3.15.tgz", nil)
-	if err.Error() != expectedError {
-		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
-	}
-}

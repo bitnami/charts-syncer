@@ -9,12 +9,15 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/bitnami/charts-syncer/api"
+	"github.com/bitnami/charts-syncer/internal/cache"
+	"github.com/bitnami/charts-syncer/internal/indexer"
+	"github.com/bitnami/charts-syncer/internal/utils"
+	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -23,18 +26,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/juju/errors"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-	orascontext "oras.land/oras-go/pkg/context"
-
-	"helm.sh/helm/v3/pkg/chart"
 	"k8s.io/klog"
-	"oras.land/oras-go/pkg/content"
-	"oras.land/oras-go/pkg/oras"
-
-	"github.com/bitnami/charts-syncer/api"
-	"github.com/bitnami/charts-syncer/internal/cache"
-	"github.com/bitnami/charts-syncer/internal/indexer"
-	"github.com/bitnami/charts-syncer/internal/utils"
-	"github.com/bitnami/charts-syncer/pkg/client/types"
 )
 
 const (
@@ -329,72 +321,6 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 // GetUploadURL returns the upload URL
 func (r *Repo) GetUploadURL() string {
 	return fmt.Sprintf("%s%s", r.url.Host, r.url.Path)
-}
-
-// Upload uploads a chart to the repo
-func (r *Repo) Upload(file string, metadata *chart.Metadata) error {
-	name := metadata.Name
-	version := metadata.Version
-	// Invalidate cache to avoid inconsistency between an old cache result and
-	// the chart repo
-	if err := r.cache.Invalidate(filepath.Base(file)); err != nil {
-		return errors.Trace(err)
-	}
-
-	f, err := os.Open(file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer f.Close()
-
-	if err = r.cache.Store(f, filepath.Base(file)); err != nil {
-		return errors.Trace(err)
-	}
-
-	memoryStore := content.NewMemory()
-	resolver := r.dockerResolver
-
-	// Preparing layers
-	fileName := filepath.Base(file)
-	fileMediaType := HelmChartContentLayerMediaType
-	fileBuffer, err := os.ReadFile(file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	blobDesc, err := memoryStore.Add(fileName, fileMediaType, fileBuffer)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	// Preparing Oras config
-	configBytes, err := json.Marshal(metadata)
-	if err != nil {
-		return err
-	}
-	configDesc, err := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	manifest, manifestDesc, err := content.GenerateManifest(&configDesc, nil, blobDesc)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	// helm replaces plus(+) characters with underscores(_) in the tag (version)
-	chartRef := fmt.Sprintf("%s%s/%s:%s", r.url.Host, r.url.Path, name, strings.ReplaceAll(version, "+", "_"))
-	if err := memoryStore.StoreManifest(chartRef, manifestDesc, manifest); err != nil {
-		return errors.Trace(err)
-	}
-
-	// Perform push
-	copyOpts := []oras.CopyOpt{
-		oras.WithAllowedMediaType(HelmChartConfigMediaType, HelmChartContentLayerMediaType),
-		oras.WithNameValidation(nil),
-	}
-	if _, err := oras.Copy(orascontext.Background(), memoryStore, chartRef, resolver, chartRef, copyOpts...); err != nil {
-		return errors.Trace(err)
-	}
-	return nil
 }
 
 // GetChartDetails returns the details of a chart

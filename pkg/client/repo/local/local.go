@@ -10,10 +10,10 @@ import (
 	"sort"
 
 	"github.com/juju/errors"
+	"helm.sh/helm/v3/pkg/chart"
 
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
-	"helm.sh/helm/v3/pkg/chart"
 )
 
 var (
