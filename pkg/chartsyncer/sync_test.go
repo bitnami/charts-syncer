@@ -1,4 +1,4 @@
-package syncer_test
+package chartsyncer_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bitnami/charts-syncer/pkg/syncer"
+	"github.com/bitnami/charts-syncer/pkg/chartsyncer"
 )
 
 func TestFakeSyncPendingCharts(t *testing.T) {
@@ -38,7 +38,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 			}
 			defer os.RemoveAll(dstTmp)
 
-			s := syncer.NewFake(t, syncer.WithFakeSyncerDestination(dstTmp), syncer.WithFakeSkipCharts(tc.skippedEntries))
+			s := chartsyncer.NewFake(t, chartsyncer.WithFakeSyncerDestination(dstTmp), chartsyncer.WithFakeSkipCharts(tc.skippedEntries))
 
 			if err = s.SyncPendingCharts(tc.entries...); err != nil {
 				t.Error(err)
@@ -48,7 +48,7 @@ func TestFakeSyncPendingCharts(t *testing.T) {
 			// However, as it is a fake implementation, let's rely on the target
 			// directory.
 			// If we change the implementation to be in-memory, this won't work.
-			gotFiles, err := filepath.Glob(fmt.Sprintf("%s/*.tgz", dstTmp))
+			gotFiles, err := filepath.Glob(fmt.Sprintf("%s/charts/*.tgz", dstTmp))
 			if err != nil {
 				t.Fatalf("error listing tgz files: %v", err)
 			}

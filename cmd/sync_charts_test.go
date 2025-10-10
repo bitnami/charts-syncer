@@ -37,7 +37,7 @@ var (
 	}
 )
 
-func TestSync(t *testing.T) {
+func TestSyncCharts(t *testing.T) {
 	charts := map[string]string{
 		"apache":    "7.3.15",
 		"zookeeper": "5.14.3",
@@ -69,9 +69,9 @@ func TestSync(t *testing.T) {
 
 			args := []string{"sync", "--use-plain-log", "--use-plain-http", "--config", cfg}
 			if len(tc.chartsToSync) > 0 {
-				chartsyncer(args...).AssertSuccessMatchStderr(t, "Charts synced successfully")
+				chartsyncerCmd(args...).AssertSuccessMatchStderr(t, "Charts synced successfully")
 			} else {
-				chartsyncer(args...).AssertSuccessMatchStderr(t, "There are no charts out of sync!")
+				chartsyncerCmd(args...).AssertSuccessMatchStderr(t, "There are no charts out of sync!")
 			}
 
 			for k, v := range charts {
@@ -83,7 +83,7 @@ func TestSync(t *testing.T) {
 			}
 
 			if tc.twice {
-				chartsyncer(args...).AssertSuccessMatchStderr(t, "There are no charts out of sync!")
+				chartsyncerCmd(args...).AssertSuccessMatchStderr(t, "There are no charts out of sync!")
 			}
 		})
 	}

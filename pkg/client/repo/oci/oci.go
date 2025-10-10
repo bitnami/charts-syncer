@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/bitnami/charts-syncer/internal/indexer"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
+	"github.com/bitnami/charts-syncer/pkg/httputils"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -39,6 +41,11 @@ const (
 	HelmChartContentLayerMediaTypeDeprecated = "application/tar+gzip"
 	// ImageManifestMediaType is the reserved media type for OCI manifests
 	ImageManifestMediaType = "application/vnd.oci.image.manifest.v1+json"
+
+	// DockerContainerImageMediaType is the reserver media type for docker container image manifests
+	DockerContainerImageMediaType = "application/vnd.docker.container.image.v1+json"
+	// DockerDistributionMediaType is the reserver media type for docker distribution manifests
+	DockerDistributionMediaType = "application/vnd.docker.distribution.manifest.v2+json"
 )
 
 // Repo allows to operate a chart repository.
@@ -72,7 +79,7 @@ func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*R
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	resolver := newDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
+	resolver := NewDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
 
 	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
 }
@@ -115,9 +122,9 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 		}))
 	}
 	if r.insecure {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
-		opts = append(opts, remote.WithTransport(transport))
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
 	}
 
 	image, err := remote.Image(ref, opts...)
@@ -164,7 +171,11 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
-	repo, err := name.NewRepository(u.Host + u.Path)
+	nameOpts := []name.Option{}
+	if r.usePlainHTTP {
+		nameOpts = append(nameOpts, name.Insecure)
+	}
+	repo, err := name.NewRepository(u.Host+u.Path, nameOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse repo %v", err)
 	}
@@ -177,9 +188,9 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 		}))
 	}
 	if r.insecure {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
-		opts = append(opts, remote.WithTransport(transport))
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
 	}
 
 	tags, err := remote.List(repo, opts...)
@@ -187,7 +198,7 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 		return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
 	}
 
-	chartTags := []string{}
+	var chartTags []string
 	for _, tag := range tags {
 		tm, err := r.getTagManifest(chartName, tag)
 		if err != nil {
@@ -200,6 +211,66 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 		}
 	}
 	return chartTags, nil
+}
+
+// ListContainerTags lists all versions of a chart
+func (r *Repo) ListContainerTags(containerName string) ([]string, error) {
+	// If entries is populated use it to list the containers versions
+	// Otherwise, we need the containers list to be defined in the config file, retrieve all the tags for those containers names
+	// and verify which tags are real containers by checking its mimeType.
+	if _, ok := r.entries[containerName]; ok {
+		return r.entries[containerName], nil
+	}
+
+	u := *r.url
+	u.Path = path.Join(u.Path, "/", containerName)
+
+	nameOpts := []name.Option{}
+	if r.usePlainHTTP {
+		nameOpts = append(nameOpts, name.Insecure)
+	}
+	repo, err := name.NewRepository(u.Host+u.Path, nameOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse repo %v", err)
+	}
+
+	var opts []remote.Option
+	if r.username != "" && r.password != "" {
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
+	}
+	if r.insecure {
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
+	}
+
+	tags, err := remote.List(repo, opts...)
+	if err != nil {
+		if !strings.Contains(err.Error(), "NOT_FOUND") && !strings.Contains(err.Error(), "NAME_UNKNOWN") {
+			return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
+		}
+	}
+
+	var containerTags []string
+	for _, tag := range tags {
+		if looksLikeDockerImageTag(tag) {
+			containerTags = append(containerTags, tag)
+		}
+	}
+
+	return containerTags, nil
+}
+
+// tagRegex matches container image tags following the scheme MAJOR.MINOR.PATCH-DISTRO_NAME-DISTRO_VERSION-rREVISION
+// (e.g. "13.16.0-photon-5-r19", "7.4.1-debian-12-r6", "1.27.3-ubuntu-22-r0").
+// Tags that do not follow this pattern (latest, stable, sha256:...) are excluded.
+var tagRegex = regexp.MustCompile(`^\d+\.\d+\.\d+-[a-z]+-\d+-r\d+$`)
+
+func looksLikeDockerImageTag(tag string) bool {
+	return tagRegex.MatchString(tag)
 }
 
 // Fetch fetches a chart
@@ -225,9 +296,9 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		}))
 	}
 	if r.insecure {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
-		opts = append(opts, remote.WithTransport(transport))
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
 	}
 
 	img, err := remote.Image(ref, opts...)
@@ -278,6 +349,43 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 	return r.cache.Path(id), nil
 }
 
+// HasContainer checks if a repo has a specific container
+func (r *Repo) HasContainer(imageName string, tag string) (bool, error) {
+	nameOpts := []name.Option{}
+	if r.usePlainHTTP {
+		nameOpts = append(nameOpts, name.Insecure)
+	}
+	ref, err := name.NewTag(fmt.Sprintf("%s/%s:%s", httputils.RemoveSchema(r.url.String()), imageName, tag), nameOpts...)
+	if err != nil {
+		return false, errors.Errorf("failed parsing OCI reference: %s", err)
+	}
+
+	opts := []remote.Option{}
+	if r.username != "" && r.password != "" {
+		opts = append(opts, remote.WithAuth(&authn.Basic{
+			Username: r.username,
+			Password: r.password,
+		}))
+	}
+	if r.insecure {
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
+	}
+
+	_, err = remote.Head(ref, opts...)
+	if err != nil {
+		if terr, ok := err.(*transport.Error); ok {
+			if terr.StatusCode == http.StatusNotFound {
+				return false, nil
+			}
+		}
+		return false, errors.Errorf("failed checking remote: %s", err)
+	}
+
+	return true, nil
+}
+
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(chartName string, version string) (bool, error) {
 	u := *r.url
@@ -296,9 +404,9 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 		}))
 	}
 	if r.insecure {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
-		opts = append(opts, remote.WithTransport(transport))
+		transportKind := http.DefaultTransport.(*http.Transport).Clone()
+		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		opts = append(opts, remote.WithTransport(transportKind))
 	}
 
 	_, err = remote.Head(ref, opts...)
@@ -319,6 +427,11 @@ func (r *Repo) GetUploadURL() string {
 	return fmt.Sprintf("%s%s", r.url.Host, r.url.Path)
 }
 
+// GetContainerUploadURL returns the upload URL
+func (r *Repo) GetContainerUploadURL() string {
+	return fmt.Sprintf("%s%s", r.url.Host, r.url.Path)
+}
+
 // GetChartDetails returns the details of a chart
 func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails, error) {
 	digest, err := r.getChartDigest(name, version)
@@ -327,7 +440,7 @@ func (r *Repo) GetChartDetails(name string, version string) (*types.ChartDetails
 	}
 	return &types.ChartDetails{
 		// OCI registries does not provide info about the publishing date in any API endpoint.
-		// Therefore we cannot use the --from-date and we should publish everything.
+		// Therefore, we cannot use the --from-date, and we should publish everything.
 		// Setting today's date so they get published.
 		PublishedAt: time.Now(),
 		Digest:      digest,
@@ -404,7 +517,7 @@ func populateEntries(repo *apiv1.Repo) (map[string][]string, error) {
 	return entries, nil
 }
 
-func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
+func NewDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
 	client := utils.DefaultClient
 	if insecure {
 		client = utils.InsecureClient

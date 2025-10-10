@@ -14,6 +14,7 @@ import (
 // Source allows to operate a chart source.
 type Source struct {
 	client.ChartsReader
+	client.ContainersReader
 	username           string
 	password           string
 	containersUsername string
@@ -38,8 +39,19 @@ func New(source *apiv1.Source, chartReader client.ChartsReader, insecure bool, u
 	return s, nil
 }
 
-// Wrap wraps a chart.
-func (t *Source) Wrap(tgz, destWrap string, opts ...config.Option) (string, error) {
+// NewContainer creates a Repo object from an api.Repo object.
+func NewContainer(source *apiv1.Source, containersReader client.ContainersReader, insecure bool, usePlainHTTP bool) (*Source, error) {
+	containers := source.GetContainers()
+	s := &Source{ContainersReader: containersReader, insecure: insecure, usePlainHTTP: usePlainHTTP}
+	if containers != nil && containers.GetAuth() != nil {
+		s.containersUsername = containers.GetAuth().GetUsername()
+		s.containersPassword = containers.GetAuth().GetPassword()
+	}
+	return s, nil
+}
+
+// WrapChart wraps a chart.
+func (t *Source) WrapChart(tgz, destWrap string, opts ...config.Option) (string, error) {
 	cfg := config.New(opts...)
 	l := cfg.Logger
 
@@ -62,6 +74,34 @@ func (t *Source) Wrap(tgz, destWrap string, opts ...config.Option) (string, erro
 		wrap.WithLogger(l))
 	if err != nil {
 		return "", fmt.Errorf("failed to wrap chart %q: %w", tgz, err)
+	}
+	return outputFile, nil
+}
+
+// WrapContainer wraps a container image.
+func (t *Source) WrapContainer(imageRef string, destination string, opts ...config.Option) (string, error) {
+	cfg := config.New(opts...)
+	l := cfg.Logger
+
+	wrapWorkdir, err := os.MkdirTemp(cfg.WorkDir, "charts-syncer")
+	if err != nil {
+		return "", fmt.Errorf("unable to create work directory for container: %v", err)
+	}
+	defer os.RemoveAll(wrapWorkdir)
+
+	outputFile, err := wrap.Container(imageRef,
+		wrap.WithFetchArtifacts(!cfg.SkipArtifacts),
+		wrap.WithSkipPullImages(cfg.SkipImages),
+		wrap.WithInsecure(t.insecure),
+		wrap.WithUsePlainHTTP(t.usePlainHTTP),
+		wrap.WithTempDirectory(wrapWorkdir),
+		wrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
+		wrap.WithPlatforms(cfg.ContainerPlatforms),
+		wrap.WithOutputFile(destination),
+		wrap.WithLogger(l),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to wrap container %q: %w", imageRef, err)
 	}
 	return outputFile, nil
 }

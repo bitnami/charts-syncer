@@ -2,6 +2,7 @@
 package harbor
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -66,9 +67,19 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	return r.helm.ListChartVersions(name)
 }
 
+// ListContainerTags lists all tags of a container
+func (r *Repo) ListContainerTags(_ string) ([]string, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
 // Has checks if a repo has a specific chart
 func (r *Repo) Has(name string, version string) (bool, error) {
 	return r.helm.Has(name, version)
+}
+
+// HasContainer checks if a repo has a specific container
+func (r *Repo) HasContainer(_ string, _ string) (bool, error) {
+	return false, fmt.Errorf("not supported")
 }
 
 // GetChartDetails returns the details of a chart

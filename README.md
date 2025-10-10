@@ -3,7 +3,7 @@
 
 # charts-syncer
 
-Sync chart packages and associated container images between chart repositories
+Sync Helm chart packages and OCI container images between repositories
 
 > [!IMPORTANT]  
 > Starting in 2026, this project is licensed under a Broadcom license. For details, see the [_LICENSE_](https://raw.githubusercontent.com/bitnami/charts-syncer/refs/heads/v2/LICENSE) file
@@ -13,6 +13,11 @@ Sync chart packages and associated container images between chart repositories
 - [Usage](#usage)
     + [Sync all charts](#sync-all-helm-charts)
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
+    + [Sync latest version only](#sync-latest-version-of-each-helm-chart)
+- [Syncing Container Images](#syncing-container-images)
+    + [Sync containers only](#sync-container-images-only)
+    + [Sync both charts and containers](#sync-helm-charts-and-container-images-together)
+    + [Sync latest container version only](#sync-latest-version-of-each-container)
 - [Advanced Usage](#advanced-usage)
     + [Skip syncing artifacts](#skip-syncing-artifacts)
     + [Skip syncing images](#skip-syncing-images)
@@ -54,6 +59,129 @@ $ charts-syncer sync --from-date 2020-05-15
 ```console
 $ charts-syncer sync --latest-version-only
 ```
+
+## Syncing Container Images
+
+In addition to Helm charts, charts-syncer can sync standalone OCI container images between registries. This is configured via the `source.containers` and `target.containers` sections in the config file, independently of the `source.repo` / `target.repo` sections used for chart syncing.
+
+Container images are identified by a registry base URL and a list of image names. charts-syncer will discover all available tags for each image in the source registry, compare them against the target, and only transfer what is missing.
+
+> [!NOTE]
+> The container tag discovery uses the naming pattern `MAJOR.MINOR.PATCH-DISTRO_NAME-DISTRO_VERSION-rREVISION`
+> (e.g. `7.4.1-debian-12-r6`). Tags that do not follow this pattern (such as `latest` or digest references) are excluded from auto-discovery.
+
+### Sync container images only
+
+To sync container images without any Helm charts, define only the `containers` sections. The `repo` section is not required for OCI registries — charts-syncer will use the `containers.url` directly:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+  containers:
+    url: https://source-registry.example.com/myproject/containers
+    auth:
+      username: "SOURCE_USERNAME"
+      password: "SOURCE_PASSWORD"
+
+target:
+  repo:
+    kind: OCI
+  containers:
+    url: https://target-registry.example.com/myproject/containers
+    auth:
+      username: "TARGET_USERNAME"
+      password: "TARGET_PASSWORD"
+
+containers:
+  - redis
+  - nginx
+  - postgresql
+```
+
+```console
+$ charts-syncer sync
+```
+
+If you want to sync containers to a **local directory** instead of a remote registry, set `repo.kind: LOCAL` and specify a path. In this case `containers.url` is not needed:
+
+```yaml
+source:
+  containers:
+    url: https://source-registry.example.com/myproject/containers
+    auth:
+      username: "SOURCE_USERNAME"
+      password: "SOURCE_PASSWORD"
+
+target:
+  repo:
+    kind: LOCAL
+    path: /tmp/my-local-containers
+
+containers:
+  - redis
+  - nginx
+```
+
+```console
+$ charts-syncer sync
+```
+
+### Sync Helm Charts and Container Images together
+
+Both sections can coexist in the same config file. charts-syncer will run the chart sync and the container sync sequentially in the same invocation.
+
+The `repo.kind` field is required when syncing charts (it determines which chart repository backend to use). The `containers.url` field drives where container images are read from and written to:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: https://source-registry.example.com/myproject/charts
+    auth:
+      username: "SOURCE_USERNAME"
+      password: "SOURCE_PASSWORD"
+  containers:
+    url: https://source-registry.example.com/myproject/containers
+    auth:
+      username: "SOURCE_USERNAME"
+      password: "SOURCE_PASSWORD"
+
+target:
+  repo:
+    kind: OCI
+    url: https://target-registry.example.com/myproject/charts
+    auth:
+      username: "TARGET_USERNAME"
+      password: "TARGET_PASSWORD"
+  containers:
+    url: https://target-registry.example.com/myproject/containers
+    auth:
+      username: "TARGET_USERNAME"
+      password: "TARGET_PASSWORD"
+
+charts:
+  - redis
+  - mariadb
+
+containers:
+  - redis
+  - mariadb
+```
+
+```console
+$ charts-syncer sync
+```
+
+### Sync latest version of each container
+
+Use `--latest-version-only` to sync only the highest available tag for each container name. This flag also applies to chart syncing when both sections are configured:
+
+```console
+$ charts-syncer sync --latest-version-only
+```
+
+----
 
 ## Advanced Usage
 
@@ -194,10 +322,10 @@ source:
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
-  # Container images registry authn
+  # Container images source registry (required for standalone container sync)
   # containers:
-  #  auth:
-  #     registry: 'REGISTRY'
+  #   url: http://localhost:8080/containers
+  #   auth:
   #     username: "USERNAME"
   #     password: "PASSWORD"
 target:
@@ -208,13 +336,24 @@ target:
     # auth:
     #   username: "USERNAME"
     #   password: "PASSWORD"
+  # Container images target registry (required for standalone container sync)
+  # containers:
+  #   url: http://localhost:9090/containers
+  #   auth:
+  #     username: "USERNAME"
+  #     password: "PASSWORD"
 charts:
   - redis
   - mariadb
-# opt-out counterpart of "charts" property that explicit list the Helm charts to be skipped 
+# opt-out counterpart of "charts" property that explicitly lists the Helm charts to be skipped
 # either "charts" or "skipCharts" can be used at once
 # skipCharts:
 #  - mariadb
+
+# List of container image names to sync (used when containers sections are configured)
+# containers:
+#   - redis
+#   - mariadb
 ```
 
 > [!TIP]
@@ -248,6 +387,10 @@ Current available Kinds are `LOCAL`, `HELM`, `CHARTMUSEUM`, `HARBOR` and `OCI` f
 > The list of charts in the config file is optional except for OCI repositories used as source.
 > The rest of chart repositories kinds already support autodiscovery.
 
+> [!NOTE]
+> The list of containers in the config file is always required when using standalone container syncing,
+> as auto-discovery is not supported for container registries.
+
 ### Google Artifact Registry example (Tanzu Application Catalog hosted registry)
 
 The Google Artifact Registry (GAR) is the default option for Tanzu Application Catalog hosted registries.
@@ -269,7 +412,7 @@ The output from the previous command is a long single line of base64 encoded con
 
 See below an example of configuration file using GAR and Debian 12 Helm charts and containers:
 
-```yamlsource:
+```yaml
 source:
   repo:
     kind: OCI

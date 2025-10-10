@@ -1,10 +1,11 @@
 package main
 
 import (
+	goerrors "errors"
+
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/config"
 	klogLogger "github.com/bitnami/charts-syncer/internal/log"
-	"github.com/bitnami/charts-syncer/pkg/syncer"
 	"github.com/juju/errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -15,55 +16,30 @@ import (
 )
 
 var (
-	syncFromDate          string
 	syncWorkdir           string
+	syncFromDate          string
 	syncLatestVersionOnly bool
 	usePlainHTTP          bool
+	usePlainLog           bool
 )
 
-var (
-	syncExample = `
-  # Synchronizes all charts defined in the configuration file
+var syncExample = `
+  # Synchronizes charts and containers defined in the configuration file
   charts-syncer sync
 
-  # Synchronizes all charts defined in the configuration file from May 1st, 2020
-  charts-syncer sync --from-date 2020-05-01`
-)
-
-func initConfigFile() error {
-	// Use config file from the flag.
-	if rootConfig != "" {
-		viper.SetConfigFile(rootConfig)
-		klog.Infof("Using config file: %q", rootConfig)
-		return errors.Trace(viper.ReadInConfig())
-	}
-
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		return errors.Trace(err)
-	}
-
-	// Search config in home directory with name ".charts-syncer" (without extension).
-	viper.AddConfigPath(home)
-	viper.AddConfigPath(".")
-	viper.SetConfigName(defaultCfgFile)
-	viper.SetConfigType("yaml")
-	klog.Infof("Looking for the default config %s", defaultCfgFile)
-	return errors.Trace(viper.ReadInConfig())
-}
+  # Synchronizes only the latest version of each chart/container
+  charts-syncer sync --latest-version-only`
 
 func newSyncCmd() *cobra.Command {
 	var c apiv1.Config
 
-	usePlainLog := false
 	cmd := &cobra.Command{
 		Use:           "sync",
-		Short:         "Synchronizes two chart repositories",
+		Short:         "Sync charts and containers defined in the configuration file",
 		Example:       syncExample,
+		SilenceUsage:  true,
 		SilenceErrors: false,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			// Disable klog if we are using the pretty cui
 			if !usePlainLog {
 				_ = cmd.Flags().Lookup("alsologtostderr").Value.Set("false")
 				_ = cmd.Flags().Lookup("logtostderr").Value.Set("false")
@@ -71,21 +47,22 @@ func newSyncCmd() *cobra.Command {
 			if err := initConfigFile(); err != nil {
 				return errors.Trace(err)
 			}
-
-			// Env variables bindings for viper
 			if err := config.InitEnvBindings(); err != nil {
 				return errors.Trace(err)
 			}
-
-			// Load config file relying on viper to find it
 			if err := config.Load(&c); err != nil {
 				return errors.Trace(err)
 			}
-
-			if err := config.Validate(&c); err != nil {
-				return errors.Trace(err)
+			if hasChartSource(&c) && hasChartTarget(&c) {
+				if err := config.ValidateChartConfig(&c); err != nil {
+					return errors.Trace(err)
+				}
 			}
-
+			if hasContainerSource(&c) && hasContainerTarget(&c) {
+				if err := config.ValidateContainerConfig(&c); err != nil {
+					return errors.Trace(err)
+				}
+			}
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -95,45 +72,66 @@ func newSyncCmd() *cobra.Command {
 			} else {
 				parentLog = pterm.NewSectionLogger()
 			}
-			l := parentLog.StartSection("Syncing charts")
-
-			syncerOptions := []syncer.Option{
-				// TODO(jdrios): Some backends may not support discovery
-				syncer.WithAutoDiscovery(true),
-				syncer.WithDryRun(rootDryRun),
-				syncer.WithFromDate(syncFromDate),
-				syncer.WithWorkdir(syncWorkdir),
-				syncer.WithContainerPlatforms(c.GetContainerPlatforms()),
-				syncer.WithInsecure(rootInsecure),
-				syncer.WithLatestVersionOnly(syncLatestVersionOnly),
-				syncer.WithSkipArtifacts(c.GetSkipArtifacts()),
-				syncer.WithSkipImages(c.GetSkipImages()),
-				syncer.WithSkipCharts(c.SkipCharts),
-				syncer.WithUsePlainHTTP(usePlainHTTP),
-
-				syncer.WithLogger(l),
-			}
-			s, err := syncer.New(c.GetSource(), c.GetTarget(), syncerOptions...)
-			if err != nil {
-				return errors.Trace(err)
-			}
-			if err := s.SyncPendingCharts(c.GetCharts()...); err != nil {
-				if err == syncer.ErrNoChartsToSync {
-					parentLog.Successf("There are no charts out of sync!")
-					return nil
-				}
-				return l.Failf("Error syncing charts: %v", err)
-			}
-			parentLog.Successf("Charts synced successfully")
-			return nil
+			return runSync(parentLog, &c)
 		},
 	}
 
-	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
-	cmd.Flags().StringVar(&syncWorkdir, "workdir", syncer.DefaultWorkdir(), "Working directory")
-	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart")
+	cmd.Flags().StringVar(&syncWorkdir, "workdir", config.DefaultWorkdir(), "Working directory")
+	cmd.Flags().BoolVar(&syncLatestVersionOnly, "latest-version-only", false, "Sync only latest version of each chart/container")
 	cmd.Flags().BoolVar(&usePlainHTTP, "use-plain-http", false, "Use plain HTTP instead of HTTPS")
 	cmd.Flags().BoolVar(&usePlainLog, "use-plain-log", false, "Use plain klog instead of the pretty logging")
+	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
 
 	return cmd
+}
+
+func hasChartSource(c *apiv1.Config) bool {
+	return c.GetSource().GetRepo().GetUrl() != "" || (c.GetSource().GetRepo().GetPath() != "" && c.GetSource().GetRepo().GetKind() == apiv1.Kind_LOCAL)
+}
+
+func hasChartTarget(c *apiv1.Config) bool {
+	return c.GetTarget().GetRepo().GetUrl() != "" || (c.GetTarget().GetRepo().GetPath() != "" && c.GetTarget().GetRepo().GetKind() == apiv1.Kind_LOCAL)
+}
+
+func hasContainerSource(c *apiv1.Config) bool {
+	return c.GetSource().GetContainers().GetUrl() != "" || (c.GetTarget().GetRepo().GetPath() != "" && c.GetSource().GetRepo().GetKind() == apiv1.Kind_LOCAL)
+}
+
+func hasContainerTarget(c *apiv1.Config) bool {
+	return c.GetTarget().GetContainers().GetUrl() != "" || (c.GetTarget().GetRepo().GetPath() != "" && c.GetTarget().GetRepo().GetKind() == apiv1.Kind_LOCAL)
+}
+
+func runSync(parentLog log.SectionLogger, c *apiv1.Config) error {
+	var errs error
+	if hasChartSource(c) && hasChartTarget(c) {
+		if err := runChartsSyncer(parentLog, c); err != nil {
+			errs = goerrors.Join(errs, err)
+		}
+	}
+	if hasContainerSource(c) && hasContainerTarget(c) && len(c.GetContainers()) > 0 {
+		if err := runContainersSyncer(parentLog, c); err != nil {
+			errs = goerrors.Join(errs, err)
+		}
+	}
+	return errs
+}
+
+func initConfigFile() error {
+	if rootConfig != "" {
+		viper.SetConfigFile(rootConfig)
+		klog.Infof("Using config file: %q", rootConfig)
+		return errors.Trace(viper.ReadInConfig())
+	}
+
+	home, err := homedir.Dir()
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	viper.AddConfigPath(home)
+	viper.AddConfigPath(".")
+	viper.SetConfigName(defaultCfgFile)
+	viper.SetConfigType("yaml")
+	klog.Infof("Looking for the default config %s", defaultCfgFile)
+	return errors.Trace(viper.ReadInConfig())
 }

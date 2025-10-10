@@ -2,6 +2,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -64,4 +65,24 @@ func (o *ClientOpts) GetUsePlainHTTP() bool {
 		return false
 	}
 	return o.plainHTTP
+}
+
+// ContainerImage describes a container image
+type ContainerImage struct {
+	Reference *ImageReference
+	Tags      []string
+}
+
+// ImageReference holds the parsed components of a container image reference
+type ImageReference struct {
+	Registry   string
+	Repository string
+	ImageName  string
+}
+
+func (ir *ImageReference) String() string {
+	if ir == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s", ir.Registry, ir.Repository)
 }

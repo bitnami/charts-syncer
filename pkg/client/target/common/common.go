@@ -20,6 +20,7 @@ var (
 // Target allows to operate a remote chart target
 type Target struct {
 	client.ChartsReaderWriter
+	client.ContainersReaderWriter
 	username           string
 	password           string
 	containersURL      string
@@ -48,6 +49,22 @@ func New(target *apiv1.Target, chartWriter client.ChartsReaderWriter, insecure b
 	return s, nil
 }
 
+// NewContainer creates a Repo object from an api.Repo object.
+func NewContainer(target *apiv1.Target, containersReaderWriter client.ContainersReaderWriter, insecure bool, usePlainHTTP bool) (*Target, error) {
+	containers := target.GetContainers()
+	s := &Target{ContainersReaderWriter: containersReaderWriter, insecure: insecure, usePlainHTTP: usePlainHTTP}
+	if containers != nil {
+		s.containersURL = containers.GetUrl()
+		if containers.GetAuth() != nil {
+			s.username = containers.GetAuth().GetUsername()
+			s.password = containers.GetAuth().GetPassword()
+			s.containersUsername = containers.GetAuth().GetUsername()
+			s.containersPassword = containers.GetAuth().GetPassword()
+		}
+	}
+	return s, nil
+}
+
 func (t *Target) getContainersUploadURL() string {
 	containersURL := t.containersURL
 	if containersURL == "" {
@@ -60,8 +77,8 @@ func (t *Target) getContainersUploadURL() string {
 	return containersURL
 }
 
-// Unwrap unwraps a chart
-func (t *Target) Unwrap(file string, _ *chart.Metadata, opts ...config.Option) error {
+// UnwrapChart unwraps a chart
+func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Option) error {
 	cfg := config.New(opts...)
 
 	wrapWorkdir, err := os.MkdirTemp(cfg.WorkDir, "charts-syncer")
@@ -80,6 +97,33 @@ func (t *Target) Unwrap(file string, _ *chart.Metadata, opts ...config.Option) e
 		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
+	); err != nil {
+		return errors.Trace(err)
+	}
+	return nil
+}
+
+// UnwrapContainer unwraps a container
+func (t *Target) UnwrapContainer(file string, opts ...config.Option) error {
+	cfg := config.New(opts...)
+
+	wrapWorkdir, err := os.MkdirTemp(cfg.WorkDir, "charts-syncer")
+
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	defer os.RemoveAll(wrapWorkdir)
+
+	if _, err := unwrap.Container(file, t.getContainersUploadURL(), unwrap.WithSayYes(true),
+		unwrap.WithTempDirectory(wrapWorkdir),
+		unwrap.WithUsePlainHTTP(t.usePlainHTTP),
+		unwrap.WithLogger(cfg.Logger),
+		unwrap.WithAuth(t.username, t.password), unwrap.WithInsecure(t.insecure),
+		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
+		unwrap.WithSkipImageRelocation(cfg.SkipImages),
+		unwrap.WithSkipPullImages(cfg.SkipImages),
+		unwrap.WithFetchArtifacts(!cfg.SkipArtifacts),
 	); err != nil {
 		return errors.Trace(err)
 	}

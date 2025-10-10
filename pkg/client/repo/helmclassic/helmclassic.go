@@ -2,6 +2,7 @@
 package helmclassic
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -150,6 +151,11 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 	return versions, nil
 }
 
+// ListContainerTags lists all versions of a chart
+func (r *Repo) ListContainerTags(_ string) ([]string, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
 // Fetch fetches a chart
 func (r *Repo) Fetch(name string, version string) (string, error) {
 	fetchOpts := []utils.FetchOption{
@@ -179,6 +185,11 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// HasContainer checks if a repo has a specific container
+func (r *Repo) HasContainer(_ string, _ string) (bool, error) {
+	return false, fmt.Errorf("not supported")
 }
 
 // GetUploadURL returns the URL to upload a chart

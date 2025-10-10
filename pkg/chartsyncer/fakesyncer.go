@@ -1,4 +1,4 @@
-package syncer
+package chartsyncer
 
 import (
 	"os"
@@ -60,9 +60,13 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 		sopts.Destination = dstTmp
 	}
 
-	// Copy all testdata tgz files to the source temporary folder
-	// We are not adding charts in the entries only to avoid specifying
-	// the dependencies
+	// Copy all testdata tgz files to the source temporary folder under the charts/ subdirectory,
+	// which is where local.Repo expects to find wrapped charts.
+	// We are not adding charts in the entries only to avoid specifying the dependencies.
+	srcChartsDir := path.Join(srcTmp, "charts")
+	if err = os.MkdirAll(srcChartsDir, 0755); err != nil {
+		t.Fatalf("error creating charts directory: %v", err)
+	}
 	matches, err := filepath.Glob("../../testdata/*.wrap.tgz")
 	if err != nil {
 		t.Fatalf("error listing tgz files: %v", err)
@@ -74,7 +78,7 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 			t.Fatalf("error reading %q chart: %v", sourceFile, err)
 		}
 
-		dstFile := path.Join(srcTmp, filepath.Base(sourceFile))
+		dstFile := path.Join(srcChartsDir, filepath.Base(sourceFile))
 		if err = os.WriteFile(dstFile, input, 0644); err != nil {
 			t.Fatalf("error copying chart to %q: %v", dstFile, err)
 		}
