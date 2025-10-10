@@ -95,9 +95,16 @@ jobs:
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
           version: v3.12.1
-      - name: Run OCI Registry
+      - name: Run OCI Source Registry
         run: |
-           docker run --name local-registry -p 5000:5000 -d registry:2
+          docker run --name local-source-registry -p 5001:5000 -d registry:2
+      - name: Push local wordpress and mariadb charts
+        run: |
+          helm push test/wordpress-27.0.7.tgz oci://127.0.0.1:5001/library
+          helm push test/mariadb-23.0.4.tgz oci://127.0.0.1:5001/library
+      - name: Run OCI Target Registry
+        run: |
+           docker run --name local-target-registry -p 5000:5000 -d registry:2
       - name: Install Kubectl
         run: |
            curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
@@ -113,6 +120,6 @@ jobs:
         run: |
            chmod +x /tmp/dist/charts-syncer
            ./test/run-charts-syncer.sh
-      - run: ./test/install-ghost.sh
-      - run: ./test/wait-for-ghost-deployment.sh
+      - run: ./test/install-wordpress.sh
+      - run: ./test/wait-for-wordpress-deployment.sh
       - run: ./test/run-verifications.sh

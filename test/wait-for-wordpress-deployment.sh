@@ -28,8 +28,8 @@ wait_for_string_in_pod() {
     done
 }
 
-## Wait until Ghost is up and running
-ghostPod=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].metadata.name}')
-wait_for_string_in_pod "${ghostPod}" "Your site is now available on" 2
+## Wait until WordPress is up and running
+wordpressPod=$(kubectl get pods --selector=app.kubernetes.io/name=wordpress -ojsonpath='{.items[0].metadata.name}')
+wait_for_string_in_pod "${wordpressPod}" "Your site is now available on" 2
 # Even after printing that message in the log, the service is not available yet
 sleep 5

@@ -4,7 +4,7 @@
 source:
   repo:
     kind: "OCI"
-    url: "https://registry-1.docker.io/bitnamicharts"
+    url: "http://localhost:5001/library"
 target:
   containers:
     auth:
@@ -19,4 +19,4 @@ target:
       password: "dummypassword"
 
 charts:
-  - ghost
+  - wordpress

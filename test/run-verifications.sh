@@ -8,21 +8,21 @@ set -o pipefail
 FAILED_TEST=0
 EXPECTED_REGISTRY='localhost:5000/library/bitnami'
 
-## Check that Ghost deployment is using the expected registry
-ghostImage=$(kubectl get pods --selector=app.kubernetes.io/name=ghost -ojsonpath='{.items[0].spec.containers[0].image}')
-if [[ "${ghostImage}" =~ ${EXPECTED_REGISTRY} ]]; then
-    echo "[PASS] Ghost is using the expected registry: ${EXPECTED_REGISTRY}"
+## Check that WordPress deployment is using the expected registry
+wordpressImage=$(kubectl get pods --selector=app.kubernetes.io/name=wordpress -ojsonpath='{.items[0].spec.containers[0].image}')
+if [[ "${wordpressImage}" =~ ${EXPECTED_REGISTRY} ]]; then
+    echo "[PASS] WordPress is using the expected registry: ${EXPECTED_REGISTRY}"
 else
-    echo "[FAILED] Ghost is not using the expected registry. Got: \"${ghostImage}\", expected: \"${EXPECTED_REGISTRY}\""
+    echo "[FAILED] WordPress is not using the expected registry. Got: \"${wordpressImage}\", expected: \"${EXPECTED_REGISTRY}\""
     FAILED_TEST=1
 fi
 
-## Check that MySQL deployment is using the expected registry
-mysqlImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=ghost-test-mysql-0 -ojsonpath='{.items[0].spec.containers[0].image}')
-if [[ "${mysqlImage}" =~ ${EXPECTED_REGISTRY} ]]; then
-    echo "[PASS] MySQL is using the expected registry: ${EXPECTED_REGISTRY}"
+## Check that MariaDB deployment is using the expected registry
+mariadbImage=$(kubectl get pods --selector=statefulset.kubernetes.io/pod-name=wordpress-test-mariadb-0 -ojsonpath='{.items[0].spec.containers[0].image}')
+if [[ "${mariadbImage}" =~ ${EXPECTED_REGISTRY} ]]; then
+    echo "[PASS] MariaDB is using the expected registry: ${EXPECTED_REGISTRY}"
 else
-    echo "[FAILED] MySQL is not using the expected registry. Got: \"${mysqlImage}\", expected: \"${EXPECTED_REGISTRY}\""
+    echo "[FAILED] MariaDB is not using the expected registry. Got: \"${mariadbImage}\", expected: \"${EXPECTED_REGISTRY}\""
     FAILED_TEST=1
 fi
 
