@@ -11,7 +11,7 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
@@ -84,8 +84,8 @@ var reloadIndex = func(r *Repo) error {
 	return nil
 }
 
-// New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
+// New creates a Repo object from an apiv1.Repo object.
+func New(repo *apiv1.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)

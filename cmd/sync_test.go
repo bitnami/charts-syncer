@@ -10,7 +10,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/oci"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
@@ -19,17 +19,17 @@ import (
 )
 
 var (
-	ociSourceRepo = &api.Repo{
-		Kind: api.Kind_OCI,
-		Auth: &api.Auth{
+	ociSourceRepo = &apiv1.Repo{
+		Kind: apiv1.Kind_OCI,
+		Auth: &apiv1.Auth{
 			Username: "user",
 			Password: "password",
 		},
 		DisableChartsIndex: true,
 	}
-	ociTargetRepo = &api.Repo{
-		Kind: api.Kind_OCI,
-		Auth: &api.Auth{
+	ociTargetRepo = &apiv1.Repo{
+		Kind: apiv1.Kind_OCI,
+		Auth: &apiv1.Auth{
 			Username: "foo",
 			Password: "password",
 		},

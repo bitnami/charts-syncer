@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	localSource "github.com/bitnami/charts-syncer/pkg/client/source/local"
 	localTarget "github.com/bitnami/charts-syncer/pkg/client/target/local"
 
@@ -90,8 +90,8 @@ func NewFake(t *testing.T, opts ...FakeSyncerOption) *Syncer {
 	}
 
 	return &Syncer{
-		source: &api.Source{},
-		target: &api.Target{},
+		source: &apiv1.Source{},
+		target: &apiv1.Target{},
 		cli: &Clients{
 			src: srcCli,
 			dst: dstCli,

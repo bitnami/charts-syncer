@@ -5,6 +5,6 @@
 You need go and the Go protocol buffers pluging:
 
 ~~~bash
-make gen # To generate Go code from protobuff definition
+make gen # To generate Go code from buf definition
 make build # To actually build the binary
 ~~~

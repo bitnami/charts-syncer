@@ -8,14 +8,14 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 )
 
 var (
-	ociRepo = &api.Repo{
-		Kind: api.Kind_OCI,
-		Auth: &api.Auth{
+	ociRepo = &apiv1.Repo{
+		Kind: apiv1.Kind_OCI,
+		Auth: &apiv1.Auth{
 			Username: "user",
 			Password: "password",
 		},

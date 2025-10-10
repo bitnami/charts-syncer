@@ -11,7 +11,7 @@ import (
 
 	"helm.sh/helm/v3/pkg/time"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/chartmuseum"
@@ -19,9 +19,9 @@ import (
 )
 
 var (
-	cmRepo = &api.Repo{
-		Kind: api.Kind_CHARTMUSEUM,
-		Auth: &api.Auth{
+	cmRepo = &apiv1.Repo{
+		Kind: apiv1.Kind_CHARTMUSEUM,
+		Auth: &apiv1.Auth{
 			Username: "user",
 			Password: "password",
 		},

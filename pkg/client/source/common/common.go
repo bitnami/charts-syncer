@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
 	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/vmware-labs/distribution-tooling-for-helm/cmd/dt/wrap"
@@ -22,8 +22,8 @@ type Source struct {
 	usePlainHTTP       bool
 }
 
-// New creates a Repo object from an api.Repo object.
-func New(source *api.Source, chartReader client.ChartsReader, insecure bool, usePlainHTTP bool) (*Source, error) {
+// New creates a Repo object from an apiv1.Repo object.
+func New(source *apiv1.Source, chartReader client.ChartsReader, insecure bool, usePlainHTTP bool) (*Source, error) {
 	containers := source.GetContainers()
 	repo := source.GetRepo()
 	s := &Source{ChartsReader: chartReader, insecure: insecure, usePlainHTTP: usePlainHTTP}

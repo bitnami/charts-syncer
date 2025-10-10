@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/config"
 	klogLogger "github.com/bitnami/charts-syncer/internal/log"
 	"github.com/bitnami/charts-syncer/pkg/syncer"
@@ -54,7 +54,7 @@ func initConfigFile() error {
 }
 
 func newSyncCmd() *cobra.Command {
-	var c api.Config
+	var c apiv1.Config
 
 	usePlainLog := false
 	cmd := &cobra.Command{
@@ -82,7 +82,7 @@ func newSyncCmd() *cobra.Command {
 				return errors.Trace(err)
 			}
 
-			if err := c.Validate(); err != nil {
+			if err := config.Validate(&c); err != nil {
 				return errors.Trace(err)
 			}
 

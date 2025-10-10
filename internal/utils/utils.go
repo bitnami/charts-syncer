@@ -21,7 +21,7 @@ import (
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache"
 )
 
@@ -45,7 +45,7 @@ var (
 )
 
 // LoadIndexFromRepo get the index.yaml from a Helm repo and returns an index object
-func LoadIndexFromRepo(repo *api.Repo) (*helmRepo.IndexFile, error) {
+func LoadIndexFromRepo(repo *apiv1.Repo) (*helmRepo.IndexFile, error) {
 	indexFile, err := downloadIndex(repo)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -82,7 +82,7 @@ func ChartExistInIndex(name string, version string, index *helmRepo.IndexFile) b
 
 // downloadIndex will download the index.yaml file of a chart repository and return
 // the path to the downloaded file.
-func downloadIndex(repo *api.Repo) (string, error) {
+func downloadIndex(repo *apiv1.Repo) (string, error) {
 	downloadURL := repo.GetUrl() + "/index.yaml"
 
 	// Get the data

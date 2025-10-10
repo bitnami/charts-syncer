@@ -4,7 +4,7 @@ package source
 import (
 	"github.com/juju/errors"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
 
 	"github.com/bitnami/charts-syncer/pkg/client/repo"
@@ -14,7 +14,7 @@ import (
 )
 
 // NewClient returns a Client object
-func NewClient(source *api.Source, opts ...types.Option) (client.ChartsWrapper, error) {
+func NewClient(source *apiv1.Source, opts ...types.Option) (client.ChartsWrapper, error) {
 	copts := &types.ClientOpts{}
 	for _, o := range opts {
 		o(copts)
@@ -23,7 +23,7 @@ func NewClient(source *api.Source, opts ...types.Option) (client.ChartsWrapper, 
 	insecure := copts.GetInsecure()
 	usePlainHTTP := copts.GetUsePlainHTTP()
 
-	if r.Kind == api.Kind_LOCAL {
+	if r.Kind == apiv1.Kind_LOCAL {
 		return local.New(r.Path)
 	}
 

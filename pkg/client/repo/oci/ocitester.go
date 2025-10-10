@@ -26,7 +26,7 @@ import (
 	orascontext "oras.land/oras-go/pkg/context"
 	"oras.land/oras-go/pkg/oras"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
@@ -48,7 +48,7 @@ type RepoTester struct {
 	username string
 	password string
 	t        *testing.T
-	// Map of chart name to indexed versions, as returned by the charts API.
+	// Map of chart name to indexed versions, as returned by the charts apiv1.
 	index map[string][]*helmclassic.ChartVersion
 }
 
@@ -135,7 +135,7 @@ func PushChartToOCI(file string, metadata *chart.Metadata, ref string) error {
 }
 
 // PrepareTest creates a client to interact with OCI servers
-func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
+func PrepareTest(t *testing.T, ociRepo *apiv1.Repo) *Repo {
 	t.Helper()
 
 	// Define cache dir
@@ -159,7 +159,7 @@ func PrepareTest(t *testing.T, ociRepo *api.Repo) *Repo {
 
 // PrepareHTTPServer creates an HTTP server that knows how to reply to all OCI related request except PUSH one.
 // Returns a client to interact with the server
-func PrepareHTTPServer(t *testing.T, ociRepo *api.Repo) *Repo {
+func PrepareHTTPServer(t *testing.T, ociRepo *apiv1.Repo) *Repo {
 	t.Helper()
 
 	// Create HTTP server
@@ -180,7 +180,7 @@ func canConnectToHost(ctx context.Context, addr string) bool {
 
 // PrepareOCIServer starts an OCI compliant server (docker-registry) so our push command based on oras cli works out-of-the-box.
 // This way we don't have to mimic all the low-level HTTP requests made by oras.
-func PrepareOCIServer(ctx context.Context, t *testing.T, ociRepo *api.Repo) {
+func PrepareOCIServer(ctx context.Context, t *testing.T, ociRepo *apiv1.Repo) {
 	t.Helper()
 	// Create OCI server as docker registry
 	config := &configuration.Configuration{}
