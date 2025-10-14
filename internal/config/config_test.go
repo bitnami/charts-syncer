@@ -7,42 +7,9 @@ import (
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
-
-func TestValidate(t *testing.T) {
-	config := &apiv1.Config{
-		Source: &apiv1.Source{
-			Repo: &apiv1.Repo{
-				Url:  "ht//:fake.source.com",
-				Kind: apiv1.Kind_CHARTMUSEUM,
-				Auth: &apiv1.Auth{
-					Username: "user",
-					Password: "password",
-				},
-			},
-		},
-		Target: &apiv1.Target{
-			Repo: &apiv1.Repo{
-				Url:  "http://fake.target.com",
-				Kind: apiv1.Kind_OCI,
-				Auth: &apiv1.Auth{
-					Username: "user",
-					Password: "password",
-				},
-			},
-		},
-	}
-
-	if err := Validate(config); err == nil {
-		t.Errorf("expected error but got nothing")
-	} else {
-		expectedError := `"source.repo.url" should be a valid URL: parse "ht//:fake.source.com": invalid URI for request`
-		if err.Error() != expectedError {
-			t.Errorf("incorrect error, got: \n %s \n, want: \n %s \n", err.Error(), expectedError)
-		}
-	}
-}
 
 // Load unmarshall config file into Config struct
 func TestLoad(t *testing.T) {
@@ -202,6 +169,124 @@ func TestGetAuthFromEnvVar(t *testing.T) {
 			}
 			if got, want := target.GetContainers().GetAuth(), tc.expectedTargetContainerAuth; !proto.Equal(got, want) {
 				t.Errorf("got: %+v, want %+v", got, want)
+			}
+		})
+	}
+}
+
+func TestValidate(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   *apiv1.Config
+		wantErrs []string
+	}{
+		{
+			name: "Should validate a proper config",
+			config: &apiv1.Config{
+				Source: &apiv1.Source{
+					Repo: &apiv1.Repo{
+						Url:  "https://fake.source.com",
+						Kind: apiv1.Kind_OCI,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Target: &apiv1.Target{
+					Repo: &apiv1.Repo{
+						Url:  "https://fake.source.com",
+						Kind: apiv1.Kind_OCI,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			wantErrs: nil,
+		},
+		{
+			name: "Should complain about wrong source url",
+			config: &apiv1.Config{
+				Source: &apiv1.Source{
+					Repo: &apiv1.Repo{
+						Url:  "ht//:fake.source.com",
+						Kind: apiv1.Kind_CHARTMUSEUM,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			wantErrs: []string{"\"source.repo.url\" should be a valid URL"},
+		},
+		{
+			name: "Should complain about wrong target kind",
+			config: &apiv1.Config{
+				Source: &apiv1.Source{
+					Repo: &apiv1.Repo{
+						Url:  "https://fake.source.com",
+						Kind: apiv1.Kind_CHARTMUSEUM,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Target: &apiv1.Target{
+					Repo: &apiv1.Repo{
+						Url:  "https://fake.source.com",
+						Kind: apiv1.Kind_CHARTMUSEUM,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			wantErrs: []string{"\"target.repo.kind\" should be \"OCI\" or \"LOCAL\""},
+		},
+		{
+			name: "Should complain about wrong source url and wrong target kind",
+			config: &apiv1.Config{
+				Source: &apiv1.Source{
+					Repo: &apiv1.Repo{
+						Url:  "ht//:fake.source.com",
+						Kind: apiv1.Kind_CHARTMUSEUM,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Target: &apiv1.Target{
+					Repo: &apiv1.Repo{
+						Url:  "https://fake.source.com",
+						Kind: apiv1.Kind_CHARTMUSEUM,
+						Auth: &apiv1.Auth{
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+			},
+			wantErrs: []string{
+				"\"source.repo.url\" should be a valid URL",
+				"\"target.repo.kind\" should be \"OCI\" or \"LOCAL\"",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Validate(tt.config)
+			if len(tt.wantErrs) > 0 && err != nil {
+				for _, wantErr := range tt.wantErrs {
+					assert.Contains(t, err.Error(), wantErr)
+				}
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

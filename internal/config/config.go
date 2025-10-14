@@ -29,17 +29,13 @@ const DefaultIndexTag = "latest"
 func Validate(c *apiv1.Config) error {
 	var errs error
 
-	if repo := c.GetSource().GetRepo(); repo != nil {
-		switch k := repo.GetKind(); k {
-		case apiv1.Kind_CHARTMUSEUM, apiv1.Kind_HELM, apiv1.Kind_HARBOR, apiv1.Kind_OCI:
-			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
-				errs = goerrors.Join(errs, errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err))
-			}
+	if repo := c.GetSource().GetRepo(); repo != nil && repo.GetKind() != apiv1.Kind_LOCAL {
+		if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
+			errs = goerrors.Join(errs, errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err))
 		}
 	}
 	if repo := c.GetTarget().GetRepo(); repo != nil {
-		switch k := repo.GetKind(); k {
-		case apiv1.Kind_CHARTMUSEUM, apiv1.Kind_HELM, apiv1.Kind_HARBOR, apiv1.Kind_OCI:
+		if repo.GetKind() != apiv1.Kind_LOCAL {
 			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
 				errs = goerrors.Join(errs, errors.Errorf(`"target.repo.url" should be a valid URL: %v`, err))
 			}
