@@ -25,7 +25,7 @@ func TestValidate(t *testing.T) {
 		Target: &apiv1.Target{
 			Repo: &apiv1.Repo{
 				Url:  "http://fake.target.com",
-				Kind: apiv1.Kind_CHARTMUSEUM,
+				Kind: apiv1.Kind_OCI,
 				Auth: &apiv1.Auth{
 					Username: "user",
 					Password: "password",

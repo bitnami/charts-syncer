@@ -2,6 +2,7 @@
 package config
 
 import (
+	goerrors "errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -26,11 +27,13 @@ const DefaultIndexTag = "latest"
 
 // Validate validates the config file is correct
 func Validate(c *apiv1.Config) error {
+	var errs error
+
 	if repo := c.GetSource().GetRepo(); repo != nil {
 		switch k := repo.GetKind(); k {
 		case apiv1.Kind_CHARTMUSEUM, apiv1.Kind_HELM, apiv1.Kind_HARBOR, apiv1.Kind_OCI:
 			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
-				return errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err)
+				errs = goerrors.Join(errs, errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err))
 			}
 		}
 	}
@@ -38,8 +41,11 @@ func Validate(c *apiv1.Config) error {
 		switch k := repo.GetKind(); k {
 		case apiv1.Kind_CHARTMUSEUM, apiv1.Kind_HELM, apiv1.Kind_HARBOR, apiv1.Kind_OCI:
 			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
-				return errors.Errorf(`"target.repo.url" should be a valid URL: %v`, err)
+				errs = goerrors.Join(errs, errors.Errorf(`"target.repo.url" should be a valid URL: %v`, err))
 			}
+		}
+		if repo.GetKind() != apiv1.Kind_OCI && repo.GetKind() != apiv1.Kind_LOCAL {
+			errs = goerrors.Join(errs, errors.Errorf(`"target.repo.kind" should be "OCI" or "LOCAL"`))
 		}
 	}
 
@@ -47,23 +53,18 @@ func Validate(c *apiv1.Config) error {
 	// Container images
 	if auth := c.GetSource().GetContainers().GetAuth(); auth != nil {
 		if auth.Username == "" || auth.Password == "" || auth.Registry == "" {
-			return errors.Errorf(`"source.containers.auth" "registry", "username"" and "password" are required"`)
+			errs = goerrors.Join(errs, errors.Errorf(`"source.containers.auth" "registry", "username"" and "password" are required"`))
 		}
 	}
 	if auth := c.GetTarget().GetContainers().GetAuth(); auth != nil {
 		// NOTE: we do not indicate that the registry is empty because this one is set from target.containerRegistry
 		// so the user does not need to set it up
 		if auth.Username == "" || auth.Password == "" {
-			return errors.Errorf(`"target.containers.auth" "username"" and "password" are required"`)
-		}
-	}
-	if repo := c.GetTarget().GetRepo(); repo != nil {
-		if repo.GetKind() != apiv1.Kind_OCI && repo.GetKind() != apiv1.Kind_LOCAL {
-			return errors.Errorf(`"target.repo.kind" should be "OCI" or "LOCAL"`)
+			errs = goerrors.Join(errs, errors.Errorf(`"target.containers.auth" "username"" and "password" are required"`))
 		}
 	}
 
-	return nil
+	return errs
 }
 
 func setDefaultChartsIndex(config *apiv1.Config) error {
