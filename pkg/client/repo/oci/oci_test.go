@@ -2,9 +2,12 @@ package oci_test
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/bitnami/charts-syncer/api"
@@ -36,7 +39,13 @@ func TestFetch(t *testing.T) {
 		Version: "7.3.15",
 	}
 
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -66,7 +75,14 @@ func TestHas(t *testing.T) {
 		Name:    "apache",
 		Version: "7.3.15",
 	}
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -106,7 +122,14 @@ func TestListChartVersions(t *testing.T) {
 		Name:    "apache",
 		Version: "7.3.15",
 	}
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -128,37 +151,5 @@ func TestReload(t *testing.T) {
 	err := c.Reload()
 	if err.Error() != expectedError {
 		t.Errorf("unexpected error message. got: %q, want: %q", err.Error(), expectedError)
-	}
-}
-
-func TestUpload(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	oci.PrepareOCIServer(ctx, t, ociRepo)
-	c := oci.PrepareTest(t, ociRepo)
-	chartMetadata := &chart.Metadata{
-		Name:    "apache",
-		Version: "7.3.15",
-	}
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
-		t.Fatal(err)
-	}
-
-	chartPath, err := c.Fetch("apache", "7.3.15")
-	if err != nil {
-		t.Fatalf("error fetching chart: %v", err)
-	}
-
-	if _, err = os.Stat(chartPath); err != nil {
-		t.Errorf("chart package does not exist")
-	}
-
-	contentType, err := utils.GetFileContentType(chartPath)
-	if err != nil {
-		t.Fatalf("error checking contentType of %s file", chartPath)
-	}
-
-	if contentType != "application/x-gzip" {
-		t.Errorf("incorrect content type, got: %s, want: %s.", contentType, "application/x-gzip")
 	}
 }

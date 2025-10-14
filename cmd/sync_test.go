@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 	"text/template"
 
@@ -89,7 +91,6 @@ func TestSync(t *testing.T) {
 
 func prepareSourceRepo(_ context.Context, t *testing.T) {
 	oci.PrepareOCIServer(context.Background(), t, ociSourceRepo)
-	cs := oci.PrepareTest(t, ociSourceRepo)
 
 	charts := []struct {
 		Name    string
@@ -106,9 +107,16 @@ func prepareSourceRepo(_ context.Context, t *testing.T) {
 		}
 		// Upload chart to source repo
 		chartPath := fmt.Sprintf("../testdata/%s-%s.tgz", c.Name, c.Version)
-		if err := cs.Upload(chartPath, chartMetadata); err != nil {
+		u, err := url.Parse(ociSourceRepo.Url)
+		if err != nil {
 			t.Fatal(err)
 		}
+		// helm replaces plus(+) characters with underscores(_) in the tag (version)
+		chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+		if err := oci.PushChartToOCI(chartPath, chartMetadata, chartRef); err != nil {
+			t.Fatal(err)
+		}
+
 	}
 }
 

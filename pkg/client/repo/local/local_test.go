@@ -8,7 +8,6 @@ import (
 
 	"github.com/bitnami/charts-syncer/pkg/client/repo/local"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
-	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/time"
 )
 
@@ -92,27 +91,5 @@ func TestGetChartDetails(t *testing.T) {
 	}
 	if want.Digest != got.Digest {
 		t.Errorf("unexpected digest in chart. got: %v, want: %v", got, want)
-	}
-}
-
-func TestUpload(t *testing.T) {
-	c, err := local.New("../../../../testdata/wraps")
-	if err != nil {
-		t.Fatal(err)
-	}
-	cMetadata := chart.Metadata{
-		Name:    "apache",
-		Version: "7.3.15",
-	}
-	err = c.Upload("../../../../testdata/apache-7.3.15.tgz", &cMetadata)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedChartPath := "../../../../testdata/wraps/apache-7.3.15.wrap.tgz"
-	if _, err := os.Stat(expectedChartPath); err != nil {
-		t.Errorf("chart package does not exist after upload method")
-	}
-	if err := os.Remove(expectedChartPath); err != nil {
-		t.Errorf("error cleaning chart path from %q after successful upload", expectedChartPath)
 	}
 }
