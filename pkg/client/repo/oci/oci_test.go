@@ -2,9 +2,12 @@ package oci_test
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/bitnami/charts-syncer/api"
@@ -36,7 +39,13 @@ func TestFetch(t *testing.T) {
 		Version: "7.3.15",
 	}
 
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -66,7 +75,14 @@ func TestHas(t *testing.T) {
 		Name:    "apache",
 		Version: "7.3.15",
 	}
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -106,7 +122,14 @@ func TestListChartVersions(t *testing.T) {
 		Name:    "apache",
 		Version: "7.3.15",
 	}
-	if err := c.Upload("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata); err != nil {
+
+	u, err := url.Parse(ociRepo.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
+	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
