@@ -45,7 +45,7 @@ func TestFetch(t *testing.T) {
 	}
 	// helm replaces plus(+) characters with underscores(_) in the tag (version)
 	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
-	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -82,7 +82,7 @@ func TestHas(t *testing.T) {
 	}
 	// helm replaces plus(+) characters with underscores(_) in the tag (version)
 	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
-	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
@@ -129,7 +129,7 @@ func TestListChartVersions(t *testing.T) {
 	}
 	// helm replaces plus(+) characters with underscores(_) in the tag (version)
 	chartRef := fmt.Sprintf("%s%s/%s:%s", u.Host, u.Path, chartMetadata.Name, strings.ReplaceAll(chartMetadata.Version, "+", "_"))
-	if err := oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
+	if err = oci.PushChartToOCI("../../../../testdata/apache-7.3.15.wrap.tgz", chartMetadata, chartRef); err != nil {
 		t.Fatal(err)
 	}
 
