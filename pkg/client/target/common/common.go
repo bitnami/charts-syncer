@@ -5,7 +5,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
 	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/juju/errors"
@@ -29,8 +29,8 @@ type Target struct {
 	usePlainHTTP       bool
 }
 
-// New creates a Repo object from an api.Repo object.
-func New(target *api.Target, chartWriter client.ChartsReaderWriter, insecure bool, usePlainHTTP bool) (*Target, error) {
+// New creates a Repo object from an apiv1.Repo object.
+func New(target *apiv1.Target, chartWriter client.ChartsReaderWriter, insecure bool, usePlainHTTP bool) (*Target, error) {
 	containers := target.GetContainers()
 	repo := target.GetRepo()
 	s := &Target{ChartsReaderWriter: chartWriter, insecure: insecure, usePlainHTTP: usePlainHTTP}

@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/oci"
 )
 
 // Creates an HTTP server that knows how to reply to all OCI related requests
-func prepareHTTPServer(t *testing.T, ociRepo *api.Repo) {
+func prepareHTTPServer(t *testing.T, ociRepo *apiv1.Repo) {
 	t.Helper()
 
 	// Create HTTP server
@@ -20,21 +20,21 @@ func prepareHTTPServer(t *testing.T, ociRepo *api.Repo) {
 
 func TestNewClient(t *testing.T) {
 	tests := []struct {
-		repo     *api.Repo
+		repo     *apiv1.Repo
 		typeText string
 		errText  string
 	}{
 		{
-			&api.Repo{
-				Kind: api.Kind_HELM,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_HELM,
 				Url:  "https://charts.bitnami.com/bitnami",
 			},
 			"*helmclassic.Repo",
 			"",
 		},
 		{
-			&api.Repo{
-				Kind: api.Kind_CHARTMUSEUM,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_CHARTMUSEUM,
 				// Not a real chartmuseum service. But I just want to reloadIndex() to work
 				Url: "https://charts.bitnami.com/bitnami",
 			},
@@ -42,8 +42,8 @@ func TestNewClient(t *testing.T) {
 			"",
 		},
 		{
-			&api.Repo{
-				Kind: api.Kind_HARBOR,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_HARBOR,
 				// Not a real chartmuseum service. But I just want to reloadIndex() to work
 				Url: "https://charts.bitnami.com/bitnami",
 			},
@@ -51,10 +51,10 @@ func TestNewClient(t *testing.T) {
 			"",
 		},
 		{
-			&api.Repo{
-				Kind: api.Kind_OCI,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_OCI,
 				Url:  "http://localhost:9090/my-project",
-				Auth: &api.Auth{
+				Auth: &apiv1.Auth{
 					Username: "user",
 					Password: "password",
 				},
@@ -64,15 +64,15 @@ func TestNewClient(t *testing.T) {
 			"",
 		},
 		{
-			&api.Repo{
-				Kind: api.Kind_LOCAL,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_LOCAL,
 			},
 			"*local.Repo",
 			"",
 		},
 		{
-			&api.Repo{
-				Kind: api.Kind_UNKNOWN,
+			&apiv1.Repo{
+				Kind: apiv1.Kind_UNKNOWN,
 			},
 			"<nil>",
 			"unsupported repo kind \"UNKNOWN\"",
@@ -85,7 +85,7 @@ func TestNewClient(t *testing.T) {
 			// bitnami charts repo.
 
 			// For OCI kind we need first to init an HTTP server to mock responses during client initialization
-			if test.repo.Kind == api.Kind_OCI {
+			if test.repo.Kind == apiv1.Kind_OCI {
 				prepareHTTPServer(t, test.repo)
 			}
 			c, err := NewClient(test.repo)

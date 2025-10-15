@@ -12,7 +12,7 @@ import (
 
 	"helm.sh/helm/v3/pkg/time"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/harbor"
@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	harborRepo = &api.Repo{
-		Kind: api.Kind_HARBOR,
-		Auth: &api.Auth{
+	harborRepo = &apiv1.Repo{
+		Kind: apiv1.Kind_HARBOR,
+		Auth: &apiv1.Auth{
 			Username: "user",
 			Password: "password",
 		},

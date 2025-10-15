@@ -6,7 +6,7 @@ import (
 
 	"github.com/juju/errors"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/pkg/client"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/chartmuseum"
@@ -19,7 +19,7 @@ import (
 )
 
 // NewClient returns a Client object
-func NewClient(repo *api.Repo, opts ...types.Option) (client.ChartsReaderWriter, error) {
+func NewClient(repo *apiv1.Repo, opts ...types.Option) (client.ChartsReaderWriter, error) {
 	copts := &types.ClientOpts{}
 	for _, o := range opts {
 		o(copts)
@@ -41,15 +41,15 @@ func NewClient(repo *api.Repo, opts ...types.Option) (client.ChartsReaderWriter,
 		return nil, errors.Annotatef(err, "allocating cache")
 	}
 	switch repo.Kind {
-	case api.Kind_HELM:
+	case apiv1.Kind_HELM:
 		return helmclassic.New(repo, c, insecure)
-	case api.Kind_CHARTMUSEUM:
+	case apiv1.Kind_CHARTMUSEUM:
 		return chartmuseum.New(repo, c, insecure)
-	case api.Kind_HARBOR:
+	case apiv1.Kind_HARBOR:
 		return harbor.New(repo, c, insecure)
-	case api.Kind_OCI:
+	case apiv1.Kind_OCI:
 		return oci.New(repo, c, insecure, usePlainHTTP)
-	case api.Kind_LOCAL:
+	case apiv1.Kind_LOCAL:
 		return local.New(repo.Path)
 	default:
 		return nil, errors.Errorf("unsupported repo kind %q", repo.Kind)

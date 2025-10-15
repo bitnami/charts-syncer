@@ -32,7 +32,7 @@ fullcover:
 	GO111MODULE=on go tool cover -func=coverage.out
 
 gen:
-	go generate github.com/bitnami/charts-syncer/...
+	buf generate
 
 build: $(GO_SOURCES)
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(OUTPUT) -ldflags ${LDFLAGS} ./cmd

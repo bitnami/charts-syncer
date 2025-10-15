@@ -4,10 +4,9 @@ package chartmuseum
 import (
 	"net/url"
 
-	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
-
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache"
+	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 )
@@ -24,8 +23,8 @@ type Repo struct {
 	cache cache.Cacher
 }
 
-// New creates a Repo object from an api.Repo object.
-func New(repo *api.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
+// New creates a Repo object from an apiv1.Repo object.
+func New(repo *apiv1.Repo, c cache.Cacher, insecure bool) (*Repo, error) {
 	u, err := url.Parse(repo.GetUrl())
 	if err != nil {
 		return nil, errors.Trace(err)

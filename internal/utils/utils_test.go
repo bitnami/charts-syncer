@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
 
 var (
-	source = &api.Source{
-		Repo: &api.Repo{
+	source = &apiv1.Source{
+		Repo: &apiv1.Repo{
 			Url: "https://charts.bitnami.com/bitnami",
 		},
 	}

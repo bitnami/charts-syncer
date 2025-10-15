@@ -4,7 +4,7 @@ package syncer
 import (
 	"os"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
 	cs "github.com/bitnami/charts-syncer/pkg/client/source"
 	ct "github.com/bitnami/charts-syncer/pkg/client/target"
@@ -25,8 +25,8 @@ type Clients struct {
 
 // A Syncer can be used to sync a source and target chart repos.
 type Syncer struct {
-	source *api.Source
-	target *api.Target
+	source *apiv1.Source
+	target *apiv1.Target
 
 	cli *Clients
 
@@ -133,7 +133,7 @@ func WithLatestVersionOnly(latestVersionOnly bool) Option {
 }
 
 // New creates a new syncer using Client
-func New(source *api.Source, target *api.Target, opts ...Option) (*Syncer, error) {
+func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, error) {
 	s := &Syncer{
 		source: source,
 		target: target,

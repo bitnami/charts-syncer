@@ -2,12 +2,13 @@
 package config
 
 import (
+	goerrors "errors"
 	"fmt"
 	"net/url"
 	"os"
 	"strings"
 
-	"github.com/bitnami/charts-syncer/api"
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/juju/errors"
 	"github.com/spf13/viper"
 
@@ -24,7 +25,45 @@ const DefaultIndexName = "charts-index"
 // DefaultIndexTag is the tag for the OCI artifact with the index
 const DefaultIndexTag = "latest"
 
-func setDefaultChartsIndex(config *api.Config) error {
+// Validate validates the config file is correct
+func Validate(c *apiv1.Config) error {
+	var errs error
+
+	if repo := c.GetSource().GetRepo(); repo != nil && repo.GetKind() != apiv1.Kind_LOCAL {
+		if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
+			errs = goerrors.Join(errs, errors.Errorf(`"source.repo.url" should be a valid URL: %v`, err))
+		}
+	}
+	if repo := c.GetTarget().GetRepo(); repo != nil {
+		if repo.GetKind() != apiv1.Kind_LOCAL {
+			if _, err := url.ParseRequestURI(repo.GetUrl()); err != nil {
+				errs = goerrors.Join(errs, errors.Errorf(`"target.repo.url" should be a valid URL: %v`, err))
+			}
+		}
+		if repo.GetKind() != apiv1.Kind_OCI && repo.GetKind() != apiv1.Kind_LOCAL {
+			errs = goerrors.Join(errs, errors.Errorf(`"target.repo.kind" should be "OCI" or "LOCAL"`))
+		}
+	}
+
+	// Authentication
+	// Container images
+	if auth := c.GetSource().GetContainers().GetAuth(); auth != nil {
+		if auth.Username == "" || auth.Password == "" || auth.Registry == "" {
+			errs = goerrors.Join(errs, errors.Errorf(`"source.containers.auth" "registry", "username"" and "password" are required"`))
+		}
+	}
+	if auth := c.GetTarget().GetContainers().GetAuth(); auth != nil {
+		// NOTE: we do not indicate that the registry is empty because this one is set from target.containerRegistry
+		// so the user does not need to set it up
+		if auth.Username == "" || auth.Password == "" {
+			errs = goerrors.Join(errs, errors.Errorf(`"target.containers.auth" "username"" and "password" are required"`))
+		}
+	}
+
+	return errs
+}
+
+func setDefaultChartsIndex(config *apiv1.Config) error {
 	u, err := url.Parse(config.GetSource().GetRepo().GetUrl())
 	if err != nil {
 		return err
@@ -39,7 +78,7 @@ func setDefaultChartsIndex(config *api.Config) error {
 }
 
 // Load unmarshall config file into Config struct.
-func Load(config *api.Config) error {
+func Load(config *apiv1.Config) error {
 	// Load the config file
 	if err := yamlToProto(viper.ConfigFileUsed(), config); err != nil {
 		return errors.Trace(fmt.Errorf("error unmarshalling config file: %w", err))
@@ -56,7 +95,7 @@ func Load(config *api.Config) error {
 	return nil
 }
 
-func setDefaultOverrides(config *api.Config) error {
+func setDefaultOverrides(config *apiv1.Config) error {
 	if repo := config.GetSource().GetRepo(); repo != nil {
 		if !repo.GetDisableChartsIndex() && repo.GetChartsIndex() == "" {
 			if err := setDefaultChartsIndex(config); err != nil {
@@ -67,7 +106,7 @@ func setDefaultOverrides(config *api.Config) error {
 
 	// Target OCI Chart repositories do not use the custom index
 	if repo := config.GetTarget().GetRepo(); repo != nil {
-		if repo.Kind == api.Kind_OCI {
+		if repo.Kind == apiv1.Kind_OCI {
 			repo.DisableChartsIndex = true
 		}
 	}
@@ -82,14 +121,14 @@ func setDefaultOverrides(config *api.Config) error {
 
 // Sets the authentication configuration for container images and Helm Chart repositories
 // It reads the configuration from the viper config repository which values might come from the config file, env vars or flags
-func setAuthentication(source *api.Source, target *api.Target) error {
+func setAuthentication(source *apiv1.Source, target *apiv1.Target) error {
 	// Source Chart and container images authentication
 	if source != nil {
 		// Helm Chart authentication
 		// NOTE: Getting entries one by one is required since they match the env variables defined and being overridden i.e SOURCE_containers.auth_REGISTRY
 		username, password := viper.GetString("source.repo.auth.username"), viper.GetString("source.repo.auth.password")
 		if username != "" && password != "" && source.GetRepo() != nil {
-			source.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+			source.GetRepo().Auth = &apiv1.Auth{Username: username, Password: password}
 		}
 
 		// Container images OCI repository authentication
@@ -101,9 +140,9 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 				registry = viper.GetString("source.containers.url")
 			}
 			if source.GetContainers() == nil {
-				source.Containers = &api.Containers{}
+				source.Containers = &apiv1.Containers{}
 			}
-			source.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
+			source.GetContainers().Auth = &apiv1.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
 		}
 	}
 
@@ -111,7 +150,7 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 	if target != nil {
 		username, password := viper.GetString("target.repo.auth.username"), viper.GetString("target.repo.auth.password")
 		if username != "" && password != "" && target.GetRepo() != nil {
-			target.GetRepo().Auth = &api.Auth{Username: username, Password: password}
+			target.GetRepo().Auth = &apiv1.Auth{Username: username, Password: password}
 		}
 
 		// Target container images OCI repository
@@ -121,9 +160,9 @@ func setAuthentication(source *api.Source, target *api.Target) error {
 				registry = viper.GetString("target.containers.url")
 			}
 			if target.GetContainers() == nil {
-				target.Containers = &api.Containers{}
+				target.Containers = &apiv1.Containers{}
 			}
-			target.GetContainers().Auth = &api.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
+			target.GetContainers().Auth = &apiv1.Containers_ContainerAuth{Username: username, Password: password, Registry: registry}
 		}
 	}
 
