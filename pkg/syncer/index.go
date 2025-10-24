@@ -4,6 +4,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -115,6 +116,10 @@ func (s *Syncer) loadCharts(charts ...string) error {
 			sort.Sort(semver.Collection(vs))
 			// The last element of the array is the latest version
 			version := vs[len(vs)-1].String()
+			// Check if the original version had a prefix
+			if strings.HasPrefix(versions[0], "v") {
+				version = fmt.Sprintf("v%s", version)
+			}
 			if err := s.processVersion(name, version, publishingThreshold); err != nil {
 				klog.Warningf("Failed processing %s:%s chart. The index will remain incomplete.", name, version)
 				errs = goerrors.Join(errs, errors.Trace(err))
