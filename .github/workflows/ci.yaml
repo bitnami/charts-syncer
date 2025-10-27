@@ -62,7 +62,7 @@ jobs:
 
       - name: Build
         run: make build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: charts-syncer-binary
           path: dist/charts-syncer
