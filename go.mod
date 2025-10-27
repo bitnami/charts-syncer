@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.1
-	github.com/vmware-labs/distribution-tooling-for-helm v0.4.9
+	github.com/vmware-labs/distribution-tooling-for-helm v0.4.11
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.19.0
