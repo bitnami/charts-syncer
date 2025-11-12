@@ -102,8 +102,7 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
-	// helm replaces plus(+) characters with underscores(_) in the tag (version)
-	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
+	ref, err := r.parseReference(u, version)
 	if err != nil {
 		return nil, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -213,8 +212,7 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
-	// helm replaces plus(+) characters with underscores(_) in the tag (version)
-	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
+	ref, err := r.parseReference(u, version)
 	if err != nil {
 		return "", errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -285,9 +283,7 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 	u := *r.url
 	u.Path = path.Join(u.Path, "/", chartName)
 
-	// helm replaces plus(+) characters with underscores(_) in the tag (version)
-	ref, err := name.ParseReference(u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_"))
-
+	ref, err := r.parseReference(u, version)
 	if err != nil {
 		return false, errors.Errorf("failed parsing OCI reference: %s", err)
 	}
@@ -353,24 +349,13 @@ func isHelmChartContentLayerMediaType(t string) bool {
 	return false
 }
 
-// ociReferenceExists checks if a given oci reference exists in the repository
-func ociReferenceExists(ociRef, username, password string) (bool, error) {
-	ociReference, err := name.ParseReference(ociRef)
-	if err != nil {
-		return false, errors.Trace(err)
+func (r *Repo) parseReference(u url.URL, version string) (name.Reference, error) {
+	// helm replaces plus(+) characters with underscores(_) in the tag (version)
+	ref := u.Host + u.Path + ":" + strings.ReplaceAll(version, "+", "_")
+	if r.usePlainHTTP {
+		return name.ParseReference(ref, name.Insecure)
 	}
-	authOptions := authn.Basic{Username: username, Password: password}
-	opt := []remote.Option{
-		remote.WithAuth(&authOptions),
-	}
-	_, err = remote.Head(ociReference, opt...)
-	if err != nil {
-		if strings.Contains(err.Error(), "404 Not Found") {
-			return false, nil
-		}
-		return false, errors.Trace(err)
-	}
-	return true, nil
+	return name.ParseReference(ref)
 }
 
 // populateEntries populates the entries map with the info from the charts index
