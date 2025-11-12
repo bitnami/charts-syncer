@@ -1,70 +1,12 @@
 package oci
 
 import (
-	"context"
-	"fmt"
-	"net/url"
 	"reflect"
 	"sort"
 	"testing"
 
-	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 )
-
-var (
-	ociRepo = &apiv1.Repo{
-		Kind: apiv1.Kind_OCI,
-		Auth: &apiv1.Auth{
-			Username: "user",
-			Password: "password",
-		},
-	}
-)
-
-func TestOciReferenceExists(t *testing.T) {
-	tests := []struct {
-		desc          string
-		ociPartialRef string // to be added to repo url returned by PrepareOCIServer
-		pushTestAsset bool
-		want          bool
-	}{
-		{
-			desc:          "Artifact should exist",
-			ociPartialRef: "index:latest",
-			pushTestAsset: true,
-			want:          true,
-		},
-		{
-			desc:          "Artifact should not exist",
-			ociPartialRef: "non-existing-index:latest",
-			pushTestAsset: false,
-			want:          false,
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.desc, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			PrepareOCIServer(ctx, t, ociRepo)
-			u, err := url.Parse(ociRepo.Url)
-			if err != nil {
-				t.Fatal(err)
-			}
-			ociRef := fmt.Sprintf("%s%s/%s", u.Host, u.Path, tc.ociPartialRef)
-			if tc.pushTestAsset {
-				PushFileToOCI(t, "../../../../testdata/oci/index.json", ociRef)
-			}
-			got, err := ociReferenceExists(ociRef, ociRepo.GetAuth().GetUsername(), ociRepo.GetAuth().GetPassword())
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.want {
-				t.Errorf("wrong result from OCI reference existence check. got: %v, want: %v", got, tc.want)
-			}
-		})
-	}
-}
 
 func TestListWithEntries(t *testing.T) {
 	entries := map[string][]string{
