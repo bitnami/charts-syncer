@@ -2,24 +2,26 @@ package indexer
 
 import (
 	"context"
-	"net/url"
+	"io"
 	"os"
 
 	"github.com/bitnami/charts-syncer/internal/indexer/api"
-	containerderrs "github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
+	"github.com/distribution/reference"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/klog"
-	"oras.land/oras-go/pkg/content"
-	"oras.land/oras-go/pkg/oras"
+	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content"
+	"oras.land/oras-go/v2/content/file"
+	oraserr "oras.land/oras-go/v2/errdef"
+	"oras.land/oras-go/v2/registry/remote"
 )
 
 // ociIndexerOpts are the options to configure the ociIndexer
 type ociIndexerOpts struct {
 	reference string
-	url       string
 	username  string
 	password  string
 	insecure  bool
@@ -57,19 +59,10 @@ func WithInsecure() OciIndexerOpt {
 	}
 }
 
-// WithHost configures the OCI host
-//
-//	opt := WithHost("my.oci.domain")
-func WithHost(h string) OciIndexerOpt {
-	return func(opts *ociIndexerOpts) {
-		opts.url = h
-	}
-}
-
 // ociIndexer is an OCI-based Indexer
 type ociIndexer struct {
-	reference string
-	resolver  remotes.Resolver
+	reference  string
+	repository *remote.Repository
 }
 
 // NewOciIndexer returns a new OCI-based indexer
@@ -79,15 +72,19 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 		o(opt)
 	}
 
-	u, err := url.Parse(opt.url)
+	named, err := reference.ParseNormalizedNamed(opt.reference)
 	if err != nil {
-		return nil, errors.Wrapf(ErrInvalidArgument, "invalid OCI host URL: %+v", err)
+		return nil, err
 	}
-	resolver := newDockerResolver(u, opt.username, opt.password, opt.insecure)
+
+	repository, err := newRemoteRepository(named.Name(), opt.username, opt.password, opt.insecure)
+	if err != nil {
+		return nil, err
+	}
 
 	ind := &ociIndexer{
-		reference: opt.reference,
-		resolver:  resolver,
+		reference:  opt.reference,
+		repository: repository,
 	}
 
 	return ind, nil
@@ -138,9 +135,12 @@ func (ind *ociIndexer) Get(ctx context.Context) (idx *api.Index, e error) {
 
 func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f string, e error) {
 	// Pull index files from remote
-	store := content.NewFile(rootPath)
+	store, err := file.New(rootPath)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create file store")
+	}
 	defer func() {
-		err := store.Close()
+		err = store.Close()
 		// This library is buggy, and we need to check the error string too
 		// https://github.com/oras-project/oras-go/issues/84
 		if e == nil && err != nil && err.Error() != "" {
@@ -154,24 +154,37 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexLayerMediaType, "layer-")
 	ctx = remotes.WithMediaTypeKeyPrefix(ctx, chartsIndexConfigMediaType, "config-")
 
-	// Infer index filename from layer annotations
-	var indexFilename string
-	opts := []oras.CopyOpt{
-		oras.WithAllowedMediaType(chartsIndexLayerMediaType, chartsIndexConfigMediaType),
-		// The index artifact has no title
-		oras.WithPullEmptyNameAllowed(),
-		oras.WithLayerDescriptors(func(layers []ocispec.Descriptor) {
-			for _, layer := range layers {
-				switch layer.MediaType {
-				case chartsIndexLayerMediaType:
-					indexFilename = layer.Annotations["org.opencontainers.image.title"]
+	// Infer index filename from layer annotations and capture the layer descriptor
+	var (
+		indexFilename  string
+		indexLayerDesc ocispec.Descriptor
+	)
+	opts := oras.DefaultCopyOptions
+	opts.FindSuccessors = func(ctx context.Context, fetcher content.Fetcher, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
+		var successors []ocispec.Descriptor
+		successors, err = content.Successors(ctx, fetcher, desc)
+		if err != nil {
+			return nil, err
+		}
+		var filtered []ocispec.Descriptor
+		for _, s := range successors {
+			// filter media type
+			if s.MediaType == chartsIndexLayerMediaType || s.MediaType == chartsIndexConfigMediaType {
+				filtered = append(filtered, s)
+			}
+			// set indexFilename and capture the layer descriptor
+			if s.MediaType == chartsIndexLayerMediaType {
+				indexLayerDesc = s
+				if title, ok := s.Annotations["org.opencontainers.image.title"]; ok {
+					indexFilename = title
 				}
 			}
-		}),
+		}
+		return filtered, nil
 	}
-	_, err := oras.Copy(ctx, ind.resolver, ind.reference, store, ind.reference, opts...)
+	_, err = oras.Copy(ctx, ind.repository, ind.reference, store, ind.reference, opts)
 	if err != nil {
-		if containerderrs.IsNotFound(err) {
+		if errors.Is(err, oraserr.ErrNotFound) {
 			return "", errors.Wrap(ErrNotFound, err.Error())
 		}
 		return "", err
@@ -183,5 +196,23 @@ func (ind *ociIndexer) downloadIndex(ctx context.Context, rootPath string) (f st
 		indexFilename = defaultIndexFilename
 	}
 
-	return store.ResolvePath(indexFilename), nil
+	// Read the layer content from the store
+	reader, err := store.Fetch(ctx, indexLayerDesc)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to fetch index layer")
+	}
+	defer reader.Close()
+
+	indexFile, err := os.Create(indexFilename)
+	if err != nil {
+		return "", err
+	}
+	defer indexFile.Close()
+
+	_, err = io.Copy(indexFile, reader)
+	if err != nil {
+		return "", err
+	}
+
+	return indexFile.Name(), nil
 }

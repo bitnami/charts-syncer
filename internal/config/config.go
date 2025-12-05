@@ -69,7 +69,7 @@ func setDefaultChartsIndex(config *apiv1.Config) error {
 		return err
 	}
 
-	uri := strings.Trim(strings.Join([]string{u.Host, u.Path}, "/"), "/")
+	uri := strings.Trim(fmt.Sprintf("%s%s", u.Host, u.Path), "/")
 	ref := fmt.Sprintf("%s/%s:%s", uri, DefaultIndexName, DefaultIndexTag)
 	klog.V(4).Infof("'source.repo.chartsIndex' property is empty. Using %q default value", ref)
 	config.GetSource().GetRepo().ChartsIndex = ref
