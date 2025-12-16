@@ -6,7 +6,7 @@
 Sync chart packages and associated container images between chart repositories
 
 > [!IMPORTANT]  
-> Starting in 2026, this project is licensed under a Broadcom license. For details, see the [_LICENSE_](https://github.com/bitnami/charts-syncer/blob/patch-1/LICENSE) file
+> Starting in 2026, this project is licensed under a Broadcom license. For details, see the [_LICENSE_](https://raw.githubusercontent.com/bitnami/charts-syncer/refs/heads/v2/LICENSE) file
 
 # Table of Contents
 
