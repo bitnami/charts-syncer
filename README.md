@@ -5,6 +5,9 @@
 
 Sync chart packages and associated container images between chart repositories
 
+> [!IMPORTANT]  
+> Starting in 2026, this project is licensed under a Broadcom license. For details, see the [_LICENSE_](https://raw.githubusercontent.com/bitnami/charts-syncer/refs/heads/v2/LICENSE) file
+
 # Table of Contents
 
 - [Usage](#usage)
@@ -579,15 +582,3 @@ Visit [this guide](docs/kubernetes-deployment.md) to deploy a Kubernetes CronJob
 
 Check the [developer docs](docs/development.md).
 
-## License
-
-Copyright &copy; 2025 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
-
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and limitations under the License.
