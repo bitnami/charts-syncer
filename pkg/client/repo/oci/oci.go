@@ -365,11 +365,18 @@ func populateEntries(repo *apiv1.Repo) (map[string][]string, error) {
 	}
 
 	klog.Infof("Attempting to retrieve remote index...")
-	ind, err := indexer.NewOciIndexer(
-		indexer.WithHost(repo.GetUrl()),
+	indexerOpts := []indexer.OciIndexerOpt{
 		indexer.WithBasicAuth(repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword()),
 		indexer.WithIndexRef(repo.GetChartsIndex()),
-	)
+	}
+
+	// Only use insecure if the repository URL uses http:// scheme
+	u, err := url.Parse(repo.GetUrl())
+	if err == nil && u.Scheme == "http" {
+		indexerOpts = append(indexerOpts, indexer.WithInsecure())
+	}
+
+	ind, err := indexer.NewOciIndexer(indexerOpts...)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

@@ -1,36 +1,30 @@
 package indexer
 
 import (
-	"net/url"
-
-	"github.com/containerd/containerd/remotes"
-	"github.com/containerd/containerd/remotes/docker"
-
-	"github.com/bitnami/charts-syncer/internal/utils"
+	"oras.land/oras-go/v2/registry/remote"
+	"oras.land/oras-go/v2/registry/remote/auth"
+	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
-func newDockerResolver(u *url.URL, username, password string, insecure bool) remotes.Resolver {
-	client := utils.DefaultClient
-	if insecure {
-		client = utils.InsecureClient
-	}
-	opts := docker.ResolverOptions{
-		Hosts: func(_ string) ([]docker.RegistryHost, error) {
-			return []docker.RegistryHost{
-				{
-					Authorizer: docker.NewDockerAuthorizer(
-						docker.WithAuthCreds(func(_ string) (string, string, error) {
-							return username, password, nil
-						})),
-					Host:         u.Host,
-					Scheme:       u.Scheme,
-					Path:         "/v2",
-					Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
-					Client:       client,
-				},
-			}, nil
-		},
+// newRemoteRepository creates a remote.Repository for an OCI registry with basic auth
+func newRemoteRepository(ref, username, password string, insecure bool) (*remote.Repository, error) {
+	repo, err := remote.NewRepository(ref)
+	if err != nil {
+		return nil, err
 	}
 
-	return docker.NewResolver(opts)
+	if insecure {
+		repo.PlainHTTP = true
+	}
+
+	repo.Client = &auth.Client{
+		Client: retry.DefaultClient,
+		Cache:  auth.NewCache(),
+		Credential: auth.StaticCredential(repo.Reference.Registry, auth.Credential{
+			Username: username,
+			Password: password,
+		}),
+	}
+
+	return repo, nil
 }

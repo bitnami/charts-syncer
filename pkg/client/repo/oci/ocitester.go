@@ -1,6 +1,7 @@
 package oci
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -17,19 +18,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerd/containerd/remotes/docker"
-	"github.com/distribution/distribution/v3/configuration"
-	"github.com/distribution/distribution/v3/registry"
-	"github.com/juju/errors"
-	"helm.sh/helm/v3/pkg/chart"
-	"oras.land/oras-go/pkg/content"
-	orascontext "oras.land/oras-go/pkg/context"
-	"oras.land/oras-go/pkg/oras"
-
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/cache/cachedisk"
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/repo/helmclassic"
+	"github.com/distribution/distribution/v3/configuration"
+	"github.com/distribution/distribution/v3/registry"
+	"github.com/juju/errors"
+	ocidigest "github.com/opencontainers/go-digest"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"helm.sh/helm/v3/pkg/chart"
+	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/memory"
+	"oras.land/oras-go/v2/registry/remote"
 )
 
 var (
@@ -52,83 +53,67 @@ type RepoTester struct {
 	index map[string][]*helmclassic.ChartVersion
 }
 
-// PushFileToOCI pushes a file to an OCI repository
-func PushFileToOCI(t *testing.T, filepath string, ref string) {
-	ctx := context.Background()
-	resolver := docker.NewResolver(docker.ResolverOptions{PlainHTTP: true})
-	fileContent, err := os.ReadFile(filepath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	filename := path.Base(filepath)
-	customMediaType := "my.custom.media.type"
-	memoryStore := content.NewMemory()
-
-	blobDesc, err := memoryStore.Add(filename, customMediaType, fileContent)
-	if err != nil {
-		t.Fatal(err)
-	}
-	manifest, manifestDesc, config, configDesc, err := content.GenerateManifestAndConfig(nil, nil, blobDesc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	memoryStore.Set(configDesc, config)
-	if err := memoryStore.StoreManifest(ref, manifestDesc, manifest); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := oras.Copy(ctx, memoryStore, ref, resolver, ref, oras.WithNameValidation(nil)); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // PushChartToOCI pushes a file to an OCI repository
 func PushChartToOCI(file string, metadata *chart.Metadata, ref string) error {
+	ctx := context.Background()
+
 	f, err := os.Open(file)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	defer f.Close()
 
-	memoryStore := content.NewMemory()
-	resolver := docker.NewResolver(docker.ResolverOptions{PlainHTTP: true})
+	memoryStore := memory.New()
+	repository, err := remote.NewRepository(ref)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	repository.PlainHTTP = true
 
-	// Preparing layers
-	fileName := filepath.Base(file)
+	// Preparing layer descriptor
 	fileMediaType := HelmChartContentLayerMediaType
 	fileBuffer, err := os.ReadFile(file)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	blobDesc, err := memoryStore.Add(fileName, fileMediaType, fileBuffer)
-	if err != nil {
+	blobDesc := ocispec.Descriptor{
+		MediaType: fileMediaType,
+		Digest:    ocidigest.FromBytes(fileBuffer),
+		Size:      int64(len(fileBuffer)),
+	}
+	if err = memoryStore.Push(ctx, blobDesc, bytes.NewReader(fileBuffer)); err != nil {
 		return errors.Trace(err)
 	}
 
-	// Preparing Oras config
+	// Preparing config descriptor
 	configBytes, err := json.Marshal(metadata)
 	if err != nil {
 		return err
 	}
-	configDesc, err := memoryStore.Add("", HelmChartConfigMediaType, configBytes)
+	configDesc := ocispec.Descriptor{
+		MediaType: HelmChartConfigMediaType,
+		Digest:    ocidigest.FromBytes(configBytes),
+		Size:      int64(len(configBytes)),
+	}
+	if err = memoryStore.Push(ctx, configDesc, bytes.NewReader(configBytes)); err != nil {
+		return errors.Trace(err)
+	}
+
+	// Preparing manifest descriptor
+	manifestDesc, err := oras.PackManifest(ctx, memoryStore, oras.PackManifestVersion1_1, HelmChartConfigMediaType, oras.PackManifestOptions{
+		Layers:           []ocispec.Descriptor{blobDesc},
+		ConfigDescriptor: &configDesc,
+	})
 	if err != nil {
 		return errors.Trace(err)
 	}
 
-	manifest, manifestDesc, err := content.GenerateManifest(&configDesc, nil, blobDesc)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	if err := memoryStore.StoreManifest(ref, manifestDesc, manifest); err != nil {
+	if err := memoryStore.Tag(ctx, manifestDesc, ref); err != nil {
 		return errors.Trace(err)
 	}
 
 	// Perform push
-	copyOpts := []oras.CopyOpt{
-		oras.WithAllowedMediaType(HelmChartConfigMediaType, HelmChartContentLayerMediaType),
-		oras.WithNameValidation(nil),
-	}
-	if _, err := oras.Copy(orascontext.Background(), memoryStore, ref, resolver, ref, copyOpts...); err != nil {
+	if _, err := oras.Copy(context.Background(), memoryStore, ref, repository, ref, oras.DefaultCopyOptions); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
