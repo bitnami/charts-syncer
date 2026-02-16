@@ -65,7 +65,7 @@ jobs:
             type=raw,value=latest
       - name: Build and push image
         id: docker_build
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v6.19.2
         env:
           # Disable attestation to prevent 'unknown/unknown' artifacts in GHCR
           BUILDX_NO_DEFAULT_ATTESTATIONS: 1
