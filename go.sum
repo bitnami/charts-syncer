@@ -684,8 +684,8 @@ github.com/transparency-dev/merkle v0.0.2 h1:Q9nBoQcZcgPamMkGn7ghV8XiTZ/kRxn1yCG
 github.com/transparency-dev/merkle v0.0.2/go.mod h1:pqSy+OXefQ1EDUVmAJ8MUhHB9TXGuzVAT58PqBoHz1A=
 github.com/vbatts/tar-split v0.12.1 h1:CqKoORW7BUWBe7UL/iqTVvkTBOF8UvOMKOIZykxnnbo=
 github.com/vbatts/tar-split v0.12.1/go.mod h1:eF6B6i6ftWQcDqEn3/iGFRFRo8cBIMSJVOpnNdfTMFA=
-github.com/vmware-labs/distribution-tooling-for-helm v0.4.12 h1:lcvebQU1GnhOH590t+VeB2RxMe6vkuhd7kSRxocooxM=
-github.com/vmware-labs/distribution-tooling-for-helm v0.4.12/go.mod h1:Ym5L1GieBr5K8uEgsZAoyOAKXc6apQX+NCKQm+ULB8M=
+github.com/vmware-labs/distribution-tooling-for-helm v0.5.0 h1:+8sScsMgvKixdYtlZWM9yICX4Fo0qDSp/SG7GIR9RJg=
+github.com/vmware-labs/distribution-tooling-for-helm v0.5.0/go.mod h1:Q6WupfRDDMi6qBcta2IK6UUAt14xe64ug8kLRfiuImY=
 github.com/vmware-labs/yaml-jsonpath v0.3.2 h1:/5QKeCBGdsInyDCyVNLbXyilb61MXGi9NP674f9Hobk=
 github.com/vmware-labs/yaml-jsonpath v0.3.2/go.mod h1:U6whw1z03QyqgWdgXxvVnQ90zN1BWz5V+51Ewf8k+rQ=
 github.com/vmware-tanzu/carvel-imgpkg v0.38.3 h1:vVnqCPFEZ2NQcoTywg/va91qRyCuu46wBYAETqoyez4=

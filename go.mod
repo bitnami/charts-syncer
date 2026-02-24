@@ -1,6 +1,6 @@
 module github.com/bitnami/charts-syncer
 
-go 1.25
+go 1.26
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.1
-	github.com/vmware-labs/distribution-tooling-for-helm v0.4.12
+	github.com/vmware-labs/distribution-tooling-for-helm v0.5.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.19.0

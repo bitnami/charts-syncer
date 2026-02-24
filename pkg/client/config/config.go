@@ -2,8 +2,8 @@
 package config
 
 import (
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/silent"
+	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog/silent"
 )
 
 // Config is the configuration object for the client package
