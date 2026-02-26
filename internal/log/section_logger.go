@@ -1,7 +1,7 @@
 package klog
 
 import (
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
+	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
 	"k8s.io/klog"
 )
 

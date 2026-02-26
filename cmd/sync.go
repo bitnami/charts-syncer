@@ -9,8 +9,8 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/pterm"
+	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog/pterm"
 	"k8s.io/klog"
 )
 

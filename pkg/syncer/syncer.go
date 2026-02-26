@@ -11,8 +11,8 @@ import (
 
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/silent"
+	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog/silent"
 
 	"k8s.io/klog"
 )

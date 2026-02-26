@@ -10,7 +10,7 @@ import (
 	localSource "github.com/bitnami/charts-syncer/pkg/client/source/local"
 	localTarget "github.com/bitnami/charts-syncer/pkg/client/target/local"
 
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log/silent"
+	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog/silent"
 )
 
 // FakeSyncerOpts allows to configure a Fake syncer.

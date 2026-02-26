@@ -8,7 +8,7 @@ import (
 
 	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/juju/errors"
-	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/log"
+	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
 	helmchart "helm.sh/helm/v3/pkg/chart"
 )
 
