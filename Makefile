@@ -14,7 +14,7 @@ export PATH := $(GOBIN):$(PATH)
 
 
 $(GOLANGCILINT):
-	(cd /; GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.7)
+	(cd /; GO111MODULE=on go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.9.0)
 
 .PHONY: test
 test:
