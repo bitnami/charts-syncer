@@ -78,7 +78,7 @@ jobs:
       - name: Get Registry Local IP
         run: |
           echo "REGISTRY_IP=$(hostname -I | cut -d" " -f1)" >> $GITHUB_ENV
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
             name: charts-syncer-binary
             path: /tmp/dist
