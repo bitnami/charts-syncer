@@ -28,9 +28,9 @@ jobs:
           go-version: '^1.26'
       # Setup env for multi-arch builds
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.7.0
+        uses: docker/setup-qemu-action@v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.12.0
+        uses: docker/setup-buildx-action@v4.0.0
       # Build binaries
       - name: Release
         uses: goreleaser/goreleaser-action@v7
@@ -41,19 +41,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Build & Publish multi-arch image
       - name: Login to Docker Hub
-        uses: docker/login-action@v3.7.0
+        uses: docker/login-action@v4.0.0
         with:
           username: ${{ secrets.BITNAMI_USERNAME }}
           password: ${{ secrets.BITNAMI_PASSWORD }}
       - name: Login to GHRC
-        uses: docker/login-action@v3.7.0
+        uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract image metadata (tags, labels)
         id: metadata
-        uses: docker/metadata-action@v5.10.0
+        uses: docker/metadata-action@v6.0.0
         with:
           images: |
             ${{ env.dockerhub_image_name }}
@@ -65,7 +65,7 @@ jobs:
             type=raw,value=latest
       - name: Build and push image
         id: docker_build
-        uses: docker/build-push-action@v6.19.2
+        uses: docker/build-push-action@v7.0.0
         env:
           # Disable attestation to prevent 'unknown/unknown' artifacts in GHCR
           BUILDX_NO_DEFAULT_ATTESTATIONS: 1
