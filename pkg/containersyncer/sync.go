@@ -81,24 +81,31 @@ func (s *Syncer) DiffPendingContainers(names ...string) ([]*types.ContainerImage
 			if ok, hErr := s.cli.dst.HasContainer(n, tag); hErr != nil {
 				return nil, hErr
 			} else if !ok {
-				var imageRef string
+				var ref *types.ImageReference
 				if c := s.source.GetContainers(); c != nil {
-					imageRef = fmt.Sprintf("%s/%s", httputils.RemoveSchema(c.GetUrl()), n)
-				} else {
-					// LOCAL source: no containers URL, use the bare image name
-					imageRef = n
-				}
-				parsedRef, err := name.ParseReference(imageRef)
-				if err != nil {
-					return nil, errors.Trace(err)
-				}
-				containers = append(containers, &types.ContainerImage{
-					Reference: &types.ImageReference{
+					imageRef := fmt.Sprintf("%s/%s", httputils.RemoveSchema(c.GetUrl()), n)
+					parsedRef, err := name.ParseReference(imageRef)
+					if err != nil {
+						return nil, errors.Trace(err)
+					}
+					ref = &types.ImageReference{
 						Registry:   parsedRef.Context().RegistryStr(),
 						Repository: parsedRef.Context().RepositoryStr(),
 						ImageName:  path.Base(parsedRef.Context().RepositoryStr()),
-					},
-					Tags: []string{tag},
+					}
+				} else {
+					// LOCAL source: build reference directly from the image name without
+					// going through name.ParseReference, which would add Docker Hub defaults
+					// (e.g. "nginx" → "index.docker.io/library/nginx").
+					ref = &types.ImageReference{
+						Registry:   "",
+						Repository: n,
+						ImageName:  path.Base(n),
+					}
+				}
+				containers = append(containers, &types.ContainerImage{
+					Reference: ref,
+					Tags:      []string{tag},
 				})
 			}
 		}

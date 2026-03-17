@@ -249,9 +249,15 @@ func (r *Repo) ListContainerTags(containerName string) ([]string, error) {
 
 	tags, err := remote.List(repo, opts...)
 	if err != nil {
-		if !strings.Contains(err.Error(), "NOT_FOUND") && !strings.Contains(err.Error(), "NAME_UNKNOWN") {
-			return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
+		if terr, ok := err.(*transport.Error); ok && (terr.StatusCode == http.StatusNotFound) {
+			klog.Warningf("Image repository %q does not exist yet in the registry — treating as empty", repo)
+			return []string{}, nil
 		}
+		if strings.Contains(err.Error(), "NOT_FOUND") || strings.Contains(err.Error(), "NAME_UNKNOWN") {
+			klog.Warningf("Image repository %q does not exist yet in the registry — treating as empty", repo)
+			return []string{}, nil
+		}
+		return nil, errors.Errorf("failed to fetch tags for %q: %v", repo, err)
 	}
 
 	var containerTags []string

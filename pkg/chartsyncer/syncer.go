@@ -1,4 +1,4 @@
-// Package chartsyncer Package syncer implements types to sync charts between repositories
+// Package chartsyncer implements types to sync charts between repositories
 package chartsyncer
 
 import (

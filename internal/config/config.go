@@ -47,8 +47,6 @@ func ValidateChartConfig(c *apiv1.Config) error {
 		}
 	}
 
-	errs = goerrors.Join(errs, ValidateContainerAuth(c))
-
 	return errs
 }
 

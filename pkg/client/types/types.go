@@ -84,5 +84,8 @@ func (ir *ImageReference) String() string {
 	if ir == nil {
 		return ""
 	}
+	if ir.Registry == "" {
+		return ir.Repository
+	}
 	return fmt.Sprintf("%s/%s", ir.Registry, ir.Repository)
 }

@@ -2,7 +2,7 @@
 package chartmuseum
 
 import (
-	"fmt"
+	stderrors "errors"
 	"net/url"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
@@ -11,6 +11,9 @@ import (
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 )
+
+// ErrNotSupported is returned by methods that are not supported by this backend.
+var ErrNotSupported = stderrors.New("not supported")
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -68,7 +71,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // ListContainerTags lists all tags of a container
 func (r *Repo) ListContainerTags(_ string) ([]string, error) {
-	return nil, fmt.Errorf("not supported")
+	return nil, ErrNotSupported
 }
 
 // Has checks if a repo has a specific chart
@@ -78,7 +81,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 
 // HasContainer checks if a repo has a specific container
 func (r *Repo) HasContainer(_ string, _ string) (bool, error) {
-	return false, fmt.Errorf("not supported")
+	return false, ErrNotSupported
 }
 
 // GetChartDetails returns the details of a chart

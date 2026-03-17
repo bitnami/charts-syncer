@@ -2,7 +2,7 @@
 package helmclassic
 
 import (
-	"fmt"
+	stderrors "errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,6 +17,9 @@ import (
 	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 )
+
+// ErrNotSupported is returned by methods that are not supported by this backend.
+var ErrNotSupported = stderrors.New("not supported")
 
 // Repo allows to operate a chart repository.
 type Repo struct {
@@ -153,7 +156,7 @@ func (r *Repo) ListChartVersions(name string) ([]string, error) {
 
 // ListContainerTags lists all versions of a chart
 func (r *Repo) ListContainerTags(_ string) ([]string, error) {
-	return nil, fmt.Errorf("not supported")
+	return nil, ErrNotSupported
 }
 
 // Fetch fetches a chart
@@ -189,7 +192,7 @@ func (r *Repo) Has(name string, version string) (bool, error) {
 
 // HasContainer checks if a repo has a specific container
 func (r *Repo) HasContainer(_ string, _ string) (bool, error) {
-	return false, fmt.Errorf("not supported")
+	return false, ErrNotSupported
 }
 
 // GetUploadURL returns the URL to upload a chart

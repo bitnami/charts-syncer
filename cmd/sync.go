@@ -94,7 +94,7 @@ func hasChartTarget(c *apiv1.Config) bool {
 }
 
 func hasContainerSource(c *apiv1.Config) bool {
-	return c.GetSource().GetContainers().GetUrl() != "" || (c.GetTarget().GetRepo().GetPath() != "" && c.GetSource().GetRepo().GetKind() == apiv1.Kind_LOCAL)
+	return c.GetSource().GetContainers().GetUrl() != "" || (c.GetSource().GetRepo().GetPath() != "" && c.GetSource().GetRepo().GetKind() == apiv1.Kind_LOCAL)
 }
 
 func hasContainerTarget(c *apiv1.Config) bool {
@@ -106,6 +106,8 @@ func runSync(parentLog log.SectionLogger, c *apiv1.Config) error {
 	if hasChartSource(c) && hasChartTarget(c) {
 		if err := runChartsSyncer(parentLog, c); err != nil {
 			errs = goerrors.Join(errs, err)
+			// container sync still runs; chart errors reported at the end
+			klog.Warningf("Chart sync failed, continuing with container sync: %v", err)
 		}
 	}
 	if hasContainerSource(c) && hasContainerTarget(c) && len(c.GetContainers()) > 0 {

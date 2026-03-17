@@ -17,7 +17,7 @@ message Config {
     bool skip_artifacts = 6;
     // Do not sync chart images
     bool skip_images = 7;
-    // Single container images to include during sync
+    // Container images to include during sync
     repeated string containers = 8;
 }
 
