@@ -33,11 +33,42 @@ type ChartsReaderWriter interface {
 // ChartsUnwrapper defines the methods required to unwrap a chart
 type ChartsUnwrapper interface {
 	ChartsReader
-	Unwrap(filepath string, metadata *chart.Metadata, opts ...config.Option) error
+	UnwrapChart(filepath string, metadata *chart.Metadata, opts ...config.Option) error
 }
 
 // ChartsWrapper defines the methods required to wrap a chart
 type ChartsWrapper interface {
 	ChartsReader
-	Wrap(source string, destination string, opts ...config.Option) (string, error)
+	WrapChart(source string, destination string, opts ...config.Option) (string, error)
+}
+
+// -----------------------------------------------------
+
+// ContainersReader defines the methods that a ReadOnly container or bundle client should implement.
+type ContainersReader interface {
+	ListContainerTags(name string) ([]string, error)
+	HasContainer(name string, version string) (bool, error)
+}
+
+// ContainersWrapper defines the methods required to wrap a container
+type ContainersWrapper interface {
+	ContainersReader
+	WrapContainer(imageRef string, destination string, opts ...config.Option) (string, error)
+}
+
+// ContainersUnwrapper defines the methods required to unwrap a container
+type ContainersUnwrapper interface {
+	ContainersReader
+	UnwrapContainer(filepath string, opts ...config.Option) error
+}
+
+// ContainersWriter defines the methods that a WriteOnly chart or bundle client should implement.
+type ContainersWriter interface {
+	GetContainerUploadURL() string
+}
+
+// ContainersReaderWriter defines the methods that a chart or bundle client should implement
+type ContainersReaderWriter interface {
+	ContainersReader
+	ContainersWriter
 }

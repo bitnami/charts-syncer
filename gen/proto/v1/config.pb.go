@@ -93,7 +93,9 @@ type Config struct {
 	// Do not sync chart and container artifacts (signatures and metadata)
 	SkipArtifacts bool `protobuf:"varint,6,opt,name=skip_artifacts,json=skipArtifacts,proto3" json:"skip_artifacts,omitempty"`
 	// Do not sync chart images
-	SkipImages    bool `protobuf:"varint,7,opt,name=skip_images,json=skipImages,proto3" json:"skip_images,omitempty"`
+	SkipImages bool `protobuf:"varint,7,opt,name=skip_images,json=skipImages,proto3" json:"skip_images,omitempty"`
+	// Container images to include during sync
+	Containers    []string `protobuf:"bytes,8,rep,name=containers,proto3" json:"containers,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -175,6 +177,13 @@ func (x *Config) GetSkipImages() bool {
 		return x.SkipImages
 	}
 	return false
+}
+
+func (x *Config) GetContainers() []string {
+	if x != nil {
+		return x.Containers
+	}
+	return nil
 }
 
 // SourceRepo contains the required information of the source chart repository
@@ -555,7 +564,7 @@ var File_v1_config_proto protoreflect.FileDescriptor
 
 const file_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x0fv1/config.proto\x12\x03api\"\x84\x02\n" +
+	"\x0fv1/config.proto\x12\x03api\"\xa4\x02\n" +
 	"\x06Config\x12#\n" +
 	"\x06source\x18\x01 \x01(\v2\v.api.SourceR\x06source\x12#\n" +
 	"\x06target\x18\x02 \x01(\v2\v.api.TargetR\x06target\x12\x16\n" +
@@ -565,7 +574,10 @@ const file_v1_config_proto_rawDesc = "" +
 	"skipCharts\x12%\n" +
 	"\x0eskip_artifacts\x18\x06 \x01(\bR\rskipArtifacts\x12\x1f\n" +
 	"\vskip_images\x18\a \x01(\bR\n" +
-	"skipImages\"X\n" +
+	"skipImages\x12\x1e\n" +
+	"\n" +
+	"containers\x18\b \x03(\tR\n" +
+	"containers\"X\n" +
 	"\x06Source\x12\x1d\n" +
 	"\x04repo\x18\x01 \x01(\v2\t.api.RepoR\x04repo\x12/\n" +
 	"\n" +

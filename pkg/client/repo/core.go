@@ -2,6 +2,7 @@
 package repo
 
 import (
+	"net/url"
 	"os"
 
 	"github.com/juju/errors"
@@ -54,4 +55,37 @@ func NewClient(repo *apiv1.Repo, opts ...types.Option) (client.ChartsReaderWrite
 	default:
 		return nil, errors.Errorf("unsupported repo kind %q", repo.Kind)
 	}
+}
+
+// NewContainerClient returns a Client object
+func NewContainerClient(containers *apiv1.Containers, opts ...types.Option) (client.ContainersReaderWriter, error) {
+	copts := &types.ClientOpts{}
+	for _, o := range opts {
+		o(copts)
+	}
+
+	insecure := copts.GetInsecure()
+	usePlainHTTP := copts.GetUsePlainHTTP()
+	// Define cache dir if it hasn't been provided
+	cacheDir := copts.GetCache()
+	if cacheDir == "" {
+		dir, err := os.MkdirTemp("", "client")
+		if err != nil {
+			return nil, errors.Annotatef(err, "creating temporary dir")
+		}
+		cacheDir = dir
+	}
+	c, err := cachedisk.New(cacheDir, containers.GetUrl())
+	if err != nil {
+		return nil, errors.Annotatef(err, "allocating cache")
+	}
+
+	entries := make(map[string][]string)
+	u, err := url.Parse(containers.GetUrl())
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	resolver := oci.NewDockerResolver(u, containers.GetAuth().GetUsername(), containers.GetAuth().GetPassword(), insecure)
+
+	return oci.NewRaw(u, containers.GetAuth().GetUsername(), containers.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
 }

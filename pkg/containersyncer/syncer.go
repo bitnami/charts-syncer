@@ -1,5 +1,5 @@
 // Package syncer implements types to sync charts between repositories
-package syncer
+package containersyncer
 
 import (
 	"os"
@@ -8,7 +8,6 @@ import (
 	"github.com/bitnami/charts-syncer/pkg/client"
 	cs "github.com/bitnami/charts-syncer/pkg/client/source"
 	ct "github.com/bitnami/charts-syncer/pkg/client/target"
-
 	"github.com/bitnami/charts-syncer/pkg/client/types"
 	"github.com/juju/errors"
 	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
@@ -19,8 +18,8 @@ import (
 
 // Clients holds the source and target chart repo clients
 type Clients struct {
-	src client.ChartsWrapper
-	dst client.ChartsUnwrapper
+	src client.ContainersWrapper
+	dst client.ContainersUnwrapper
 }
 
 // A Syncer can be used to sync a source and target chart repos.
@@ -31,25 +30,15 @@ type Syncer struct {
 	cli *Clients
 
 	dryRun            bool
-	autoDiscovery     bool
-	fromDate          string
 	insecure          bool
 	usePlainHTTP      bool
 	latestVersionOnly bool
-	// list of charts to skip
-	skipCharts []string
 
 	// list of container platforms to sync
 	containerPlatforms []string
-	// TODO(jdrios): Cache index in local filesystem to speed
-	// up re-runs
-	index ChartIndex
 
 	// skip syncing artifacts
 	skipArtifacts bool
-
-	// skip syncing images
-	skipImages bool
 
 	// Storage directory for required artifacts
 	workdir string
@@ -74,22 +63,6 @@ func WithLogger(l log.SectionLogger) Option {
 	}
 }
 
-// WithAutoDiscovery configures the syncer to discover all the charts to sync
-// from the source chart repos.
-func WithAutoDiscovery(enable bool) Option {
-	return func(s *Syncer) {
-		s.autoDiscovery = enable
-	}
-}
-
-// WithFromDate configures the syncer to synchronize the charts from a specific
-// time using YYYY-MM-DD format.
-func WithFromDate(date string) Option {
-	return func(s *Syncer) {
-		s.fromDate = date
-	}
-}
-
 // WithUsePlainHTTP configures the syncer to use plain HTTP
 func WithUsePlainHTTP(enable bool) Option {
 	return func(s *Syncer) {
@@ -101,13 +74,6 @@ func WithUsePlainHTTP(enable bool) Option {
 func WithSkipArtifacts(skip bool) Option {
 	return func(s *Syncer) {
 		s.skipArtifacts = skip
-	}
-}
-
-// WithSkipImages configures the syncer to skip syncing images
-func WithSkipImages(skip bool) Option {
-	return func(s *Syncer) {
-		s.skipImages = skip
 	}
 }
 
@@ -156,35 +122,27 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 	}
 
 	s.cli = &Clients{}
-	if source.GetRepo() != nil {
-		srcCli, err := cs.NewClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		s.cli.src = srcCli
-	} else {
-		return nil, errors.New("no source info defined in config file")
+	sourceIsLocal := source.GetRepo() != nil && source.GetRepo().GetKind() == apiv1.Kind_LOCAL
+	if source.GetContainers() == nil && !sourceIsLocal {
+		return nil, errors.New("missing source.containers config")
 	}
+	srcCli, err := cs.NewContainerClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	s.cli.src = srcCli
 
-	if target.GetRepo() != nil {
-		dstCli, err := ct.NewClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		s.cli.dst = dstCli
-	} else {
-		return nil, errors.New("no target info defined in config file")
+	targetIsLocal := target.GetRepo() != nil && target.GetRepo().GetKind() == apiv1.Kind_LOCAL
+	if target.GetContainers() == nil && !targetIsLocal {
+		return nil, errors.New("missing target.containers config")
 	}
+	dstCli, err := ct.NewContainerClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	s.cli.dst = dstCli
 
 	return s, nil
-}
-
-// WithSkipCharts configures the syncer to skip an explicit list of chart names
-// from the source chart repos.
-func WithSkipCharts(charts []string) Option {
-	return func(s *Syncer) {
-		s.skipCharts = charts
-	}
 }
 
 // WithContainerPlatforms configures the syncer to sync chart containers for only

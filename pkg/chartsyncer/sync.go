@@ -1,4 +1,4 @@
-package syncer
+package chartsyncer
 
 import (
 	goerrors "errors"
@@ -38,7 +38,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		Version: ch.Version,
 	}
 
-	wrappedChartPath, err := s.cli.src.Wrap(ch.TgzPath,
+	wrappedChartPath, err := s.cli.src.WrapChart(ch.TgzPath,
 		filepath.Join(workdir, "wraps", fmt.Sprintf("%s-%s.wrap.tgz", ch.Name, ch.Version)),
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
@@ -53,7 +53,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		return nil
 	}
 
-	if err := s.cli.dst.Unwrap(wrappedChartPath, metadata, config.WithLogger(l), config.WithWorkDir(workdir), config.WithSkipImages(s.skipImages)); err != nil {
+	if err := s.cli.dst.UnwrapChart(wrappedChartPath, metadata, config.WithLogger(l), config.WithWorkDir(workdir), config.WithSkipImages(s.skipImages)); err != nil {
 		l.Errorf("unable to upload %q chart: %+v", id, err)
 		return errors.Trace(err)
 	}

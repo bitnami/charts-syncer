@@ -280,7 +280,7 @@ func TestValidate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Validate(tt.config)
+			err := ValidateChartConfig(tt.config)
 			if len(tt.wantErrs) > 0 && err != nil {
 				for _, wantErr := range tt.wantErrs {
 					assert.Contains(t, err.Error(), wantErr)

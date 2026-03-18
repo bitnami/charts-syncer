@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/juju/errors"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -25,8 +27,8 @@ const DefaultIndexName = "charts-index"
 // DefaultIndexTag is the tag for the OCI artifact with the index
 const DefaultIndexTag = "latest"
 
-// Validate validates the config file is correct
-func Validate(c *apiv1.Config) error {
+// ValidateChartConfig validates the config file is correct for chart syncs
+func ValidateChartConfig(c *apiv1.Config) error {
 	var errs error
 
 	if repo := c.GetSource().GetRepo(); repo != nil && repo.GetKind() != apiv1.Kind_LOCAL {
@@ -45,6 +47,33 @@ func Validate(c *apiv1.Config) error {
 		}
 	}
 
+	return errs
+}
+
+// ValidateContainerConfig validates the config file is correct for container syncs
+func ValidateContainerConfig(c *apiv1.Config) error {
+	var errs error
+
+	if repoURL := c.GetSource().GetContainers().GetUrl(); repoURL != "" {
+		if _, err := url.ParseRequestURI(repoURL); err != nil {
+			errs = goerrors.Join(errs, errors.Errorf(`"source.containers.url" should be a valid URL: %v`, err))
+		}
+	}
+	if repoURL := c.GetTarget().GetContainers().GetUrl(); repoURL != "" {
+		if _, err := url.ParseRequestURI(repoURL); err != nil {
+			errs = goerrors.Join(errs, errors.Errorf(`"target.containers.url" should be a valid URL: %v`, err))
+		}
+	}
+
+	errs = goerrors.Join(errs, ValidateContainerAuth(c))
+
+	return errs
+}
+
+// ValidateContainerAuth validates the container auth configuration is valid if provided
+func ValidateContainerAuth(c *apiv1.Config) error {
+	var errs error
+
 	// Authentication
 	// Container images
 	if auth := c.GetSource().GetContainers().GetAuth(); auth != nil {
@@ -62,6 +91,9 @@ func Validate(c *apiv1.Config) error {
 
 	return errs
 }
+
+// WorkdirName is the default name for a workdir
+const WorkdirName = ".charts-syncer"
 
 func setDefaultChartsIndex(config *apiv1.Config) error {
 	u, err := url.Parse(config.GetSource().GetRepo().GetUrl())
@@ -133,7 +165,7 @@ func setAuthentication(source *apiv1.Source, target *apiv1.Target) error {
 
 		// Container images OCI repository authentication
 		username, password, registry := viper.GetString("source.containers.auth.username"), viper.GetString("source.containers.auth.password"), viper.GetString("source.containers.auth.registry")
-		// Validation will happen in a later stage config.Validate()
+		// Validation will happen in a later stage config.ValidateChartConfig()
 		// For now we set the struct value if any of the properties is available
 		if username != "" || password != "" {
 			if registry == "" {
@@ -219,4 +251,24 @@ func InitEnvBindings() error {
 	}
 
 	return nil
+}
+
+// DefaultWorkdir returns the default workdir path
+func DefaultWorkdir() string {
+	// We are ignoring errors here as they don't really matter for the purpose
+	// of the function
+
+	// Try to assign home as workdir
+	home, _ := homedir.Dir()
+	if home != "" {
+		return path.Join(home, WorkdirName)
+	}
+
+	// Try to assign the current directory as workdir
+	cwd, _ := os.Getwd()
+	if cwd != "" {
+		return path.Join(cwd, WorkdirName)
+	}
+
+	return WorkdirName
 }

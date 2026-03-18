@@ -33,12 +33,12 @@ func newRootCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "charts-syncer",
-		Short: "tool to synchronize helm chart repositories",
+		Short: "tool to synchronize helm chart and container repositories",
 		Long:  rootUsage,
 		// Do not show the Usage page on every raised error
 		SilenceUsage: true,
 	}
-	cmd.PersistentFlags().BoolVar(&rootDryRun, "dry-run", false, "Only shows the charts pending to be synced without syncing them")
+	cmd.PersistentFlags().BoolVar(&rootDryRun, "dry-run", false, "Only shows the pending artifacts to be synced without syncing them")
 	cmd.PersistentFlags().StringVarP(&rootConfig, "config", "c", "", fmt.Sprintf("Config file. Defaults to ./%s or $HOME/%s)", defaultCfgFile, defaultCfgFile))
 	cmd.PersistentFlags().BoolVar(&rootInsecure, "insecure", false, "Allow insecure SSL connections")
 

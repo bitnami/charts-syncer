@@ -33,3 +33,23 @@ func NewClient(source *apiv1.Source, opts ...types.Option) (client.ChartsWrapper
 	}
 	return common.New(source, c, insecure, usePlainHTTP)
 }
+
+// NewContainerClient returns a Client object
+func NewContainerClient(source *apiv1.Source, opts ...types.Option) (client.ContainersWrapper, error) {
+	copts := &types.ClientOpts{}
+	for _, o := range opts {
+		o(copts)
+	}
+	insecure := copts.GetInsecure()
+	usePlainHTTP := copts.GetUsePlainHTTP()
+
+	if r := source.GetRepo(); r != nil && r.Kind == apiv1.Kind_LOCAL {
+		return local.New(r.Path)
+	}
+
+	c, err := repo.NewContainerClient(source.GetContainers(), opts...)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return common.NewContainer(source, c, insecure, usePlainHTTP)
+}

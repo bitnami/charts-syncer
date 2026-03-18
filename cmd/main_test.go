@@ -22,8 +22,8 @@ func TestMain(m *testing.M) {
 	os.Exit(c)
 }
 
-// chartsyncer calls the chartsyncer command externally via exec
-func chartsyncer(cmdArgs ...string) CmdResult {
+// chartsyncerCmd calls the chartsyncerCmd command externally via exec
+func chartsyncerCmd(cmdArgs ...string) CmdResult {
 	return execCommand(cmdArgs...)
 }
 

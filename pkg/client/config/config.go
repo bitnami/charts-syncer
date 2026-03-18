@@ -55,7 +55,9 @@ func WithLogger(logger log.SectionLogger) func(*Config) {
 
 // New creates a new Config object
 func New(options ...Option) *Config {
-	c := &Config{Logger: silent.NewSectionLogger()}
+	c := &Config{
+		Logger: silent.NewSectionLogger(),
+	}
 	for _, option := range options {
 		option(c)
 	}
