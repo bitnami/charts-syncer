@@ -270,10 +270,13 @@ func (r *Repo) ListContainerTags(containerName string) ([]string, error) {
 	return containerTags, nil
 }
 
-// tagRegex matches container image tags following the scheme MAJOR.MINOR.PATCH-DISTRO_NAME-DISTRO_VERSION-rREVISION
-// (e.g. "13.16.0-photon-5-r19", "7.4.1-debian-12-r6", "1.27.3-ubuntu-22-r0").
-// Tags that do not follow this pattern (latest, stable, sha256:...) are excluded.
-var tagRegex = regexp.MustCompile(`^\d+\.\d+\.\d+-[a-z]+-\d+-r\d+$`)
+// tagRegex matches container image tags in the following schemes:
+//   - MAJOR.MINOR.PATCH-DISTRO-DISTRO_VER-rREV        (e.g. "13.16.0-photon-5-r19", "7.4.1-debian-12-r6")
+//   - MAJOR.MINOR.PATCH-BUILD-DISTRO-DISTRO_VER-rREV  (e.g. "17.0.16-12-photon-5-r0")
+//   - MAJOR-DISTRO-DISTRO_VER-rREV                    (e.g. "5-photon-5-r19")
+//
+// Tags that do not follow these patterns (latest, stable, sha256:...) are excluded.
+var tagRegex = regexp.MustCompile(`^(\d+\.\d+\.\d+(-\d+)?|\d+)-[a-z]+-\d+-r\d+$`)
 
 func looksLikeDockerImageTag(tag string) bool {
 	return tagRegex.MatchString(tag)
