@@ -68,7 +68,9 @@ func NewContainer(target *apiv1.Target, containersReaderWriter client.Containers
 func (t *Target) getContainersUploadURL() string {
 	containersURL := t.containersURL
 	if containersURL == "" {
-		containersURL = t.GetUploadURL()
+		// When containers URL is not specified, append /containers to charts URL
+		// to avoid collision between charts and containers at the same path
+		containersURL = t.GetUploadURL() + "/containers"
 	}
 
 	if schemeRE.MatchString(containersURL) {
@@ -97,6 +99,7 @@ func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Opti
 		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
+		unwrap.WithPreserveRepository(false),
 	); err != nil {
 		return errors.Trace(err)
 	}
@@ -124,6 +127,7 @@ func (t *Target) UnwrapContainer(file string, opts ...config.Option) error {
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithFetchArtifacts(!cfg.SkipArtifacts),
+		unwrap.WithPreserveRepository(false),
 	); err != nil {
 		return errors.Trace(err)
 	}
