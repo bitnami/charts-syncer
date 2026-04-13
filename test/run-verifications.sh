@@ -6,7 +6,7 @@ set -o pipefail
 
 # Constants
 FAILED_TEST=0
-EXPECTED_REGISTRY='localhost:5000/library/bitnami'
+EXPECTED_REGISTRY='localhost:5000/library/containers'
 
 ## Check that WordPress deployment is using the expected registry
 wordpressImage=$(kubectl get pods --selector=app.kubernetes.io/name=wordpress -ojsonpath='{.items[0].spec.containers[0].image}')

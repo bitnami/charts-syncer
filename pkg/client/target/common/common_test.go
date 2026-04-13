@@ -12,7 +12,7 @@ type MockChartsReaderWriter struct {
 	uploadURL string
 }
 
-func (m *MockChartsReaderWriter) Fetch(name, version string) (string, error) {
+func (m *MockChartsReaderWriter) Fetch(_, _ string) (string, error) {
 	return "", nil
 }
 
@@ -20,15 +20,15 @@ func (m *MockChartsReaderWriter) List() ([]string, error) {
 	return []string{}, nil
 }
 
-func (m *MockChartsReaderWriter) ListChartVersions(name string) ([]string, error) {
+func (m *MockChartsReaderWriter) ListChartVersions(_ string) ([]string, error) {
 	return []string{}, nil
 }
 
-func (m *MockChartsReaderWriter) Has(name, version string) (bool, error) {
+func (m *MockChartsReaderWriter) Has(_, _ string) (bool, error) {
 	return false, nil
 }
 
-func (m *MockChartsReaderWriter) GetChartDetails(name, version string) (*types.ChartDetails, error) {
+func (m *MockChartsReaderWriter) GetChartDetails(_, _ string) (*types.ChartDetails, error) {
 	return nil, nil
 }
 
