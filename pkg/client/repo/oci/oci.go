@@ -70,7 +70,7 @@ type Tags struct {
 // New creates a Repo object from an apiv1.Repo object.
 func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*Repo, error) {
 	// Init entries
-	entries, err := populateEntries(repo)
+	entries, err := populateEntries(repo, usePlainHTTP)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -82,6 +82,7 @@ func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*R
 	resolver := NewDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
 
 	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
+
 }
 
 // NewRaw creates a Repo object.
@@ -481,7 +482,7 @@ func (r *Repo) parseReference(u url.URL, version string) (name.Reference, error)
 }
 
 // populateEntries populates the entries map with the info from the charts index
-func populateEntries(repo *apiv1.Repo) (map[string][]string, error) {
+func populateEntries(repo *apiv1.Repo, usePlainHTTP bool) (map[string][]string, error) {
 	if repo.GetDisableChartsIndex() {
 		return make(map[string][]string), nil
 	}
@@ -492,10 +493,14 @@ func populateEntries(repo *apiv1.Repo) (map[string][]string, error) {
 		indexer.WithIndexRef(repo.GetChartsIndex()),
 	}
 
-	// Only use insecure if the repository URL uses http:// scheme
-	u, err := url.Parse(repo.GetUrl())
-	if err == nil && u.Scheme == "http" {
-		indexerOpts = append(indexerOpts, indexer.WithInsecure())
+	if usePlainHTTP {
+		indexerOpts = append(indexerOpts, indexer.WithPlainHTTP())
+	} else {
+		// Fallback: use insecure (PlainHTTP) if the repository URL uses an explicit http:// scheme
+		u, err := url.Parse(repo.GetUrl())
+		if err == nil && u.Scheme == "http" {
+			indexerOpts = append(indexerOpts, indexer.WithInsecure())
+		}
 	}
 
 	ind, err := indexer.NewOciIndexer(indexerOpts...)

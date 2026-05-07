@@ -21,10 +21,11 @@ import (
 
 // ociIndexerOpts are the options to configure the ociIndexer
 type ociIndexerOpts struct {
-	reference string
-	username  string
-	password  string
-	insecure  bool
+	reference    string
+	username     string
+	password     string
+	insecure     bool
+	usePlainHTTP bool
 }
 
 // OciIndexerOpt allows setting configuration options
@@ -59,6 +60,15 @@ func WithInsecure() OciIndexerOpt {
 	}
 }
 
+// WithPlainHTTP configures the indexer to use plain HTTP instead of HTTPS
+//
+//	opt := WithPlainHTTP()
+func WithPlainHTTP() OciIndexerOpt {
+	return func(opts *ociIndexerOpts) {
+		opts.usePlainHTTP = true
+	}
+}
+
 // ociIndexer is an OCI-based Indexer
 type ociIndexer struct {
 	reference  string
@@ -77,7 +87,7 @@ func NewOciIndexer(opts ...OciIndexerOpt) (Indexer, error) {
 		return nil, err
 	}
 
-	repository, err := newRemoteRepository(named.Name(), opt.username, opt.password, opt.insecure)
+	repository, err := newRemoteRepository(named.Name(), opt.username, opt.password, opt.insecure, opt.usePlainHTTP)
 	if err != nil {
 		return nil, err
 	}
