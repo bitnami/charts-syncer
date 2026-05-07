@@ -1,6 +1,9 @@
 package indexer
 
 import (
+	"crypto/tls"
+	"net/http"
+
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
 	"oras.land/oras-go/v2/registry/remote/retry"
@@ -13,12 +16,21 @@ func newRemoteRepository(ref, username, password string, insecure bool, usePlain
 		return nil, err
 	}
 
-	if insecure || usePlainHTTP {
+	if usePlainHTTP {
 		repo.PlainHTTP = true
 	}
 
+	httpClient := retry.DefaultClient
+	if insecure {
+		httpClient = &http.Client{
+			Transport: retry.NewTransport(&http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402
+			}),
+		}
+	}
+
 	repo.Client = &auth.Client{
-		Client: retry.DefaultClient,
+		Client: httpClient,
 		Cache:  auth.NewCache(),
 		Credential: auth.StaticCredential(repo.Reference.Registry, auth.Credential{
 			Username: username,
