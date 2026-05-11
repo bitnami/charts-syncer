@@ -7,13 +7,13 @@ import (
 )
 
 // newRemoteRepository creates a remote.Repository for an OCI registry with basic auth
-func newRemoteRepository(ref, username, password string, insecure bool) (*remote.Repository, error) {
+func newRemoteRepository(ref, username, password string, insecure bool, usePlainHTTP bool) (*remote.Repository, error) {
 	repo, err := remote.NewRepository(ref)
 	if err != nil {
 		return nil, err
 	}
 
-	if insecure {
+	if insecure || usePlainHTTP {
 		repo.PlainHTTP = true
 	}
 
