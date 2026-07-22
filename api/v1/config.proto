@@ -19,6 +19,10 @@ message Config {
     bool skip_images = 7;
     // Container images to include during sync
     repeated string containers = 8;
+    // Copy charts and container images byte-for-byte so their original digest is preserved.
+    // Not compatible with "container_platforms", since filtering platforms always changes
+    // the resulting manifest digest.
+    bool preserve_digest = 9;
 }
 
 // SourceRepo contains the required information of the source chart repository

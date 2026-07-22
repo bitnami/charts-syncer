@@ -124,6 +124,10 @@ func Load(config *apiv1.Config) error {
 		return errors.New("\"charts\" and \"skipCharts\" properties can not be set at the same time")
 	}
 
+	if config.GetPreserveDigest() && len(config.GetContainerPlatforms()) > 0 {
+		return errors.New("\"preserveDigest\" and \"containerPlatforms\" properties can not be set at the same time: filtering container platforms always changes the resulting manifest digest")
+	}
+
 	return nil
 }
 

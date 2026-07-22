@@ -1,0 +1,15 @@
+#
+# Example config file with conflicting preserveDigest/containerPlatforms properties
+#
+source:
+  repo:
+    kind: HELM
+    url: http://localhost:8080 # local test source repo
+target:
+  repo:
+    kind: CHARTMUSEUM
+    url: http://localhost:9090 # local test target repo
+
+preserveDigest: true
+containerPlatforms:
+  - linux/amd64

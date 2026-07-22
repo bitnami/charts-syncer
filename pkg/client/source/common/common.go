@@ -72,6 +72,8 @@ func (t *Source) WrapChart(tgz, destWrap string, opts ...config.Option) (string,
 		wrap.WithPlatforms(cfg.ContainerPlatforms),
 		wrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		wrap.WithOutputFile(destWrap),
+		wrap.WithPreserveDigest(cfg.PreserveDigest),
+		wrap.WithPreservedSourceRef(cfg.PreservedSourceRef),
 		wrap.WithLogger(l))
 	if err != nil {
 		return "", fmt.Errorf("failed to wrap chart %q: %w", tgz, err)
@@ -99,6 +101,7 @@ func (t *Source) WrapContainer(imageRef string, destination string, opts ...conf
 		wrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		wrap.WithPlatforms(cfg.ContainerPlatforms),
 		wrap.WithOutputFile(destination),
+		wrap.WithPreserveDigest(cfg.PreserveDigest),
 		wrap.WithLogger(l),
 	)
 	if err != nil {

@@ -33,6 +33,22 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+// preserveDigest and containerPlatforms are mutually exclusive: filtering
+// platforms always changes the resulting manifest digest.
+func TestLoadPreserveDigestConflict(t *testing.T) {
+	var syncConfig apiv1.Config
+	cfgFile := "../../testdata/example-config-preserve-digest-conflict.yaml"
+	viper.SetConfigFile(cfgFile)
+	if err := viper.ReadInConfig(); err != nil {
+		t.Fatalf("error reading config file: %+v", err)
+	}
+	err := Load(&syncConfig)
+	if err == nil {
+		t.Fatalf("expected error loading config file, got nil")
+	}
+	assert.Contains(t, err.Error(), "\"preserveDigest\" and \"containerPlatforms\" properties can not be set at the same time")
+}
+
 // Get auth properties from env vars
 func TestGetAuthFromEnvVar(t *testing.T) {
 	tests := map[string]struct {

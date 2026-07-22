@@ -19,6 +19,7 @@ func runContainersSyncer(parentLog log.SectionLogger, c *apiv1.Config) error {
 		containersyncer.WithInsecure(rootInsecure),
 		containersyncer.WithLatestVersionOnly(syncLatestVersionOnly),
 		containersyncer.WithSkipArtifacts(c.GetSkipArtifacts()),
+		containersyncer.WithPreserveDigest(c.GetPreserveDigest()),
 		containersyncer.WithUsePlainHTTP(usePlainHTTP),
 
 		containersyncer.WithLogger(l),

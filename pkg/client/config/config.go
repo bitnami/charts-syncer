@@ -13,6 +13,8 @@ type Config struct {
 	ContainerPlatforms []string
 	SkipArtifacts      bool
 	SkipImages         bool
+	PreserveDigest     bool
+	PreservedSourceRef string
 }
 
 // Option is a function that modifies the Config
@@ -43,6 +45,22 @@ func WithSkipImages(skipImages bool) func(*Config) {
 func WithContainerPlatforms(containerPlatforms []string) func(*Config) {
 	return func(c *Config) {
 		c.ContainerPlatforms = containerPlatforms
+	}
+}
+
+// WithPreserveDigest sets the preserve digest flag
+func WithPreserveDigest(preserveDigest bool) func(*Config) {
+	return func(c *Config) {
+		c.PreserveDigest = preserveDigest
+	}
+}
+
+// WithPreservedSourceRef sets the original oci:// reference of the chart
+// being wrapped, so PreserveDigest can capture the pristine source manifest
+// even though the chart was already fetched to a local .tgz for indexing
+func WithPreservedSourceRef(ref string) func(*Config) {
+	return func(c *Config) {
+		c.PreservedSourceRef = ref
 	}
 }
 

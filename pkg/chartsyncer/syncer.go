@@ -51,6 +51,9 @@ type Syncer struct {
 	// skip syncing images
 	skipImages bool
 
+	// copy charts and container images byte-for-byte, preserving their original digest
+	preserveDigest bool
+
 	// Storage directory for required artifacts
 	workdir string
 
@@ -108,6 +111,14 @@ func WithSkipArtifacts(skip bool) Option {
 func WithSkipImages(skip bool) Option {
 	return func(s *Syncer) {
 		s.skipImages = skip
+	}
+}
+
+// WithPreserveDigest configures the syncer to copy charts and container images
+// byte-for-byte, preserving their original digest
+func WithPreserveDigest(preserve bool) Option {
+	return func(s *Syncer) {
+		s.preserveDigest = preserve
 	}
 }
 
