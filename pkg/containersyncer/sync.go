@@ -35,6 +35,7 @@ func (s *Syncer) syncContainer(c *types.ContainerImage, tag string, l log.Sectio
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms),
 		config.WithSkipArtifacts(s.skipArtifacts),
+		config.WithPreserveDigest(s.preserveDigest),
 	)
 	if err != nil {
 		return errors.Annotatef(err, "unable to move container %q with charts-syncer", id)
@@ -47,7 +48,7 @@ func (s *Syncer) syncContainer(c *types.ContainerImage, tag string, l log.Sectio
 		return nil
 	}
 
-	if err := s.cli.dst.UnwrapContainer(wrappedContainerPath, config.WithLogger(l), config.WithWorkDir(workdir)); err != nil {
+	if err := s.cli.dst.UnwrapContainer(wrappedContainerPath, config.WithLogger(l), config.WithWorkDir(workdir), config.WithPreserveDigest(s.preserveDigest)); err != nil {
 		l.Errorf("unable to upload %q container: %+v", id, err)
 		return errors.Trace(err)
 	}

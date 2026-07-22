@@ -3,9 +3,11 @@ package chartsyncer
 import (
 	goerrors "errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
+	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/juju/errors"
 	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
@@ -14,6 +16,26 @@ import (
 
 // ErrNoChartsToSync is returned when there are no charts to sync
 var ErrNoChartsToSync = errors.New("no charts to sync")
+
+// preservedSourceRef returns the bare oci:// reference for chartName in the
+// syncer's source repo, or "" if the source isn't an OCI registry.
+//
+// charts-syncer always fetches ch.TgzPath to a local file before wrapping
+// (needed to inspect the chart for indexing/dependency resolution), so
+// WrapChart never sees an oci:// inputPath on its own. Passing this
+// alongside the local tgz lets the wrap library still capture the pristine
+// source manifest for PreserveDigest, instead of only the tgz bytes.
+func (s *Syncer) preservedSourceRef(chartName string) string {
+	repo := s.source.GetRepo()
+	if repo.GetKind() != apiv1.Kind_OCI {
+		return ""
+	}
+	u, err := url.Parse(repo.GetUrl())
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("oci://%s%s/%s", u.Host, u.Path, chartName)
+}
 
 func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 	id := fmt.Sprintf("%s-%s", ch.Name, ch.Version)
@@ -38,11 +60,18 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		Version: ch.Version,
 	}
 
-	wrappedChartPath, err := s.cli.src.WrapChart(ch.TgzPath,
-		filepath.Join(workdir, "wraps", fmt.Sprintf("%s-%s.wrap.tgz", ch.Name, ch.Version)),
+	wrapOpts := []config.Option{
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
-		config.WithSkipImages(s.skipImages),
+		config.WithSkipImages(s.skipImages), config.WithPreserveDigest(s.preserveDigest),
+	}
+	if s.preserveDigest {
+		wrapOpts = append(wrapOpts, config.WithPreservedSourceRef(s.preservedSourceRef(ch.Name)))
+	}
+
+	wrappedChartPath, err := s.cli.src.WrapChart(ch.TgzPath,
+		filepath.Join(workdir, "wraps", fmt.Sprintf("%s-%s.wrap.tgz", ch.Name, ch.Version)),
+		wrapOpts...,
 	)
 	if err != nil {
 		return errors.Annotatef(err, "unable to move chart %q with charts-syncer", id)
@@ -53,7 +82,13 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		return nil
 	}
 
-	if err := s.cli.dst.UnwrapChart(wrappedChartPath, metadata, config.WithLogger(l), config.WithWorkDir(workdir), config.WithSkipImages(s.skipImages)); err != nil {
+	if err := s.cli.dst.UnwrapChart(
+		wrappedChartPath, metadata,
+		config.WithLogger(l),
+		config.WithWorkDir(workdir),
+		config.WithSkipImages(s.skipImages),
+		config.WithPreserveDigest(s.preserveDigest),
+	); err != nil {
 		l.Errorf("unable to upload %q chart: %+v", id, err)
 		return errors.Trace(err)
 	}

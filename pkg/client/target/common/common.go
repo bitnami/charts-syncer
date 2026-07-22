@@ -100,6 +100,7 @@ func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Opti
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithPreserveRepository(false),
+		unwrap.WithPreserveDigest(cfg.PreserveDigest),
 	); err != nil {
 		return errors.Trace(err)
 	}
@@ -128,6 +129,7 @@ func (t *Target) UnwrapContainer(file string, opts ...config.Option) error {
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithFetchArtifacts(!cfg.SkipArtifacts),
 		unwrap.WithPreserveRepository(false),
+		unwrap.WithPreserveDigest(cfg.PreserveDigest),
 	); err != nil {
 		return errors.Trace(err)
 	}

@@ -95,9 +95,13 @@ type Config struct {
 	// Do not sync chart images
 	SkipImages bool `protobuf:"varint,7,opt,name=skip_images,json=skipImages,proto3" json:"skip_images,omitempty"`
 	// Container images to include during sync
-	Containers    []string `protobuf:"bytes,8,rep,name=containers,proto3" json:"containers,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Containers []string `protobuf:"bytes,8,rep,name=containers,proto3" json:"containers,omitempty"`
+	// Copy charts and container images byte-for-byte so their original digest is preserved.
+	// Not compatible with "container_platforms", since filtering platforms always changes
+	// the resulting manifest digest.
+	PreserveDigest bool `protobuf:"varint,9,opt,name=preserve_digest,json=preserveDigest,proto3" json:"preserve_digest,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -184,6 +188,13 @@ func (x *Config) GetContainers() []string {
 		return x.Containers
 	}
 	return nil
+}
+
+func (x *Config) GetPreserveDigest() bool {
+	if x != nil {
+		return x.PreserveDigest
+	}
+	return false
 }
 
 // SourceRepo contains the required information of the source chart repository
@@ -564,7 +575,7 @@ var File_v1_config_proto protoreflect.FileDescriptor
 
 const file_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x0fv1/config.proto\x12\x03api\"\xa4\x02\n" +
+	"\x0fv1/config.proto\x12\x03api\"\xcd\x02\n" +
 	"\x06Config\x12#\n" +
 	"\x06source\x18\x01 \x01(\v2\v.api.SourceR\x06source\x12#\n" +
 	"\x06target\x18\x02 \x01(\v2\v.api.TargetR\x06target\x12\x16\n" +
@@ -577,7 +588,8 @@ const file_v1_config_proto_rawDesc = "" +
 	"skipImages\x12\x1e\n" +
 	"\n" +
 	"containers\x18\b \x03(\tR\n" +
-	"containers\"X\n" +
+	"containers\x12'\n" +
+	"\x0fpreserve_digest\x18\t \x01(\bR\x0epreserveDigest\"X\n" +
 	"\x06Source\x12\x1d\n" +
 	"\x04repo\x18\x01 \x01(\v2\t.api.RepoR\x04repo\x12/\n" +
 	"\n" +

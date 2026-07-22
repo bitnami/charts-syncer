@@ -267,6 +267,27 @@ charts:
 skipImages: true
 ```
 
+### Preserve the original digest of charts and container images
+
+By default, charts and container images are unpacked and rebuilt as they are relocated to the target repo, which changes their manifest digest. If you need byte-for-byte mirroring instead, so the destination digest (and any signature made against it) matches the source exactly, set `preserveDigest` to true:
+
+```yaml
+source:
+  repo:
+    kind: OCI
+    url: http://localhost:8080
+target:
+  repo:
+    kind: OCI
+    url: http://localhost:9090/charts
+charts:
+  - redis
+
+preserveDigest: true
+```
+
+`preserveDigest` is not compatible with `containerPlatforms`: filtering platforms always produces a different manifest digest than the source. Setting both at the same time makes charts-syncer fail with a validation error before starting the sync.
+
 ### Sync Helm Charts and Container Images to different registries
 
 By default, charts-syncer syncs Helm Charts packages and their container images to the same registry specified in the `target.repo.url` property. If you require to configure a different destination registry for the images, this can be configured in the `target.containers.url` property:

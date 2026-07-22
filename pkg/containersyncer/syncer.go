@@ -40,6 +40,9 @@ type Syncer struct {
 	// skip syncing artifacts
 	skipArtifacts bool
 
+	// copy container images byte-for-byte, preserving their original digest
+	preserveDigest bool
+
 	// Storage directory for required artifacts
 	workdir string
 
@@ -150,5 +153,13 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 func WithContainerPlatforms(platforms []string) Option {
 	return func(s *Syncer) {
 		s.containerPlatforms = platforms
+	}
+}
+
+// WithPreserveDigest configures the syncer to copy container images byte-for-byte,
+// preserving their original digest
+func WithPreserveDigest(preserve bool) Option {
+	return func(s *Syncer) {
+		s.preserveDigest = preserve
 	}
 }
