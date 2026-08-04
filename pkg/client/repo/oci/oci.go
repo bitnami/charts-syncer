@@ -59,6 +59,7 @@ type Repo struct {
 	entries        map[string][]string
 	cache          cache.Cacher
 	dockerResolver remotes.Resolver
+	timeout        time.Duration
 }
 
 // Tags contains the tags for a specific OCI artifact
@@ -68,7 +69,7 @@ type Tags struct {
 }
 
 // New creates a Repo object from an apiv1.Repo object.
-func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*Repo, error) {
+func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool, timeout time.Duration) (*Repo, error) {
 	// Init entries
 	entries, err := populateEntries(repo, usePlainHTTP)
 	if err != nil {
@@ -81,13 +82,13 @@ func New(repo *apiv1.Repo, c cache.Cacher, insecure bool, usePlainHTTP bool) (*R
 	}
 	resolver := NewDockerResolver(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), insecure)
 
-	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
+	return NewRaw(u, repo.GetAuth().GetUsername(), repo.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver, timeout)
 
 }
 
 // NewRaw creates a Repo object.
-func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool, usePlainHTTP bool, entries map[string][]string, resolver remotes.Resolver) (*Repo, error) {
-	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure, usePlainHTTP: usePlainHTTP, entries: entries, dockerResolver: resolver}, nil
+func NewRaw(u *url.URL, user string, pass string, c cache.Cacher, insecure bool, usePlainHTTP bool, entries map[string][]string, resolver remotes.Resolver, timeout time.Duration) (*Repo, error) {
+	return &Repo{url: u, username: user, password: pass, cache: c, insecure: insecure, usePlainHTTP: usePlainHTTP, entries: entries, dockerResolver: resolver, timeout: timeout}, nil
 }
 
 // List lists all chart names in a repo
@@ -126,6 +127,11 @@ func (r *Repo) getTagManifest(chartName, version string) (*ocispec.Manifest, err
 		transportKind := http.DefaultTransport.(*http.Transport).Clone()
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
+	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
 	}
 
 	image, err := remote.Image(ref, opts...)
@@ -193,6 +199,11 @@ func (r *Repo) ListChartVersions(chartName string) ([]string, error) {
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
 	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
+	}
 
 	tags, err := remote.List(repo, opts...)
 	if err != nil {
@@ -246,6 +257,11 @@ func (r *Repo) ListContainerTags(containerName string) ([]string, error) {
 		transportKind := http.DefaultTransport.(*http.Transport).Clone()
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
+	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
 	}
 
 	tags, err := remote.List(repo, opts...)
@@ -309,6 +325,11 @@ func (r *Repo) Fetch(chartName string, version string) (string, error) {
 		transportKind := http.DefaultTransport.(*http.Transport).Clone()
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
+	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
 	}
 
 	img, err := remote.Image(ref, opts...)
@@ -382,6 +403,11 @@ func (r *Repo) HasContainer(imageName string, tag string) (bool, error) {
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
 	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
+	}
 
 	_, err = remote.Head(ref, opts...)
 	if err != nil {
@@ -417,6 +443,11 @@ func (r *Repo) Has(chartName string, version string) (bool, error) {
 		transportKind := http.DefaultTransport.(*http.Transport).Clone()
 		transportKind.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 		opts = append(opts, remote.WithTransport(transportKind))
+	}
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		opts = append(opts, remote.WithContext(ctx))
 	}
 
 	_, err = remote.Head(ref, opts...)

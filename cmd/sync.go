@@ -2,10 +2,12 @@ package main
 
 import (
 	goerrors "errors"
+	"time"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/internal/config"
 	klogLogger "github.com/bitnami/charts-syncer/internal/log"
+	"github.com/bitnami/charts-syncer/internal/utils"
 	"github.com/juju/errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -21,6 +23,7 @@ var (
 	syncLatestVersionOnly bool
 	usePlainHTTP          bool
 	usePlainLog           bool
+	syncTimeout           time.Duration
 )
 
 var syncExample = `
@@ -81,6 +84,7 @@ func newSyncCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&usePlainHTTP, "use-plain-http", false, "Use plain HTTP instead of HTTPS")
 	cmd.Flags().BoolVar(&usePlainLog, "use-plain-log", false, "Use plain klog instead of the pretty logging")
 	cmd.Flags().StringVar(&syncFromDate, "from-date", "", "Date you want to synchronize charts from. Format: YYYY-MM-DD")
+	cmd.Flags().DurationVar(&syncTimeout, "timeout", 0, "Timeout for chart and container syncing operations (e.g. 5m, 300s)")
 
 	return cmd
 }
@@ -103,6 +107,13 @@ func hasContainerTarget(c *apiv1.Config) bool {
 
 func runSync(parentLog log.SectionLogger, c *apiv1.Config) error {
 	var errs error
+
+	if syncTimeout > 0 {
+		klog.V(3).Infof("Setting global HTTP client timeout to %v", syncTimeout)
+		utils.DefaultClient.Timeout = syncTimeout
+		utils.InsecureClient.Timeout = syncTimeout
+	}
+
 	if hasChartSource(c) && hasChartTarget(c) {
 		if err := runChartsSyncer(parentLog, c); err != nil {
 			errs = goerrors.Join(errs, err)

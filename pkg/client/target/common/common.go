@@ -2,6 +2,7 @@
 package common
 
 import (
+	"context"
 	"os"
 	"regexp"
 
@@ -91,17 +92,27 @@ func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Opti
 
 	defer os.RemoveAll(wrapWorkdir)
 
-	if _, err := unwrap.Chart(file, t.getContainersUploadURL(), t.GetUploadURL(), unwrap.WithSayYes(true),
+	unwrapOpts := []unwrap.Option{
+		unwrap.WithSayYes(true),
 		unwrap.WithTempDirectory(wrapWorkdir),
 		unwrap.WithUsePlainHTTP(t.usePlainHTTP),
 		unwrap.WithLogger(cfg.Logger),
-		unwrap.WithAuth(t.username, t.password), unwrap.WithInsecure(t.insecure),
+		unwrap.WithAuth(t.username, t.password),
+		unwrap.WithInsecure(t.insecure),
 		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithPreserveRepository(false),
 		unwrap.WithPreserveDigest(cfg.PreserveDigest),
-	); err != nil {
+	}
+
+	if cfg.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+		defer cancel()
+		unwrapOpts = append(unwrapOpts, unwrap.WithContext(ctx))
+	}
+
+	if _, err := unwrap.Chart(file, t.getContainersUploadURL(), t.GetUploadURL(), unwrapOpts...); err != nil {
 		return errors.Trace(err)
 	}
 	return nil
@@ -119,18 +130,28 @@ func (t *Target) UnwrapContainer(file string, opts ...config.Option) error {
 
 	defer os.RemoveAll(wrapWorkdir)
 
-	if _, err := unwrap.Container(file, t.getContainersUploadURL(), unwrap.WithSayYes(true),
+	unwrapOpts := []unwrap.Option{
+		unwrap.WithSayYes(true),
 		unwrap.WithTempDirectory(wrapWorkdir),
 		unwrap.WithUsePlainHTTP(t.usePlainHTTP),
 		unwrap.WithLogger(cfg.Logger),
-		unwrap.WithAuth(t.username, t.password), unwrap.WithInsecure(t.insecure),
+		unwrap.WithAuth(t.username, t.password),
+		unwrap.WithInsecure(t.insecure),
 		unwrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		unwrap.WithSkipImageRelocation(cfg.SkipImages),
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithFetchArtifacts(!cfg.SkipArtifacts),
 		unwrap.WithPreserveRepository(false),
 		unwrap.WithPreserveDigest(cfg.PreserveDigest),
-	); err != nil {
+	}
+
+	if cfg.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+		defer cancel()
+		unwrapOpts = append(unwrapOpts, unwrap.WithContext(ctx))
+	}
+
+	if _, err := unwrap.Container(file, t.getContainersUploadURL(), unwrapOpts...); err != nil {
 		return errors.Trace(err)
 	}
 	return nil

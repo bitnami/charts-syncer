@@ -17,6 +17,22 @@ type ClientOpts struct {
 	cacheDir  string
 	insecure  bool
 	plainHTTP bool
+	timeout   time.Duration
+}
+
+// WithTimeout sets a timeout for network operations
+func WithTimeout(timeout time.Duration) Option {
+	return func(s *ClientOpts) {
+		s.timeout = timeout
+	}
+}
+
+// GetTimeout returns the configured timeout
+func (o *ClientOpts) GetTimeout() time.Duration {
+	if o == nil {
+		return 0
+	}
+	return o.timeout
 }
 
 // Option is an option value used to create a new syncer instance.
