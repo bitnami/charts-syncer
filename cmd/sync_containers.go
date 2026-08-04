@@ -21,6 +21,7 @@ func runContainersSyncer(parentLog log.SectionLogger, c *apiv1.Config) error {
 		containersyncer.WithSkipArtifacts(c.GetSkipArtifacts()),
 		containersyncer.WithPreserveDigest(c.GetPreserveDigest()),
 		containersyncer.WithUsePlainHTTP(usePlainHTTP),
+		containersyncer.WithTimeout(syncTimeout),
 
 		containersyncer.WithLogger(l),
 	}

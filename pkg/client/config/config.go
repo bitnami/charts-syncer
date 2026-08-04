@@ -2,6 +2,8 @@
 package config
 
 import (
+	"time"
+
 	log "github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog"
 	"github.com/vmware-labs/distribution-tooling-for-helm/pkg/dtlog/silent"
 )
@@ -15,6 +17,7 @@ type Config struct {
 	SkipImages         bool
 	PreserveDigest     bool
 	PreservedSourceRef string
+	Timeout            time.Duration
 }
 
 // Option is a function that modifies the Config
@@ -68,6 +71,13 @@ func WithPreservedSourceRef(ref string) func(*Config) {
 func WithLogger(logger log.SectionLogger) func(*Config) {
 	return func(c *Config) {
 		c.Logger = logger
+	}
+}
+
+// WithTimeout sets the timeout for network operations
+func WithTimeout(timeout time.Duration) func(*Config) {
+	return func(c *Config) {
+		c.Timeout = timeout
 	}
 }
 

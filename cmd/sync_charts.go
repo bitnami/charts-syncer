@@ -25,6 +25,7 @@ func runChartsSyncer(parentLog log.SectionLogger, c *apiv1.Config) error {
 		chartsyncer.WithPreserveDigest(c.GetPreserveDigest()),
 		chartsyncer.WithSkipCharts(c.SkipCharts),
 		chartsyncer.WithUsePlainHTTP(usePlainHTTP),
+		chartsyncer.WithTimeout(syncTimeout),
 
 		chartsyncer.WithLogger(l),
 	}

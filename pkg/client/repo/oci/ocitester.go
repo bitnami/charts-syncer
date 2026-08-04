@@ -135,7 +135,7 @@ func PrepareTest(t *testing.T, ociRepo *apiv1.Repo) *Repo {
 	t.Cleanup(func() { os.RemoveAll(cacheDir) })
 
 	// Create oci client
-	client, err := New(ociRepo, cache, false, true)
+	client, err := New(ociRepo, cache, false, true, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

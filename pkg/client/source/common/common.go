@@ -2,6 +2,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -64,9 +65,11 @@ func (t *Source) WrapChart(tgz, destWrap string, opts ...config.Option) (string,
 
 	fetchArtifacts := !cfg.SkipArtifacts
 
-	outputFile, err := wrap.Chart(tgz, wrap.WithFetchArtifacts(fetchArtifacts),
+	wrapOpts := []wrap.Option{
+		wrap.WithFetchArtifacts(fetchArtifacts),
 		wrap.WithSkipPullImages(cfg.SkipImages),
-		wrap.WithInsecure(t.insecure), wrap.WithTempDirectory(wrapWorkdir),
+		wrap.WithInsecure(t.insecure),
+		wrap.WithTempDirectory(wrapWorkdir),
 		wrap.WithUsePlainHTTP(t.usePlainHTTP),
 		wrap.WithAuth(t.username, t.password),
 		wrap.WithPlatforms(cfg.ContainerPlatforms),
@@ -74,7 +77,16 @@ func (t *Source) WrapChart(tgz, destWrap string, opts ...config.Option) (string,
 		wrap.WithOutputFile(destWrap),
 		wrap.WithPreserveDigest(cfg.PreserveDigest),
 		wrap.WithPreservedSourceRef(cfg.PreservedSourceRef),
-		wrap.WithLogger(l))
+		wrap.WithLogger(l),
+	}
+
+	if cfg.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+		defer cancel()
+		wrapOpts = append(wrapOpts, wrap.WithContext(ctx))
+	}
+
+	outputFile, err := wrap.Chart(tgz, wrapOpts...)
 	if err != nil {
 		return "", fmt.Errorf("failed to wrap chart %q: %w", tgz, err)
 	}
@@ -92,7 +104,7 @@ func (t *Source) WrapContainer(imageRef string, destination string, opts ...conf
 	}
 	defer os.RemoveAll(wrapWorkdir)
 
-	outputFile, err := wrap.Container(imageRef,
+	wrapOpts := []wrap.Option{
 		wrap.WithFetchArtifacts(!cfg.SkipArtifacts),
 		wrap.WithSkipPullImages(cfg.SkipImages),
 		wrap.WithInsecure(t.insecure),
@@ -103,7 +115,15 @@ func (t *Source) WrapContainer(imageRef string, destination string, opts ...conf
 		wrap.WithOutputFile(destination),
 		wrap.WithPreserveDigest(cfg.PreserveDigest),
 		wrap.WithLogger(l),
-	)
+	}
+
+	if cfg.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+		defer cancel()
+		wrapOpts = append(wrapOpts, wrap.WithContext(ctx))
+	}
+
+	outputFile, err := wrap.Container(imageRef, wrapOpts...)
 	if err != nil {
 		return "", fmt.Errorf("failed to wrap container %q: %w", imageRef, err)
 	}

@@ -3,6 +3,7 @@ package containersyncer
 
 import (
 	"os"
+	"time"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
@@ -46,6 +47,9 @@ type Syncer struct {
 	// Storage directory for required artifacts
 	workdir string
 
+	// Timeout for operations
+	timeout time.Duration
+
 	logger log.SectionLogger
 }
 
@@ -84,6 +88,13 @@ func WithSkipArtifacts(skip bool) Option {
 func WithWorkdir(dir string) Option {
 	return func(s *Syncer) {
 		s.workdir = dir
+	}
+}
+
+// WithTimeout configures the syncer to use a specific timeout.
+func WithTimeout(timeout time.Duration) Option {
+	return func(s *Syncer) {
+		s.timeout = timeout
 	}
 }
 
@@ -129,7 +140,7 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 	if source.GetContainers() == nil && !sourceIsLocal {
 		return nil, errors.New("missing source.containers config")
 	}
-	srcCli, err := cs.NewContainerClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+	srcCli, err := cs.NewContainerClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP), types.WithTimeout(s.timeout))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -139,7 +150,7 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 	if target.GetContainers() == nil && !targetIsLocal {
 		return nil, errors.New("missing target.containers config")
 	}
-	dstCli, err := ct.NewContainerClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+	dstCli, err := ct.NewContainerClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP), types.WithTimeout(s.timeout))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

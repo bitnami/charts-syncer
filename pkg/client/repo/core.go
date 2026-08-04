@@ -28,6 +28,7 @@ func NewClient(repo *apiv1.Repo, opts ...types.Option) (client.ChartsReaderWrite
 
 	insecure := copts.GetInsecure()
 	usePlainHTTP := copts.GetUsePlainHTTP()
+	timeout := copts.GetTimeout()
 	// Define cache dir if it hasn't been provided
 	cacheDir := copts.GetCache()
 	if cacheDir == "" {
@@ -49,7 +50,7 @@ func NewClient(repo *apiv1.Repo, opts ...types.Option) (client.ChartsReaderWrite
 	case apiv1.Kind_HARBOR:
 		return harbor.New(repo, c, insecure)
 	case apiv1.Kind_OCI:
-		return oci.New(repo, c, insecure, usePlainHTTP)
+		return oci.New(repo, c, insecure, usePlainHTTP, timeout)
 	case apiv1.Kind_LOCAL:
 		return local.New(repo.Path)
 	default:
@@ -66,6 +67,7 @@ func NewContainerClient(containers *apiv1.Containers, opts ...types.Option) (cli
 
 	insecure := copts.GetInsecure()
 	usePlainHTTP := copts.GetUsePlainHTTP()
+	timeout := copts.GetTimeout()
 	// Define cache dir if it hasn't been provided
 	cacheDir := copts.GetCache()
 	if cacheDir == "" {
@@ -87,5 +89,5 @@ func NewContainerClient(containers *apiv1.Containers, opts ...types.Option) (cli
 	}
 	resolver := oci.NewDockerResolver(u, containers.GetAuth().GetUsername(), containers.GetAuth().GetPassword(), insecure)
 
-	return oci.NewRaw(u, containers.GetAuth().GetUsername(), containers.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver)
+	return oci.NewRaw(u, containers.GetAuth().GetUsername(), containers.GetAuth().GetPassword(), c, insecure, usePlainHTTP, entries, resolver, timeout)
 }

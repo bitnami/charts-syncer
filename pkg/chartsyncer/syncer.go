@@ -3,6 +3,7 @@ package chartsyncer
 
 import (
 	"os"
+	"time"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
 	"github.com/bitnami/charts-syncer/pkg/client"
@@ -56,6 +57,9 @@ type Syncer struct {
 
 	// Storage directory for required artifacts
 	workdir string
+
+	// Timeout for operations
+	timeout time.Duration
 
 	logger log.SectionLogger
 }
@@ -129,6 +133,13 @@ func WithWorkdir(dir string) Option {
 	}
 }
 
+// WithTimeout configures the syncer to use a specific timeout.
+func WithTimeout(timeout time.Duration) Option {
+	return func(s *Syncer) {
+		s.timeout = timeout
+	}
+}
+
 // WithInsecure configures the syncer to allow insecure SSL connections
 func WithInsecure(enable bool) Option {
 	return func(s *Syncer) {
@@ -168,7 +179,7 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 
 	s.cli = &Clients{}
 	if source.GetRepo() != nil {
-		srcCli, err := cs.NewClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+		srcCli, err := cs.NewClient(source, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP), types.WithTimeout(s.timeout))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
@@ -178,7 +189,7 @@ func New(source *apiv1.Source, target *apiv1.Target, opts ...Option) (*Syncer, e
 	}
 
 	if target.GetRepo() != nil {
-		dstCli, err := ct.NewClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP))
+		dstCli, err := ct.NewClient(target, types.WithCache(s.workdir), types.WithInsecure(s.insecure), types.WithUsePlainHTTP(s.usePlainHTTP), types.WithTimeout(s.timeout))
 		if err != nil {
 			return nil, errors.Trace(err)
 		}

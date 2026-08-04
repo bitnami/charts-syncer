@@ -64,6 +64,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
 		config.WithSkipImages(s.skipImages), config.WithPreserveDigest(s.preserveDigest),
+		config.WithTimeout(s.timeout),
 	}
 	if s.preserveDigest {
 		wrapOpts = append(wrapOpts, config.WithPreservedSourceRef(s.preservedSourceRef(ch.Name)))
@@ -86,6 +87,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		wrappedChartPath, metadata,
 		config.WithLogger(l),
 		config.WithWorkDir(workdir),
+		config.WithTimeout(s.timeout),
 		config.WithSkipImages(s.skipImages),
 		config.WithPreserveDigest(s.preserveDigest),
 	); err != nil {
