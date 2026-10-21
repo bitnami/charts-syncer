@@ -53,7 +53,7 @@ func WithContainerPlatforms(containerPlatforms []string) func(*Config) {
 }
 
 // WithSyncAliasTags enables discovery and publication of image aliases.
-func WithSyncAliasTags(enabled bool) Option {
+func WithSyncAliasTags(enabled bool) func(*Config) {
 	return func(c *Config) { c.SyncAliasTags = enabled }
 }
 

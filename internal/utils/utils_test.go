@@ -40,6 +40,29 @@ func TestCopyFileDoesNotPublishPartialBundle(t *testing.T) {
 	}
 }
 
+func TestCopyFileCleansUpAfterRenameFailure(t *testing.T) {
+	dir := t.TempDir()
+	dest := path.Join(dir, "image.container.wrap.tgz")
+	// A file cannot replace a directory, so copying succeeds but rename fails.
+	if err := os.Mkdir(dest, 0755); err != nil {
+		t.Fatal(err)
+	}
+	src := path.Join(t.TempDir(), "source.wrap.tgz")
+	if err := os.WriteFile(src, []byte("complete bundle"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := CopyFile(dest, src); err == nil {
+		t.Fatal("expected a rename failure")
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != path.Base(dest) || !entries[0].IsDir() {
+		t.Fatalf("failed rename changed the destination or left temporary files: %v", entries)
+	}
+}
+
 var (
 	source = &apiv1.Source{
 		Repo: &apiv1.Repo{

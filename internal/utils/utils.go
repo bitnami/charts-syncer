@@ -295,8 +295,15 @@ func CopyFile(destPath string, srcPath string) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	defer dest.Close()
-	defer os.Remove(dest.Name())
+	closed, published := false, false
+	defer func() {
+		if !closed {
+			_ = dest.Close()
+		}
+		if !published {
+			_ = os.Remove(dest.Name())
+		}
+	}()
 	if err := dest.Chmod(0644); err != nil {
 		return errors.Trace(err)
 	}
@@ -305,10 +312,16 @@ func CopyFile(destPath string, srcPath string) error {
 		return errors.Trace(err)
 	}
 
-	if err := dest.Close(); err != nil {
+	closeErr := dest.Close()
+	closed = true
+	if closeErr != nil {
+		return errors.Trace(closeErr)
+	}
+	if err := os.Rename(dest.Name(), destPath); err != nil {
 		return errors.Trace(err)
 	}
-	return errors.Trace(os.Rename(dest.Name(), destPath))
+	published = true
+	return nil
 }
 
 // HTTPResponseBody returns the body of an HTTP response
