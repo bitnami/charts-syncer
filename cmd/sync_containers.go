@@ -20,6 +20,7 @@ func runContainersSyncer(parentLog log.SectionLogger, c *apiv1.Config) error {
 		containersyncer.WithLatestVersionOnly(syncLatestVersionOnly),
 		containersyncer.WithSkipArtifacts(c.GetSkipArtifacts()),
 		containersyncer.WithPreserveDigest(c.GetPreserveDigest()),
+		containersyncer.WithSyncAliasTags(c.GetSyncAliasTags()),
 		containersyncer.WithUsePlainHTTP(usePlainHTTP),
 		containersyncer.WithTimeout(syncTimeout),
 

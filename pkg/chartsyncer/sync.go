@@ -63,7 +63,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 	wrapOpts := []config.Option{
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms), config.WithSkipArtifacts(s.skipArtifacts),
-		config.WithSkipImages(s.skipImages), config.WithPreserveDigest(s.preserveDigest),
+		config.WithSkipImages(s.skipImages), config.WithSyncAliasTags(s.syncAliasTags), config.WithPreserveDigest(s.preserveDigest),
 		config.WithTimeout(s.timeout),
 	}
 	if s.preserveDigest {
@@ -89,6 +89,7 @@ func (s *Syncer) syncChart(ch *Chart, l log.SectionLogger) error {
 		config.WithWorkDir(workdir),
 		config.WithTimeout(s.timeout),
 		config.WithSkipImages(s.skipImages),
+		config.WithSyncAliasTags(s.syncAliasTags),
 		config.WithPreserveDigest(s.preserveDigest),
 	); err != nil {
 		l.Errorf("unable to upload %q chart: %+v", id, err)

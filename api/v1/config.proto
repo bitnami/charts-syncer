@@ -23,6 +23,9 @@ message Config {
     // Not compatible with "container_platforms", since filtering platforms always changes
     // the resulting manifest digest.
     bool preserve_digest = 9;
+    // Sync additional tags of selected container images, overwriting existing aliases.
+    // Includes latest; excludes revision and artifact tags. Skipped charts/containers remain skipped.
+    bool sync_alias_tags = 10;
 }
 
 // SourceRepo contains the required information of the source chart repository

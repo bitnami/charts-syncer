@@ -279,7 +279,8 @@ func FileExists(f string) (bool, error) {
 	return true, nil
 }
 
-// CopyFile copies a file from srcPath to destPath, ensuring the destPath directory exists.
+// CopyFile copies a file atomically, ensuring the destination directory exists.
+// Incomplete bundles must not be visible to the local repository's discovery.
 func CopyFile(destPath string, srcPath string) error {
 	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
 		return errors.Trace(err)
@@ -290,17 +291,24 @@ func CopyFile(destPath string, srcPath string) error {
 	}
 	defer src.Close()
 
-	dest, err := os.Create(destPath)
+	dest, err := os.CreateTemp(filepath.Dir(destPath), ".bundle-*")
 	if err != nil {
 		return errors.Trace(err)
 	}
 	defer dest.Close()
+	defer os.Remove(dest.Name())
+	if err := dest.Chmod(0644); err != nil {
+		return errors.Trace(err)
+	}
 
 	if _, err := io.Copy(dest, src); err != nil {
 		return errors.Trace(err)
 	}
 
-	return nil
+	if err := dest.Close(); err != nil {
+		return errors.Trace(err)
+	}
+	return errors.Trace(os.Rename(dest.Name(), destPath))
 }
 
 // HTTPResponseBody returns the body of an HTTP response

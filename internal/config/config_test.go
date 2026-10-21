@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	apiv1 "github.com/bitnami/charts-syncer/gen/proto/v1"
@@ -10,6 +11,24 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
+
+func TestSyncAliasTagsConfiguration(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		file := filepath.Join(t.TempDir(), "config.yaml")
+		content := "{}"
+		if enabled {
+			content = "syncAliasTags: true\n"
+		}
+		if err := os.WriteFile(file, []byte(content), 0600); err != nil {
+			t.Fatal(err)
+		}
+		var cfg apiv1.Config
+		if err := yamlToProto(file, &cfg); err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, enabled, cfg.GetSyncAliasTags())
+	}
+}
 
 // Load unmarshall config file into Config struct
 func TestLoad(t *testing.T) {

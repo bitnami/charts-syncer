@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -11,6 +12,33 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
+
+func TestCopyFileDoesNotPublishPartialBundle(t *testing.T) {
+	dir := t.TempDir()
+	dest := path.Join(dir, "image.container.wrap.tgz")
+	// Reading a directory as a file fails after the temporary output is opened.
+	if err := CopyFile(dest, t.TempDir()); err == nil {
+		t.Fatal("expected a copy failure")
+	}
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Fatalf("failed copy left a discoverable bundle: %v", err)
+	}
+	original := []byte("previous complete bundle")
+	if err := os.WriteFile(dest, original, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := CopyFile(dest, t.TempDir()); err == nil {
+		t.Fatal("expected a copy failure")
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil || !bytes.Equal(original, got) {
+		t.Fatalf("failed copy changed destination: %q, %v", got, err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("temporary files were not cleaned up: %v, %v", entries, err)
+	}
+}
 
 var (
 	source = &apiv1.Source{

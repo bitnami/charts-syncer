@@ -23,6 +23,7 @@ func runChartsSyncer(parentLog log.SectionLogger, c *apiv1.Config) error {
 		chartsyncer.WithSkipArtifacts(c.GetSkipArtifacts()),
 		chartsyncer.WithSkipImages(c.GetSkipImages()),
 		chartsyncer.WithPreserveDigest(c.GetPreserveDigest()),
+		chartsyncer.WithSyncAliasTags(c.GetSyncAliasTags()),
 		chartsyncer.WithSkipCharts(c.SkipCharts),
 		chartsyncer.WithUsePlainHTTP(usePlainHTTP),
 		chartsyncer.WithTimeout(syncTimeout),

@@ -15,6 +15,7 @@ type Config struct {
 	ContainerPlatforms []string
 	SkipArtifacts      bool
 	SkipImages         bool
+	SyncAliasTags      bool
 	PreserveDigest     bool
 	PreservedSourceRef string
 	Timeout            time.Duration
@@ -49,6 +50,11 @@ func WithContainerPlatforms(containerPlatforms []string) func(*Config) {
 	return func(c *Config) {
 		c.ContainerPlatforms = containerPlatforms
 	}
+}
+
+// WithSyncAliasTags enables discovery and publication of image aliases.
+func WithSyncAliasTags(enabled bool) Option {
+	return func(c *Config) { c.SyncAliasTags = enabled }
 }
 
 // WithPreserveDigest sets the preserve digest flag

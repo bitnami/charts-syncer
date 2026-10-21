@@ -3,8 +3,32 @@ package chartsyncer
 import (
 	"testing"
 
+	"github.com/bitnami/charts-syncer/pkg/client"
+	"github.com/bitnami/charts-syncer/pkg/client/config"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 )
+
+type skippedChartSource struct {
+	client.ChartsWrapper
+	t *testing.T
+}
+
+func (s skippedChartSource) WrapChart(string, string, ...config.Option) (string, error) {
+	s.t.Fatal("an existing chart must not be wrapped to refresh its image aliases")
+	return "", nil
+}
+
+func TestAliasSyncDoesNotProcessExistingCharts(t *testing.T) {
+	dir := t.TempDir()
+	s := NewFake(t, WithFakeSyncerDestination(dir))
+	require.NoError(t, s.SyncPendingCharts("apache"))
+	s = NewFake(t, WithFakeSyncerDestination(dir))
+	s.syncAliasTags = true
+	s.cli.src = skippedChartSource{ChartsWrapper: s.cli.src, t: t}
+	require.ErrorIs(t, s.SyncPendingCharts("apache"), ErrNoChartsToSync)
+	require.Empty(t, s.getIndex())
+}
 
 func removeTgzPath(i ChartIndex) {
 	for _, c := range i {

@@ -76,6 +76,7 @@ func (t *Source) WrapChart(tgz, destWrap string, opts ...config.Option) (string,
 		wrap.WithContainerRegistryAuth(t.containersUsername, t.containersPassword),
 		wrap.WithOutputFile(destWrap),
 		wrap.WithPreserveDigest(cfg.PreserveDigest),
+		wrap.WithSyncAliasTags(cfg.SyncAliasTags),
 		wrap.WithPreservedSourceRef(cfg.PreservedSourceRef),
 		wrap.WithLogger(l),
 	}
@@ -114,6 +115,7 @@ func (t *Source) WrapContainer(imageRef string, destination string, opts ...conf
 		wrap.WithPlatforms(cfg.ContainerPlatforms),
 		wrap.WithOutputFile(destination),
 		wrap.WithPreserveDigest(cfg.PreserveDigest),
+		wrap.WithSyncAliasTags(cfg.SyncAliasTags),
 		wrap.WithLogger(l),
 	}
 

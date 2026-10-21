@@ -15,6 +15,7 @@ Sync Helm chart packages and OCI container images between repositories
     + [Sync all charts from specific date](#sync-all-charts-from-specific-date)
     + [Sync latest version only](#sync-latest-version-of-each-helm-chart)
 - [Syncing Container Images](#syncing-container-images)
+    + [Sync image aliases](#sync-image-aliases)
     + [Sync containers only](#sync-container-images-only)
     + [Sync both charts and containers](#sync-helm-charts-and-container-images-together)
     + [Sync latest container version only](#sync-latest-version-of-each-container)
@@ -68,7 +69,45 @@ Container images are identified by a registry base URL and a list of image names
 
 > [!NOTE]
 > The container tag discovery uses the naming pattern `MAJOR.MINOR.PATCH-DISTRO_NAME-DISTRO_VERSION-rREVISION`
-> (e.g. `7.4.1-debian-12-r6`). Tags that do not follow this pattern (such as `latest` or digest references) are excluded from auto-discovery.
+> (e.g. `7.4.1-debian-12-r6`). Tags that do not follow this pattern (such as `latest` or digest references) are excluded from revision auto-discovery. `latest` can still be copied as an alias with `syncAliasTags` below.
+
+### Sync image aliases
+
+To also copy aliases of the images being synced, enable this top-level setting:
+
+```yaml
+syncAliasTags: true
+```
+
+This applies to both chart images and the `containers:` list and defaults to `false`.
+For each selected image, charts-syncer discovers other tags in its source repository
+that resolve to the same complete manifest or multi-platform index. For example,
+syncing `postgresql:18.6.0-debian-12-r13` can also publish `18`, `18-debian-12`,
+`18.6.0`, and `latest` when they point to that image at the source. Tags pointing to
+other manifests are not copied; if source `latest` points elsewhere, destination
+`latest` is left untouched. Revision tags (ending in `-rNUMBER`) and DT's signature
+and metadata tag formats are excluded from alias discovery and publication.
+The standalone revision-tag discovery rules above remain unchanged.
+
+Missing aliases are created and existing aliases are overwritten without prompting,
+after the image content has been published. Aliases point to the resulting destination
+manifest, including when `containerPlatforms` changes it. For images actually selected
+for copying, the primary tag retains DT's existing overwrite behavior, including
+revision tags; this is independent of `syncAliasTags`.
+
+**Existing charts and standalone revisions are still skipped, including their aliases.**
+Enabling this option does not repair aliases for previously synced content. It also
+does not follow an alias to an image outside the selected charts or container revisions.
+
+Local exports record an optional `aliases` list on each image entry in `Images.lock`
+(`chart/Images.lock` in chart bundles, `Images.lock` in container bundles). Enable
+`syncAliasTags` on both export and import. Import uses that snapshot without contacting
+the source registry; bundles without alias metadata have no additional tags to publish.
+Importing an older snapshot can move aliases back to an older image.
+
+An alias write error fails that item's sync. Successfully written aliases are not
+rolled back. The final chart or standalone revision tag is published after its alias
+updates, allowing unfinished items to be retried with the same configuration.
 
 ### Sync container images only
 
