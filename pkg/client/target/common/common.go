@@ -105,6 +105,9 @@ func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Opti
 		unwrap.WithPreserveRepository(false),
 		unwrap.WithPreserveDigest(cfg.PreserveDigest),
 		unwrap.WithSyncAliasTags(cfg.SyncAliasTags),
+		// Charts are relocated with their dependencies vendored under charts/, so drop the
+		// reference to the source repository instead of leaving it pointing at the source registry
+		unwrap.WithLocalizeDependencies(true),
 	}
 
 	if cfg.Timeout > 0 {
