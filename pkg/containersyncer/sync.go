@@ -35,6 +35,7 @@ func (s *Syncer) syncContainer(c *types.ContainerImage, tag string, l log.Sectio
 		config.WithLogger(l), config.WithWorkDir(workdir),
 		config.WithContainerPlatforms(s.containerPlatforms),
 		config.WithSkipArtifacts(s.skipArtifacts),
+		config.WithSyncAliasTags(s.syncAliasTags),
 		config.WithPreserveDigest(s.preserveDigest),
 		config.WithTimeout(s.timeout),
 	)
@@ -49,7 +50,11 @@ func (s *Syncer) syncContainer(c *types.ContainerImage, tag string, l log.Sectio
 		return nil
 	}
 
-	if err := s.cli.dst.UnwrapContainer(wrappedContainerPath, config.WithLogger(l), config.WithWorkDir(workdir), config.WithPreserveDigest(s.preserveDigest), config.WithTimeout(s.timeout)); err != nil {
+	if err := s.cli.dst.UnwrapContainer(wrappedContainerPath,
+		config.WithLogger(l), config.WithWorkDir(workdir),
+		config.WithSyncAliasTags(s.syncAliasTags), config.WithPreserveDigest(s.preserveDigest),
+		config.WithTimeout(s.timeout),
+	); err != nil {
 		l.Errorf("unable to upload %q container: %+v", id, err)
 		return errors.Trace(err)
 	}

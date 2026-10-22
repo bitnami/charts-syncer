@@ -26,5 +26,9 @@ dist
 .vscode
 .idea
 
+# Local development against sibling Go modules
+/go.work
+/go.work.sum
+
 ### Tests output
 pkg/syncer/workdir/

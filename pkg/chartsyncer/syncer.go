@@ -55,6 +55,9 @@ type Syncer struct {
 	// copy charts and container images byte-for-byte, preserving their original digest
 	preserveDigest bool
 
+	// Sync additional tags for images actually selected for syncing.
+	syncAliasTags bool
+
 	// Storage directory for required artifacts
 	workdir string
 
@@ -66,6 +69,11 @@ type Syncer struct {
 
 // Option is an option value used to create a new syncer instance.
 type Option func(*Syncer)
+
+// WithSyncAliasTags enables discovery and publication of image aliases.
+func WithSyncAliasTags(enabled bool) Option {
+	return func(s *Syncer) { s.syncAliasTags = enabled }
+}
 
 // WithDryRun configures the syncer to run in dry-run mode.
 func WithDryRun(enable bool) Option {

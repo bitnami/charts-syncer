@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -11,6 +12,56 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 	helmRepo "helm.sh/helm/v3/pkg/repo"
 )
+
+func TestCopyFileDoesNotPublishPartialBundle(t *testing.T) {
+	dir := t.TempDir()
+	dest := path.Join(dir, "image.container.wrap.tgz")
+	// Reading a directory as a file fails after the temporary output is opened.
+	if err := CopyFile(dest, t.TempDir()); err == nil {
+		t.Fatal("expected a copy failure")
+	}
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Fatalf("failed copy left a discoverable bundle: %v", err)
+	}
+	original := []byte("previous complete bundle")
+	if err := os.WriteFile(dest, original, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := CopyFile(dest, t.TempDir()); err == nil {
+		t.Fatal("expected a copy failure")
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil || !bytes.Equal(original, got) {
+		t.Fatalf("failed copy changed destination: %q, %v", got, err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("temporary files were not cleaned up: %v, %v", entries, err)
+	}
+}
+
+func TestCopyFileCleansUpAfterRenameFailure(t *testing.T) {
+	dir := t.TempDir()
+	dest := path.Join(dir, "image.container.wrap.tgz")
+	// A file cannot replace a directory, so copying succeeds but rename fails.
+	if err := os.Mkdir(dest, 0755); err != nil {
+		t.Fatal(err)
+	}
+	src := path.Join(t.TempDir(), "source.wrap.tgz")
+	if err := os.WriteFile(src, []byte("complete bundle"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := CopyFile(dest, src); err == nil {
+		t.Fatal("expected a rename failure")
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != path.Base(dest) || !entries[0].IsDir() {
+		t.Fatalf("failed rename changed the destination or left temporary files: %v", entries)
+	}
+}
 
 var (
 	source = &apiv1.Source{

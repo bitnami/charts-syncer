@@ -104,6 +104,7 @@ func (t *Target) UnwrapChart(file string, _ *chart.Metadata, opts ...config.Opti
 		unwrap.WithSkipPullImages(cfg.SkipImages),
 		unwrap.WithPreserveRepository(false),
 		unwrap.WithPreserveDigest(cfg.PreserveDigest),
+		unwrap.WithSyncAliasTags(cfg.SyncAliasTags),
 		// Charts are relocated with their dependencies vendored under charts/, so drop the
 		// reference to the source repository instead of leaving it pointing at the source registry
 		unwrap.WithLocalizeDependencies(true),
@@ -146,6 +147,7 @@ func (t *Target) UnwrapContainer(file string, opts ...config.Option) error {
 		unwrap.WithFetchArtifacts(!cfg.SkipArtifacts),
 		unwrap.WithPreserveRepository(false),
 		unwrap.WithPreserveDigest(cfg.PreserveDigest),
+		unwrap.WithSyncAliasTags(cfg.SyncAliasTags),
 	}
 
 	if cfg.Timeout > 0 {

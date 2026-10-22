@@ -157,16 +157,8 @@ func (r *Repo) Upload(filepath string, metadata *chart.Metadata) error {
 		}
 	}
 
-	input, err := os.ReadFile(filepath)
-	if err != nil {
-		return errors.Annotatef(err, "reading %q", filepath)
-	}
-
 	out := path.Join(r.dir, "charts", fmt.Sprintf("%s-%s.wrap.tgz", name, version))
-	if err := os.MkdirAll(path.Dir(out), 0755); err != nil {
-		return errors.Annotatef(err, "creating directory for %q", out)
-	}
-	if err := os.WriteFile(out, input, 0644); err != nil {
+	if err := utils.CopyFile(out, filepath); err != nil {
 		return errors.Annotatef(err, "creating %q", out)
 	}
 
